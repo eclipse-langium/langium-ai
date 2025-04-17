@@ -1,0 +1,15 @@
+node_modules/
+.DS_Store
+logs
+*.log
+npm-debug.log*
+.npm
+.eslintcache
+.env
+dist
+modelfiles
+results
+downloads/
+stores/
+data/
+.langium-ai

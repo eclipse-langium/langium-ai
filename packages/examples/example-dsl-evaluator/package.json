@@ -1,0 +1,35 @@
+{
+    "name": "example-dsl-evaluator",
+    "description": "Example evaluator for a targeted DSL",
+    "private": "true",
+    "version": "0.0.1",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node ./dist/index.js",
+        "demo": "npm run build && npm run start -- run-langdev && open ./radar-chart.html",
+        "clean": "rimraf ./dist"
+    },
+    "type": "module",
+    "author": {
+        "name": "TypeFox",
+        "url": "https://www.typefox.io"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "chromadb": "^1.9.2",
+        "chromadb-default-embed": "^2.13.2",
+        "dotenv": "^16.4.5",
+        "langium-ai-tools": "^0.0.1",
+        "ollama": "^0.5.9",
+        "openai": "^4.67.3"
+    },
+    "volta": {
+        "node": "20.10.0",
+        "npm": "10.2.3"
+    },
+    "devDependencies": {
+        "typescript": "^5.4.5",
+        "rimraf": "^6.0.1"
+    }
+}

@@ -1,0 +1,61 @@
+{
+    "name": "langium-ai-tools",
+    "version": "0.0.1",
+    "description": "Tooling for building AI Applications that leverage Langium DSLs",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/eclipse-langium/langium-ai.git",
+        "directory": "packages/langium-ai-tools"
+    },
+    "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
+    "type": "module",
+    "main": "dist/index.js",
+    "private": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        },
+        "./splitter": {
+            "import": "./dist/splitter/index.js",
+            "types": "./dist/splitter/index.d.ts"
+        },
+        "./evaluator": {
+            "import": "./dist/evaluator/index.js",
+            "types": "./dist/evaluator/index.d.ts"
+        }
+    },
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w",
+        "test": "vitest run",
+        "clean": "rimraf ./dist"
+    },
+    "author": {
+        "name": "TypeFox",
+        "url": "https://www.typefox.io"
+    },
+    "keywords": [
+        "langium",
+        "ai",
+        "tools",
+        "llm"
+    ],
+    "license": "MIT",
+    "dependencies": {
+        "langium": "~3.4.0",
+        "levenshtein-edit-distance": "^3.0.1"
+    },
+    "volta": {
+        "node": "20.10.0",
+        "npm": "10.2.3"
+    },
+    "devDependencies": {
+        "typescript": "^5.4.5",
+        "vitest": "^3.0.9",
+        "rimraf": "^6.0.1"
+    }
+}
