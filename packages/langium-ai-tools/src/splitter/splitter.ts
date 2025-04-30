@@ -43,6 +43,15 @@ export function splitByNode(
     const langiumDoc = services.shared.workspace.LangiumDocumentFactory.fromString(document, URI.parse('memory://document.langium'));
 
     // not checking for lexer or parser errors here...
+    if (langiumDoc.parseResult.lexerErrors.length > 0) {
+        console.error('Lexer errors:', langiumDoc.parseResult.lexerErrors);
+        return [];
+    }
+
+    if (langiumDoc.parseResult.parserErrors.length > 0) {
+        console.error('Parser errors:', langiumDoc.parseResult.parserErrors);
+        return [];
+    }
 
     const txtDoc = langiumDoc.textDocument;
 

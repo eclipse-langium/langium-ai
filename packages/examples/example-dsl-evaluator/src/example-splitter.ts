@@ -4,10 +4,56 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
+import { NodeFileSystem } from "langium/node";
+import { splitByNode } from "langium-ai-tools/splitter";
+import { createLangiumGrammarServices } from "langium/grammar";
+import { LangiumServices } from "langium/lsp";
+
 /**
  * An example of utilizing the splitter in Langium AI
  */
 
 export function runSpliterExample() {
+    const exampleLangiumDoc = `
+grammar Test
 
+entry Model: A | B | C | D | E;
+
+A: 'A' ID;
+
+/**
+ * Info about B (one line above)
+ */
+
+B: 'B' ID;
+
+/**
+ * Info about C
+ */
+C: 'C' ID;
+
+
+// info about D (one line above)
+
+D: 'D' ID;
+
+// info about E
+E: 'E' ID;
+
+hidden terminal WS: /\s+/;
+terminal ID: /[_a-zA-Z][\w_]*/;
+    `;
+
+    const langiumServices = createLangiumGrammarServices(NodeFileSystem);
+
+    // split by ParserRule (w/ comments included)
+    const splits = splitByNode(
+        exampleLangiumDoc,
+        [
+            (node) => node.$type === 'ParserRule'
+        ],
+        langiumServices.grammar,
+    );
+
+    console.dir(splits);
 }
