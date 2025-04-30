@@ -26,6 +26,10 @@
         "./evaluator": {
             "import": "./dist/evaluator/index.js",
             "types": "./dist/evaluator/index.d.ts"
+        },
+        "./server": {
+            "import": "./dist/server/index.js",
+            "types": "./dist/server/index.d.ts"
         }
     },
     "scripts": {
@@ -46,6 +50,7 @@
     ],
     "license": "MIT",
     "dependencies": {
+        "express": "^5.1.0",
         "langium": "~3.4.0",
         "levenshtein-edit-distance": "^3.0.1"
     },
@@ -54,8 +59,9 @@
         "npm": "10.2.3"
     },
     "devDependencies": {
+        "@types/express": "^5.0.1",
+        "rimraf": "^6.0.1",
         "typescript": "^5.4.5",
-        "vitest": "^3.0.9",
-        "rimraf": "^6.0.1"
+        "vitest": "^3.0.9"
     }
 }

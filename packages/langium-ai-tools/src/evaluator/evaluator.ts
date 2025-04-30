@@ -189,9 +189,6 @@ export function loadLastResults(dir: string, take?: number): EvaluatorResult[] {
         results.push(...report.results);
     }
 
-    // find the most recently created file in the path & read it
-    // const lastFileName = readFileSync(lastFile).toString();
-    // return loadReport(path.join(dir, lastFileName)).results;
     return results;
 }
 
