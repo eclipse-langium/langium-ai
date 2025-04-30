@@ -1,3 +1,9 @@
+/******************************************************************************
+ * Copyright 2024 - 2025 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
+
 /**
  * An example of creating an evaluator that is accessible via a REST API by other programs
  */

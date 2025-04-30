@@ -1,6 +1,13 @@
+/******************************************************************************
+ * Copyright 2024 - 2025 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
+
 import { runLangDevDemo, generateChartFromLastResults } from './eval-langdev.js';
 import { runLangiumEvals } from './eval-langium.js';
 import { runExampleServer } from './example-server.js';
+import { runSpliterExample } from './example-splitter.js';
 
 function printHelp() {
     console.log('Usage: node dist/index.js [run-langium|run-langdev|report|server|help]');
@@ -34,6 +41,12 @@ async function main() {
             break;
         case 'server':
             runExampleServer();
+            break;
+        case 'splitter':
+            runSpliterExample();
+            break;
+        case 'program-map':
+            console.log('Program map is not implemented yet.');
             break;
         case 'help':
             printHelp();

@@ -4,4 +4,10 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-export * from './splitter.js';
+/**
+ * An example of utilizing the splitter in Langium AI
+ */
+
+export function runSpliterExample() {
+
+}
