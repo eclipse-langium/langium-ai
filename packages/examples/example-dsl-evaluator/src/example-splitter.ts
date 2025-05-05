@@ -55,5 +55,19 @@ terminal ID: /[_a-zA-Z][\w_]*/;
         langiumServices.grammar,
     );
 
+    console.log('Split by ParserRule w/ comments:');
     console.dir(splits);
+
+    // split by ParserRule (w/ comments included)
+    const splitsNoComments = splitByNode(
+        exampleLangiumDoc,
+        [
+            (node) => node.$type === 'ParserRule'
+        ],
+        langiumServices.grammar,
+        { commentRuleNames: [] }
+    );
+
+    console.log('Split by ParserRule without comments:');
+    console.dir(splitsNoComments);
 }

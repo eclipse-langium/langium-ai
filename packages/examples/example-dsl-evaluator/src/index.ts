@@ -6,6 +6,7 @@
 
 import { runLangDevDemo, generateChartFromLastResults } from './eval-langdev.js';
 import { runLangiumEvals } from './eval-langium.js';
+import { runExampleProgramMap } from './example-program-map.js';
 import { runExampleServer } from './example-server.js';
 import { runSpliterExample } from './example-splitter.js';
 
@@ -48,7 +49,7 @@ async function main() {
             runSpliterExample();
             break;
         case 'program-map':
-            console.log('Program map is not implemented yet.');
+            runExampleProgramMap();
             break;
         case 'help':
             printHelp();

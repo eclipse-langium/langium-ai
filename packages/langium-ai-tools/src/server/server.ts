@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2024 - 2025 TypeFox GmbH
+ * Copyright 2025 TypeFox GmbH
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
@@ -61,7 +61,7 @@ export function startServer(config?: ServerConfig) {
             const result = await evaluator.evaluate(program, expectedResponse ?? "");
             res.json({ result });
         } catch (error) {
-            res.status(500).json({ error: 'An error occurred while evaluating DSL' });
+            res.status(500).json({ error: 'An error occurred while evaluating a Program' });
         }
     });
 
