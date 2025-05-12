@@ -7,7 +7,6 @@
 import { runLangDevDemo, generateChartFromLastResults } from './eval-langdev.js';
 import { runLangiumEvals } from './eval-langium.js';
 import { runExampleProgramMap } from './example-program-map.js';
-import { runExampleServer } from './example-server.js';
 import { runSpliterExample } from './example-splitter.js';
 
 function printHelp() {
@@ -15,7 +14,6 @@ function printHelp() {
     console.log('  run-langium: Run Langium evaluations');
     console.log('  run-langdev: Run LangDev evaluations');
     console.log('  report: Generate a report from the last results');
-    console.log('  server: Start the Langium AI REST API server');
     console.log('  splitter: Run the splitter example');
     console.log('  program-map: Generate a program map');
     console.log('  help: Show this help message');
@@ -41,9 +39,6 @@ async function main() {
             break;
         case 'report':
             generateChartFromLastResults();
-            break;
-        case 'server':
-            runExampleServer();
             break;
         case 'splitter':
             runSpliterExample();

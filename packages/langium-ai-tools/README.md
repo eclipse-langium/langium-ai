@@ -145,10 +145,6 @@ You can also define custom evaluators that are more tuned to the needs of your D
 
 In general we stick to focusing on what Langium can do to help with evaluation, but leave the opportunity open for you to extend, supplement, or modify evaluation logic as you see fit.
 
-### Server
-
-For cases where you intend to make Langium AI accessible to some other tools, locally or on a network, you can use the internal server we've packaged up with it. 
-
 ## Contributing
 
 If you want to help feel free to open an issue or a PR. As a general note we're open to accept changes that focus on improving how we can support AI application development for Langium DSLs. But we don't want to provide explicit bindings to actual services/providers at this time, such as LLamaIndex, Ollama, LangChain, or others. Similarly this package doesn't provide direct bindings for AI providers such as OpenAI and Anthropic here. Instead these changes will go into a separate package under Langium AI that is intended for this purpose.

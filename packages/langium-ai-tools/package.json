@@ -1,6 +1,6 @@
 {
     "name": "langium-ai-tools",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Tooling for building AI Applications that leverage Langium DSLs",
     "repository": {
         "type": "git",
@@ -26,10 +26,6 @@
         "./evaluator": {
             "import": "./dist/evaluator/index.js",
             "types": "./dist/evaluator/index.d.ts"
-        },
-        "./server": {
-            "import": "./dist/server/index.js",
-            "types": "./dist/server/index.d.ts"
         }
     },
     "scripts": {
