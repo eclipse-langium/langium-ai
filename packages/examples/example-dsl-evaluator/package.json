@@ -20,7 +20,7 @@
         "chromadb": "^1.9.2",
         "chromadb-default-embed": "^2.13.2",
         "dotenv": "^16.4.5",
-        "langium-ai-tools": "^0.0.1",
+        "langium-ai-tools": "^0.0.2",
         "ollama": "^0.5.9",
         "openai": "^4.67.3"
     },

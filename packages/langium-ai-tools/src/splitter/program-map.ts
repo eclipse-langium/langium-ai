@@ -6,7 +6,7 @@
 
 import { AstNode } from "langium";
 import { LangiumServices } from "langium/lsp";
-import { parseDocument, splitByNode, splitByNodeToAst } from "./splitter.js";
+import { splitByNodeToAst } from "./splitter.js";
 
 interface MappingRule {
     /**

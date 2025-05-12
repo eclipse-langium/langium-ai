@@ -47,8 +47,6 @@ async function main() {
             runExampleProgramMap();
             break;
         case 'help':
-            printHelp();
-            break;
         default:
             printHelp();
             break;

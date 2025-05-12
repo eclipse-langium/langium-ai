@@ -23,7 +23,7 @@ interface SplitterOptions {
  * @param services Associated Langium services for parsing
  * @returns The parsed LangiumDocument or undefined if there were errors
  */
-export function parseDocument(document: string, services: LangiumServices): LangiumDocument<AstNode> | undefined {
+function parseDocument(document: string, services: LangiumServices): LangiumDocument<AstNode> | undefined {
     const langiumDoc = services.shared.workspace.LangiumDocumentFactory.fromString(document, URI.parse('memory://document.langium'));
     if (langiumDoc.parseResult.lexerErrors.length > 0) {
         console.error('Lexer errors:', langiumDoc.parseResult.lexerErrors);
