@@ -54,7 +54,7 @@ async function ragLookup(content: string): Promise<string[][]> {
         embeddingFunction: {
             generate: async (texts: string[]) => {
                 return (await ollama.embed({
-                    model: 'mxbai-embed-large',
+                    model: 'nomic-embed-text',
                     input: texts,
                     keep_alive: 30
                 })).embeddings;
@@ -64,7 +64,7 @@ async function ragLookup(content: string): Promise<string[][]> {
 
     // embed
     const queryEmbeddings = (await ollama.embed({
-        model: 'mxbai-embed-large',
+        model: 'nomic-embed-text',
         input: content,
         keep_alive: 30
     })).embeddings;

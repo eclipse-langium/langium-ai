@@ -49,7 +49,7 @@ export async function runLangiumEvals() {
                 eval: mergeEvaluators(
                     new LangiumEvaluator(langiumServices.grammar),
                     new EditDistanceEvaluator(),
-                    new OllamaEmbeddingEvaluator('mxbai-embed-large')
+                    new OllamaEmbeddingEvaluator('nomic-embed-text')
                 )
             }
         ],
