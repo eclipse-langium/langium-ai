@@ -1,3 +1,8 @@
+/******************************************************************************
+ * Copyright 2024 - 2025 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
 
 import OpenAI from 'openai';
 import ollama from 'ollama';
@@ -49,7 +54,7 @@ async function ragLookup(content: string): Promise<string[][]> {
         embeddingFunction: {
             generate: async (texts: string[]) => {
                 return (await ollama.embed({
-                    model: 'mxbai-embed-large',
+                    model: 'nomic-embed-text',
                     input: texts,
                     keep_alive: 30
                 })).embeddings;
@@ -59,7 +64,7 @@ async function ragLookup(content: string): Promise<string[][]> {
 
     // embed
     const queryEmbeddings = (await ollama.embed({
-        model: 'mxbai-embed-large',
+        model: 'nomic-embed-text',
         input: content,
         keep_alive: 30
     })).embeddings;

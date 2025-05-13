@@ -1,6 +1,6 @@
 {
     "name": "langium-ai-tools",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Tooling for building AI Applications that leverage Langium DSLs",
     "repository": {
         "type": "git",
@@ -54,8 +54,8 @@
         "npm": "10.2.3"
     },
     "devDependencies": {
+        "rimraf": "^6.0.1",
         "typescript": "^5.4.5",
-        "vitest": "^3.0.9",
-        "rimraf": "^6.0.1"
+        "vitest": "^3.0.9"
     }
 }

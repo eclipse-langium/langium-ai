@@ -1,8 +1,20 @@
+/******************************************************************************
+ * Copyright 2024 - 2025 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
+
 import { EmptyFileSystem } from 'langium';
 import { averageAcrossCases, Case, EvalMatrix, EvaluatorResult, generateRadarChart, LangiumEvaluator, LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, Message, normalizeData, Runner } from 'langium-ai-tools/evaluator';
 import { createLangiumGrammarServices } from 'langium/grammar';
 import ollama from 'ollama';
 import { EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
+import * as readline from 'readline/promises';
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
 
 /**
  * Create services for the Langium grammar language.
@@ -101,10 +113,32 @@ const langiumAndEmbeddingEvaluator = mergeEvaluators(
     new LangiumEvaluator(langiumServices.grammar),
 
     // then run the Ollama embedding evaluator to compare expected vs. actual
-    new OllamaEmbeddingEvaluator('mxbai-embed-large')
+    new OllamaEmbeddingEvaluator('nomic-embed-text')
 );
 
 export async function runLangDevDemo() {
+
+    // check if all the necessary models are installed via ollama
+    const models = ['llama3.2:latest', 'codellama:latest', 'codegemma:latest', 'nomic-embed-text:latest'];
+    const listedModels = (await ollama.list()).models;
+    console.log('Available models: ', listedModels.map(m => m.name));
+    const missingModels = models.filter(model => !listedModels.some(m => m.name === model));
+    if (missingModels.length > 0) {
+        console.error(`The following models are missing: ${missingModels.join(', ')}.`);
+        // prompt to install
+        const answer = await rl.question(`Do you want to install these missing models for this demo? (y/n) `);
+        if (answer.toLowerCase() === 'y') {
+            for (const model of missingModels) {
+                console.log(`Installing model ${model}...`);
+                await ollama.pull({
+                    model: model
+                });
+            }
+        } else {
+            console.error('Please install missing models and try again.');
+            return;
+        }
+    }
 
     const eMat = new EvalMatrix({
 

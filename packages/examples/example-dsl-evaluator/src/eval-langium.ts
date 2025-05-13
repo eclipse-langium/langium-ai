@@ -1,3 +1,9 @@
+/******************************************************************************
+ * Copyright 2024 - 2025 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
+
 import { config } from 'dotenv';
 import { EmptyFileSystem } from 'langium';
 import { averageAcrossCases, averageAcrossRunners, EditDistanceEvaluator, EditDistanceEvaluatorResultData, EvalMatrix, generateHistogram, generateHistoricalChart, generateRadarChart, LangiumEvaluator, LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, normalizeData } from 'langium-ai-tools/evaluator';
@@ -43,7 +49,7 @@ export async function runLangiumEvals() {
                 eval: mergeEvaluators(
                     new LangiumEvaluator(langiumServices.grammar),
                     new EditDistanceEvaluator(),
-                    new OllamaEmbeddingEvaluator('mxbai-embed-large')
+                    new OllamaEmbeddingEvaluator('nomic-embed-text')
                 )
             }
         ],

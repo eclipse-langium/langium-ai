@@ -1,3 +1,9 @@
+/******************************************************************************
+ * Copyright 2024 - 2025 TypeFox GmbH
+ * This program and the accompanying materials are made available under the
+ * terms of the MIT License, which is available in the project root.
+ ******************************************************************************/
+
 /**
  * Baseline Validator Class
  */
@@ -189,9 +195,6 @@ export function loadLastResults(dir: string, take?: number): EvaluatorResult[] {
         results.push(...report.results);
     }
 
-    // find the most recently created file in the path & read it
-    // const lastFileName = readFileSync(lastFile).toString();
-    // return loadReport(path.join(dir, lastFileName)).results;
     return results;
 }
 
