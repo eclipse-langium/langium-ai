@@ -1,0 +1,52 @@
+{
+    "name": "langium-ai-mcp",
+    "version": "0.0.2",
+    "displayName": "Langium AI - MCP",
+    "publisher": "TypeFox",
+    "description": "MCP server for Langium AI",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/eclipse-langium/langium-ai.git",
+        "directory": "packages/langium-ai-mcp"
+    },
+    "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
+    "type": "module",
+    "main": "dist/mcp-server.js",
+    "private": false,
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "clean": "rm -rf ./dist",
+        "build": "npm run clean && tsc",
+        "watch": "tsc -w",
+        "start": "node .",
+        "cstart": "node ./dist/mcp-client.js",
+        "prepare": "npm run build",
+        "test": "vitest run"
+    },
+    "author": {
+        "name": "TypeFox",
+        "url": "https://www.typefox.io"
+    },
+    "keywords": [
+        "langium",
+        "ai",
+        "mcp",
+        "server",
+        "llm"
+    ],
+    "license": "MIT",
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.17.4",
+        "langium-ai-tools": "0.0.2"
+    },
+    "volta": {
+        "node": "20.10.0",
+        "npm": "10.2.3"
+    },
+    "devDependencies": {
+        "typescript": "^5.4.5",
+        "vitest": "^3.0.9"
+    }
+}
