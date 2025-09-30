@@ -22,11 +22,17 @@ LLMs (and transformers in general), are evolving quite rapidly. With this approa
 
 ## Installation
 
-You can install Langium AI Tools by running:
+Langium AI tools tracks tightly with Langium releases. If you're using Langium 3.X or 4.X in your project, you'll want to install the corresponding version of Langium AI Tools that matches it.
 
-```sh
-npm i --save langium-ai-tools
+```bash
+# if you're using Langium 4.1.X
+npm i --save langium@^4.1.0
+
+# or 3.5.X
+npm i --save langium@^3.5.0
 ```
+
+The same goes for the 3.X line as well. We don't actively support Langium 2.X or earlier.
 
 ## Usage
 
