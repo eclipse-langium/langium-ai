@@ -32,7 +32,7 @@ npm i --save langium@^4.1.0
 npm i --save langium@^3.5.0
 ```
 
-The same goes for the 3.X line as well. We don't actively support Langium 2.X or earlier.
+We don't actively support Langium 2.X or earlier.
 
 ## Usage
 
