@@ -18,7 +18,7 @@ export type EvaluatorResultData = Record<string, unknown> & {
 /**
  * Evaluator result type
  */
-export type EvaluatorResult = {
+export type EvaluatorResult<T = EvaluatorResultData> = {
     /**
      * Name of this evaluation
      */
@@ -32,7 +32,7 @@ export type EvaluatorResult = {
     /**
      * Data for this evaluation
      */
-    data: EvaluatorResultData;
+    data: T;
 
 };
 
