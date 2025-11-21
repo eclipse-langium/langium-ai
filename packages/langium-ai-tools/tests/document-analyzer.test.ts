@@ -77,8 +77,22 @@ describe('LangiumDocumentAnalyzer', () => {
     it('should compute coverage correctly', () => {
         const statistics = collectSyntaxUsageStatistics('package foo.bar {}');
         expect(Object.values(statistics.ruleUsage).filter(count => count > 0).length, 'Used rules number').toBe(4);
-        expect(statistics.coverage).toBeCloseTo(100 * (4 / (Object.keys(statistics.ruleUsage).length)));
+        expect(statistics.coverage).toBeCloseTo(40.0, 1);
     });
+
+    it('should handle "includeHiddenRules" flag', () => {
+        const model = 'package bar { /** Multi-line comment */ }';
+
+        const statistics = collectSyntaxUsageStatistics(model);
+        expect(statistics.ruleUsage['ML_COMMENT']).toBe(1);
+
+        const noHidden = new LangiumDocumentAnalyzer(domainModelServices, {
+            includeHiddenRules: false
+        });
+        const statisticsNoHidden = collectSyntaxUsageStatistics(model, noHidden);
+        expect(statisticsNoHidden.ruleUsage['ML_COMMENT']).toBeUndefined();
+    });
+
 
     it('should compute entropy correctly', () => {
         const statistics = collectSyntaxUsageStatistics(exampleModel);
@@ -97,7 +111,7 @@ describe('LangiumDocumentAnalyzer', () => {
 
     it('should handle excluded rules', () => {
         const analyzerWithExcludedRules = new LangiumDocumentAnalyzer(domainModelServices, {
-            excludeRules: ['SL_COMMENT', 'ML_COMMENT']
+            excludeRules: ['Feature', 'DataType']
         });
 
         const testModel = 'package foo.bar { entity TestEntity { } }';
@@ -105,11 +119,11 @@ describe('LangiumDocumentAnalyzer', () => {
         const stats = collectSyntaxUsageStatistics(testModel);
         const statsWithExclude = collectSyntaxUsageStatistics(testModel, analyzerWithExcludedRules);
 
-        expect(stats.ruleUsage).toHaveProperty('SL_COMMENT');
-        expect(stats.ruleUsage).toHaveProperty('ML_COMMENT');
+        expect(stats.ruleUsage).toHaveProperty('DataType');
+        expect(stats.ruleUsage).toHaveProperty('Feature');
         // Verify that excluded rules are not present in the statistics
-        expect(statsWithExclude.ruleUsage).not.toHaveProperty('SL_COMMENT');
-        expect(statsWithExclude.ruleUsage).not.toHaveProperty('ML_COMMENT');
+        expect(statsWithExclude.ruleUsage).not.toHaveProperty('DataType');
+        expect(statsWithExclude.ruleUsage).not.toHaveProperty('Feature');
 
         // Check stats with exclude still has all rules from original except excluded ones
         expect(Object.keys(statsWithExclude.ruleUsage).length).toBe(Object.keys(stats.ruleUsage).length - 2);

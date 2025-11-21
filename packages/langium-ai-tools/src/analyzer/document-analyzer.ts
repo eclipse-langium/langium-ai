@@ -6,7 +6,7 @@
  * @author Dennis Hübner
  ******************************************************************************/
 
-import { CstUtils, Grammar, GrammarAST, LangiumDocument } from "langium";
+import { CstUtils, Grammar, GrammarAST, LangiumDocument, isLeafCstNode } from "langium";
 import { resolveTransitiveImports, } from 'langium/grammar';
 import { LangiumServices } from "langium/lsp";
 import { EvaluationContext } from "../evaluator/document-evaluator.js";
@@ -55,36 +55,44 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
         if (!rootCstNode) {
             return this.createEmptySyntaxStatistic();
         }
+        const { includeImportedRules, excludeRules, computeDiversity, includeHiddenRules } = this.analysisOptions;
+        const excludedRules = new Set(excludeRules);
+        const isRuleExcluded = (ruleName: string) => ruleName === 'WS' || excludedRules.has(ruleName);
 
-        const excludedRules = new Set(this.analysisOptions.excludeRules);
-        const isRuleExcluded = (ruleName: string) => excludedRules.has(ruleName);
-
-        const allRules = this.collectAllRules(grammar);
+        const allRules = includeImportedRules ? this.collectAllRules(grammar) : grammar.rules;
         const ruleUsage: Record<string, number> = {};
-        // Initialize rule usage map, excluding rules specified in excludeRules
+        // Initialize rule usage map, excluding rules specified in excludeRules. Also skip entry rule.
         for (const rule of allRules) {
             if (!isRuleExcluded(rule.name)) {
+                if (
+                    (GrammarAST.isParserRule(rule) && rule.entry)
+                    || (GrammarAST.isTerminalRule(rule) && rule.hidden && !includeHiddenRules)
+                ) {
+                    continue;
+                }
                 ruleUsage[rule.name] = 0;
             }
         }
 
         for (const cstNode of CstUtils.streamCst(rootCstNode)) {
             const grammarSource = cstNode.grammarSource;
-            if (!grammarSource) {
-                continue;
-            }
 
-            // For now handle only RuleCalls
-            if (GrammarAST.isRuleCall(grammarSource)) {
-                const ruleName = grammarSource.rule.ref?.name ?? 'unknown';
+            const addIfNotExcluded = (ruleName: string) => {
                 if (!isRuleExcluded(ruleName)) {
                     ruleUsage[ruleName] = (ruleUsage[ruleName] ?? 0) + 1;
                 }
+            };
+
+            if (grammarSource && GrammarAST.isRuleCall(grammarSource)) {
+                // For now handle only RuleCalls
+                addIfNotExcluded(grammarSource.rule.ref?.name ?? 'unknown');
+            } else if (includeHiddenRules && cstNode.hidden && isLeafCstNode(cstNode)) {
+                addIfNotExcluded(cstNode.tokenType.name);
             }
         }
 
         let diversity = { entropy: 0, giniCoefficient: 0, simpsonIndex: 0 };
-        if (this.analysisOptions.computeDiversity) {
+        if (computeDiversity) {
             diversity = {
                 entropy: this.computeEntropy(ruleUsage),
                 giniCoefficient: this.computeGiniCoefficient(ruleUsage),
@@ -206,14 +214,29 @@ interface AnalysisOptions {
     analysisMode: AnalysisMode;
     /**
      * Filter for specific rules (e.g deprecated) to exclude in the analysis.
+     * Rule WS (whitespace) is always excluded.
      */
     excludeRules: string[];
+    /** 
+     * Whether to include rules from imported grammars. Default is true.
+     */
+    includeImportedRules: boolean;
+    /**
+     * Whether to include hidden tokens (like comments, whitespace) in the analysis. Default is false.
+     * Rule WS (whitespace) is always excluded.
+     */
+    includeHiddenRules: boolean;
+    /**
+     * Whether to compute diversity metrics for rule usage. Default is true.
+     */
     computeDiversity: boolean;
 }
 
 const DEFAULT_OPTIONS: AnalysisOptions = {
     analysisMode: AnalysisMode.ALL,
     excludeRules: [],
+    includeImportedRules: true,
+    includeHiddenRules: true,
     computeDiversity: true
 };
 
@@ -223,15 +246,36 @@ const DEFAULT_OPTIONS: AnalysisOptions = {
 export type SyntaxStatistic = {
     /** Map of rule names to their usage counts */
     ruleUsage: Record<string, number>;
+
     /** Percentage of used rules compared to all available rules */
     coverage: number;
+
     /** Diversity metrics for rule usage patterns */
     diversity: {
-        /** Shannon entropy - information diversity measure */
+
+        /**
+         * Shannon entropy - information diversity measure.
+         * **Range:** 0 to log₂(n) where n = number of rules.
+         * - **Low (0-1):** dominated by few rules
+         * - **Medium (1-3):** moderate diversity  
+         * - **High (>3):** high diversity
+         */
         entropy: number;
-        /** Gini coefficient - inequality measure (0=equal, 1=unequal) */
+
+        /**
+         * Gini coefficient - inequality measure. Range: 0 to 1.
+         * - **Low (0-0.3):** equal distribution
+         * - **Medium (0.3-0.7):** moderate inequality
+         * - **High (0.7-1):** high inequality
+         */
         giniCoefficient: number;
-        /** Simpson's diversity index - probability of different selection */
+
+        /**
+         * Simpson's diversity index - probability that two randomly selected items are different. **Range:** 0 to 1.
+         * - **Low (0-0.3):** low diversity
+         * - **Medium (0.3-0.7):** moderate diversity
+         * - **High (0.7-1):** high diversity
+         */
         simpsonIndex: number;
     };
 }
