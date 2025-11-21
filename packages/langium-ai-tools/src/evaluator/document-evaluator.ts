@@ -28,15 +28,15 @@ export abstract class AbstractDocumentEvaluator<T extends LangiumServices, RD ex
     /**
      * Validate an agent response as if it's a langium program. If we can parse it, we attempt to validate it.
      */
-    async evaluate(input: string): Promise<Partial<EvaluatorResult<RD>>> {
+    async evaluate(input: string, fileExtension: string | undefined = undefined): Promise<Partial<EvaluatorResult<RD>>> {
 
         if (input.includes('```')) {
             // take the first code block instead, if present (assuming it's a langium grammar)
             const codeBlock = input.split(/```[a-z-]*/)[1];
             input = codeBlock;
         }
-
-        const doc = this.services.shared.workspace.LangiumDocumentFactory.fromString(input, URI.parse('memory://test.langium'));
+        const fileExt = fileExtension ? fileExtension : this.services.LanguageMetaData.fileExtensions[0];
+        const doc = this.services.shared.workspace.LangiumDocumentFactory.fromString(input, URI.parse(`memory:/test.${fileExt}`));
         const context: EvaluationContext = {
             input: input
         };

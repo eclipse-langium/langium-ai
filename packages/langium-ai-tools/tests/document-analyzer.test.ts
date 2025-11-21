@@ -56,7 +56,7 @@ const exampleModel = `package foo.bar {
 }`
 
 function collectSyntaxUsageStatistics(model: string, analyzer = docAnalyzer) {
-    const doc = domainModelServices.shared.workspace.LangiumDocumentFactory.fromString(model, URI.parse('memory://test.domainmodel'));
+    const doc = domainModelServices.shared.workspace.LangiumDocumentFactory.fromString(model, URI.parse('memory:/test.txt'));
     return analyzer.collectSyntaxUsageStatistics(doc, domainModelServices.Grammar);
 }
 
