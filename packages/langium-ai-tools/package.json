@@ -31,7 +31,7 @@
     "scripts": {
         "build": "tsc",
         "watch": "tsc -w",
-        "test": "vitest run --passWithNoTests",
+        "test": "vitest run",
         "clean": "rimraf ./dist"
     },
     "author": {
@@ -54,8 +54,5 @@
         "npm": "10.2.3"
     },
     "devDependencies": {
-        "rimraf": "^6.0.1",
-        "typescript": "^5.4.5",
-        "vitest": "^3.0.9"
     }
 }

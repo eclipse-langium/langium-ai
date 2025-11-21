@@ -44,13 +44,13 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
         const validationResult = super.evaluateDocument(doc, ctx);
         if (this.analysisOptions.analysisMode !== AnalysisMode.NO_STATISTIC && validationResult.data.failures === 0) {
             // Add syntax usage statistics only if build was successful
-            const statistics = this.collectSyntaxUsageStatistics(doc);
-            validationResult.data[LangiumDocumentAnalyzer.METADATA_KEY] = statistics;
+            const statistics = this.collectSyntaxUsageStatistics(doc, this.services.Grammar);
+            validationResult.metadata[LangiumDocumentAnalyzer.METADATA_KEY] = statistics;
         }
         return validationResult;
     }
 
-    collectSyntaxUsageStatistics(doc: LangiumDocument): SyntaxStatistic {
+    collectSyntaxUsageStatistics(doc: LangiumDocument, grammar: Grammar): SyntaxStatistic {
         const rootCstNode = doc.parseResult.value.$cstNode;
         if (!rootCstNode) {
             return this.createEmptySyntaxStatistic();
@@ -59,7 +59,7 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
         const excludedRules = new Set(this.analysisOptions.excludeRules);
         const isRuleExcluded = (ruleName: string) => excludedRules.has(ruleName);
 
-        const allRules = this.collectAllRules(this.services.Grammar);
+        const allRules = this.collectAllRules(grammar);
         const ruleUsage: Record<string, number> = {};
         // Initialize rule usage map, excluding rules specified in excludeRules
         for (const rule of allRules) {
@@ -155,6 +155,19 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
         }
 
         return 1 - sum; // Simpson's diversity index (1-D)
+    }
+
+    /**
+     * Extracts syntax statistics from the evaluation result.
+     * @param result The evaluation result.
+     * @returns The extracted syntax statistics or undefined if not found.
+     */
+    extractStatisticsFromResult(result: Partial<EvaluatorResult> | undefined): SyntaxStatistic | undefined {
+        const metadata = result?.metadata;
+        if (metadata && metadata[LangiumDocumentAnalyzer.METADATA_KEY]) {
+            return metadata[LangiumDocumentAnalyzer.METADATA_KEY] as SyntaxStatistic;
+        }
+        return undefined;
     }
 
     protected collectAllRules(grammar: Grammar): GrammarAST.AbstractRule[] {
