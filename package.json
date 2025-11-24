@@ -4,7 +4,11 @@
     "version": "0.0.1",
     "description": "Monorepo for Langium AI and its associated projects",
     "scripts": {
-        "build": "npm run build --workspaces"
+        "build": "npm run build --workspaces",
+        "test": "npm run test --workspaces --if-present --continue-on-error",
+        "test:ci": "npm run test --workspaces --if-present",
+        "clean": "npm run clean --workspaces --if-present",
+        "watch": "npm run watch --workspaces --if-present"
     },
     "type": "module",
     "author": {
@@ -17,6 +21,11 @@
         "packages/langium-ai-mcp",
         "packages/examples/*"
     ],
+    "devDependencies": {
+        "typescript": "^5.4.5",
+        "vitest": "^3.0.9",
+        "rimraf": "^6.0.1"
+    },
     "volta": {
         "node": "20.10.0",
         "npm": "10.2.3"

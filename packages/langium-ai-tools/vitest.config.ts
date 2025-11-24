@@ -13,5 +13,3 @@ export default defineConfig({
         target: 'node20'
     }
 });
-
-
