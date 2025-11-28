@@ -26,10 +26,10 @@ Langium AI tools tracks tightly with Langium releases. If you're using Langium 3
 
 ```bash
 # if you're using Langium 4.1.X
-npm i --save langium@^4.1.0
+npm i --save langium-ai-tools@^4.1.0
 
 # or 3.5.X
-npm i --save langium@^3.5.0
+npm i --save langium-ai-tools@^3.5.0
 ```
 
 We don't actively support Langium 2.X or earlier.
@@ -45,7 +45,7 @@ Langium AI Tools presents various splitting utilities that are simple but flexib
 
 For example, if you have a DSL that looks like this:
 
-```dsl
+```
 // A dsl that allows writing functions...
 function foo() { ... }
 function bar() { ... }
@@ -66,7 +66,7 @@ const chunks: string[] = splitByNode(
 ```
 
 And you would get back something like this:
-```json
+```
 [
     'function foo() { ... }',
     'function bar() { ... }'
@@ -100,7 +100,7 @@ const programMap: string[] = mapper.map(myProg);
 
 Which would give you an output like so:
 
-```json
+```
 [
     'func foo',
     'func bar'
