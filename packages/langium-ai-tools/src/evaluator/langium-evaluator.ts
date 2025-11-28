@@ -47,7 +47,7 @@ export interface LangiumEvaluatorResultData extends FailureAwarenessData {
     /**
      * Length of the response in chars
      */
-    response_length: number;
+    responseLength: number;
 
     /**
      * Raw diagnostic data, same which is used to compute the other values above
@@ -109,7 +109,7 @@ export class LangiumEvaluator<T extends LangiumServices> extends AbstractDocumen
             infos: 0,
             hints: 0,
             unassigned: 0,
-            response_length: 0,
+            responseLength: 0,
             diagnostics: []
         };
     }

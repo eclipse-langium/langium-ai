@@ -12,6 +12,9 @@ import { LangiumServices } from "langium/lsp";
 import { EvaluationContext } from "../evaluator/document-evaluator.js";
 import { EvaluatorResult } from "../evaluator/evaluator.js";
 import { LangiumEvaluator, LangiumEvaluatorResultData } from "../evaluator/langium-evaluator.js";
+import { EvaluatorResultMsg, SyntaxStatistic } from "../gen/interface.js";
+
+
 
 /**
  * Extends LangiumEvaluator and adds analysis capabilities.
@@ -40,14 +43,40 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
         this.analysisOptions = { ...DEFAULT_OPTIONS, ...analysisOptions };
     }
 
-    evaluateDocument(doc: LangiumDocument, ctx: EvaluationContext): EvaluatorResult<LangiumEvaluatorResultData> {
+    /**
+     * Evaluates a Langium document.
+     * Here we return protocol compatible object EvaluatorResultMsg.
+     * 
+     * @param doc Langium document to evaluate
+     * @param ctx Evaluation context
+     * @returns Evaluation result with syntax statistics in metadata
+     */
+    evaluateDocument(doc: LangiumDocument, ctx: EvaluationContext): EvaluatorResult<LangiumEvaluatorResultData> & EvaluatorResultMsg {
         const validationResult = super.evaluateDocument(doc, ctx);
-        if (this.analysisOptions.analysisMode !== AnalysisMode.NO_STATISTIC && validationResult.data.failures === 0) {
+        if (this.analysisOptions.analysisMode !== AnalysisMode.NO_STATISTIC && validationResult.data && validationResult.data.failures === 0) {
             // Add syntax usage statistics only if build was successful
             const statistics = this.collectSyntaxUsageStatistics(doc, this.services.Grammar);
-            validationResult.metadata[LangiumDocumentAnalyzer.METADATA_KEY] = statistics;
+            validationResult.metadata[LangiumDocumentAnalyzer.METADATA_KEY] = {
+                value: {
+                    oneofKind: 'syntaxStatisticValue',
+                    syntaxStatisticValue: statistics
+                }
+            };
         }
-        return validationResult;
+        // make sure we fulfill the EvaluatorResultMsg interface 
+        return {
+            ...validationResult,
+            data: {
+                ...validationResult.data,
+                diagnostics: validationResult.data.diagnostics.map(diagnostic => {
+                    const code = typeof diagnostic.code === 'number' ? String(diagnostic.code) : diagnostic.code;
+                    return {
+                        ...diagnostic,
+                        code
+                    };
+                })
+            }
+        };
     }
 
     collectSyntaxUsageStatistics(doc: LangiumDocument, grammar: Grammar): SyntaxStatistic {
@@ -173,7 +202,11 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
     extractStatisticsFromResult(result: Partial<EvaluatorResult> | undefined): SyntaxStatistic | undefined {
         const metadata = result?.metadata;
         if (metadata && metadata[LangiumDocumentAnalyzer.METADATA_KEY]) {
-            return metadata[LangiumDocumentAnalyzer.METADATA_KEY] as SyntaxStatistic;
+            const value = metadata[LangiumDocumentAnalyzer.METADATA_KEY].value;
+            if (value.oneofKind === 'syntaxStatisticValue') {
+                return value.syntaxStatisticValue;
+            }
+            return undefined;
         }
         return undefined;
     }
@@ -240,42 +273,3 @@ const DEFAULT_OPTIONS: AnalysisOptions = {
     computeDiversity: true
 };
 
-/**
- * Type representing syntax usage statistics.
- */
-export type SyntaxStatistic = {
-    /** Map of rule names to their usage counts */
-    ruleUsage: Record<string, number>;
-
-    /** Percentage of used rules compared to all available rules */
-    coverage: number;
-
-    /** Diversity metrics for rule usage patterns */
-    diversity: {
-
-        /**
-         * Shannon entropy - information diversity measure.
-         * **Range:** 0 to log₂(n) where n = number of rules.
-         * - **Low (0-1):** dominated by few rules
-         * - **Medium (1-3):** moderate diversity  
-         * - **High (>3):** high diversity
-         */
-        entropy: number;
-
-        /**
-         * Gini coefficient - inequality measure. Range: 0 to 1.
-         * - **Low (0-0.3):** equal distribution
-         * - **Medium (0.3-0.7):** moderate inequality
-         * - **High (0.7-1):** high inequality
-         */
-        giniCoefficient: number;
-
-        /**
-         * Simpson's diversity index - probability that two randomly selected items are different. **Range:** 0 to 1.
-         * - **Low (0-0.3):** low diversity
-         * - **Medium (0.3-0.7):** moderate diversity
-         * - **High (0.7-1):** high diversity
-         */
-        simpsonIndex: number;
-    };
-}

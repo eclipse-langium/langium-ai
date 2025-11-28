@@ -12,7 +12,7 @@ import { readFileSync, existsSync, readdirSync } from 'fs';
 import * as path from 'path';
 
 export type EvaluatorResultData = Record<string, unknown> & {
-    _runtime?: number;
+    runtime?: number;
 };
 
 /**

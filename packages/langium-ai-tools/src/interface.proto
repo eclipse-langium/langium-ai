@@ -1,0 +1,139 @@
+syntax = "proto3";
+
+package langium_ai_tools;
+
+// Position in a text document (line and character offsets)
+message Position {
+    // Line position (zero-based)
+    uint32 line = 1;
+    // Character position (zero-based)  
+    uint32 character = 2;
+}
+
+// Text range with start and end positions
+message Range {
+    // Start position
+    Position start = 1;
+    // End position
+    Position end = 2;
+}
+
+// Diagnostic severity levels
+enum DiagnosticSeverity {
+    DIAGNOSTIC_SEVERITY_UNSPECIFIED = 0;
+    DIAGNOSTIC_SEVERITY_ERROR = 1;
+    DIAGNOSTIC_SEVERITY_WARNING = 2;
+    DIAGNOSTIC_SEVERITY_INFORMATION = 3;
+    DIAGNOSTIC_SEVERITY_HINT = 4;
+}
+
+// VS Code diagnostic information
+message Diagnostic {
+    // Range where the diagnostic applies
+    Range range = 1;
+    // Human-readable message
+    string message = 2;
+    // Severity level
+    optional DiagnosticSeverity severity = 3;
+    // Optional diagnostic code
+    optional string code = 4;
+    // Optional source identifier (e.g., "langium")
+    optional string source = 5;
+}
+
+// Langium-specific evaluator result data
+message LangiumEvaluatorResultDataMsg {
+
+    // Base EvaluatorResultData START
+
+    // Optional runtime in milliseconds
+    optional double runtime = 1;
+
+    // Base EvaluatorResultData END
+
+    // Number of validation failures
+    uint32 failures = 2;
+    // Number of errors
+    uint32 errors = 3;
+    // Number of warnings
+    uint32 warnings = 4;
+    // Number of infos
+    uint32 infos = 5;
+    // Number of hints
+    uint32 hints = 6;
+    // Number of unassigned diagnostics
+    uint32 unassigned = 7;
+    // Length of the response in characters
+    uint32 response_length = 8;
+    // Raw diagnostic data
+    repeated Diagnostic diagnostics = 9;
+}
+
+// Diversity metrics for rule usage patterns
+message DiversityMetrics {
+    // Shannon entropy - information diversity measure
+    // Range: 0 to log₂(n) where n = number of rules
+    // Low (0-1): dominated by few rules
+    // Medium (1-3): moderate diversity
+    // High (>3): high diversity
+    double entropy = 1;
+    
+    // Gini coefficient - inequality measure
+    // Range: 0 to 1
+    // Low (0-0.3): equal distribution
+    // Medium (0.3-0.7): moderate inequality
+    // High (0.7-1): high inequality
+    double gini_coefficient = 2;
+    
+    // Simpson's diversity index - probability that two randomly selected items are different
+    // Range: 0 to 1
+    // Low (0-0.3): low diversity
+    // Medium (0.3-0.7): moderate diversity
+    // High (0.7-1): high diversity
+    double simpson_index = 3;
+}
+
+// Syntax usage statistics for grammar analysis
+message SyntaxStatistic {
+    // Map of rule names to their usage counts
+    map<string, uint32> rule_usage = 1;
+    
+    // Percentage of used rules compared to all available rules
+    double coverage = 2;
+    
+    // Diversity metrics for rule usage patterns
+    DiversityMetrics diversity = 3;
+}
+
+// Nested metadata container (workaround for map in oneof restriction)
+message NestedMetadata {
+    map<string, MetadataValue> values = 1;
+}
+
+// Metadata value wrapper to support different types of metadata
+message MetadataValue {
+    oneof value {
+        // String value
+        string string_value = 1;
+        // Number value
+        double number_value = 2;
+        // Boolean value
+        bool bool_value = 3;
+        // Nested metadata (workaround for map limitation in oneof)
+        NestedMetadata nested_metadata_value = 4;
+        // Syntax statistics value
+        SyntaxStatistic syntax_statistic_value = 5;
+        // Can add more types as needed in the future
+    }
+}
+
+// Generic evaluator result container
+message EvaluatorResultMsg {
+    // Name of this evaluation
+    string name = 1;
+    // Optional metadata as key-value pairs supporting different value types
+    map<string, MetadataValue> metadata = 2;
+    // Langium-specific data
+    LangiumEvaluatorResultDataMsg data = 3;
+}
+
