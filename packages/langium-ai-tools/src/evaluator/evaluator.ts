@@ -8,11 +8,11 @@
  * Baseline Validator Class
  */
 
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import * as path from 'path';
 
 export type EvaluatorResultData = Record<string, unknown> & {
-    _runtime?: number;
+    runtime?: number;
 };
 
 /**
@@ -32,7 +32,7 @@ export type EvaluatorResult<T = EvaluatorResultData> = {
     /**
      * Data for this evaluation
      */
-    data: T;
+    data?: T;
 
 };
 
@@ -55,11 +55,11 @@ export function averageAcrossCases(results: EvaluatorResult[]): EvaluatorResult[
 
     // average the results
     for (const [_key, groupedResults] of mappedResults) {
-        const avgData = groupedResults[0].data;
+        const avgData = groupedResults[0].data!;
 
         // sum all results except the first
         for (const result of groupedResults.slice(1)) {
-            const resultData = result.data;
+            const resultData = result.data!;
             for (const [key, value] of Object.entries(resultData)) {
                 if (typeof value === 'number') {
                     avgData[key] = (avgData[key] as number ?? 0) + value;
@@ -108,11 +108,11 @@ export function averageAcrossRunners(results: EvaluatorResult[]): EvaluatorResul
 
     // average the results
     for (const [_key, groupedResults] of mappedResults) {
-        const avgData = groupedResults[0].data;
+        const avgData = groupedResults[0].data!;
 
         // sum all results except the first
         for (const result of groupedResults.slice(1)) {
-            const resultData = result.data;
+            const resultData = result.data!;
             for (const [key, value] of Object.entries(resultData)) {
                 if (typeof value === 'number') {
                     avgData[key] = (avgData[key] as number ?? 0) + value;
@@ -185,7 +185,7 @@ export function loadLastResults(dir: string, take?: number): EvaluatorResult[] {
     } else {
         // read the most recent files
         files = files.sort().reverse().slice(0, take);
-        
+
     }
 
     const results: EvaluatorResult[] = [];
