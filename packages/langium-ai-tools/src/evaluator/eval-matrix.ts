@@ -107,7 +107,7 @@ export class EvalMatrix {
                             result.name = `${runner.name} - ${testCase.name} - ${evaluator.name}`;
                         }
                         // add runtime there too, so we have access to it
-                        result.data!._runtime = (runnerEndTime.getTime() - runnerStartTime.getTime()) / 1000.0; // in seconds
+                        result.data!.runtime = (runnerEndTime.getTime() - runnerStartTime.getTime()) / 1000.0; // in seconds
 
                         result.metadata = {
                             runner: runner.name,

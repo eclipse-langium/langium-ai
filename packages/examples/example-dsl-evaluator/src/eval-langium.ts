@@ -144,9 +144,9 @@ function calculateTriangleAreas(data: MergedEvaluatorResultType): number[] {
         data.warnings,
         1.0 - (data.similarity ?? 0), // Semantic Diff
         (data.errors + data.warnings + data.infos + data.hints + data.unassigned) / 5.0, // Total Diagnostics
-        data.response_length ?? 0,
+        data.responseLength ?? 0,
         data.edit_distance,
-        data._runtime ?? 0
+        data.runtime ?? 0
     ];
 
     const n = values.length;
