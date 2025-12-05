@@ -1,58 +1,57 @@
 {
-    "name": "langium-ai-tools",
-    "version": "4.1.2",
-    "description": "Tooling for building AI Applications that leverage Langium DSLs",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/eclipse-langium/langium-ai.git",
-        "directory": "packages/langium-ai-tools"
+  "name": "langium-ai-tools",
+  "version": "4.1.3",
+  "description": "Tooling for building AI Applications that leverage Langium DSLs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eclipse-langium/langium-ai.git",
+    "directory": "packages/langium-ai-tools"
+  },
+  "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
+  "type": "module",
+  "main": "dist/index.js",
+  "private": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
-    "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
-    "type": "module",
-    "main": "dist/index.js",
-    "private": false,
-    "files": [
-        "dist"
-    ],
-    "exports": {
-        ".": {
-            "import": "./dist/index.js",
-            "types": "./dist/index.d.ts"
-        },
-        "./splitter": {
-            "import": "./dist/splitter/index.js",
-            "types": "./dist/splitter/index.d.ts"
-        },
-        "./evaluator": {
-            "import": "./dist/evaluator/index.js",
-            "types": "./dist/evaluator/index.d.ts"
-        }
+    "./splitter": {
+      "import": "./dist/splitter/index.js",
+      "types": "./dist/splitter/index.d.ts"
     },
-    "scripts": {
-        "build": "tsc",
-        "watch": "tsc -w",
-        "test": "vitest run",
-        "clean": "rimraf ./dist"
-    },
-    "author": {
-        "name": "TypeFox",
-        "url": "https://www.typefox.io"
-    },
-    "keywords": [
-        "langium",
-        "ai",
-        "tools",
-        "llm"
-    ],
-    "license": "MIT",
-    "dependencies": {
-        "langium": "~4.1.0",
-        "levenshtein-edit-distance": "^3.0.1"
-    },
-    "volta": {
-        "node": "20.10.0",
-        "npm": "10.2.3"
-    },
-    "devDependencies": {
+    "./evaluator": {
+      "import": "./dist/evaluator/index.js",
+      "types": "./dist/evaluator/index.d.ts"
     }
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "vitest run",
+    "clean": "rimraf ./dist"
+  },
+  "author": {
+    "name": "TypeFox",
+    "url": "https://www.typefox.io"
+  },
+  "keywords": [
+    "langium",
+    "ai",
+    "tools",
+    "llm"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "langium": "~4.1.0",
+    "levenshtein-edit-distance": "^3.0.1"
+  },
+  "volta": {
+    "node": "20.10.0",
+    "npm": "10.2.3"
+  },
+  "devDependencies": {}
 }
