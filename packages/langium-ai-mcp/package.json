@@ -22,7 +22,6 @@
         "watch": "tsc -w",
         "start": "node .",
         "cstart": "node ./dist/mcp-client.js",
-        "prepare": "npm run build",
         "test": "vitest run"
     },
     "author": {
@@ -39,7 +38,8 @@
     "license": "MIT",
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.17.4",
-        "langium-ai-tools": "0.0.2"
+        "langium-ai-tools": "~4.1.2",
+        "langium": "~4.1.0"
     },
     "volta": {
         "node": "20.10.0",

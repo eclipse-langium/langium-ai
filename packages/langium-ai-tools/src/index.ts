@@ -7,3 +7,4 @@
 export * from './evaluator/index.js';
 export * from './analyzer/index.js';
 export * from './splitter/index.js';
+export * from './gen/interface.js';
