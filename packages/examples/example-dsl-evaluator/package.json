@@ -23,12 +23,11 @@
         "dotenv": "^16.4.5",
         "langium-ai-tools": "^4.1.2",
         "ollama": "^0.5.9",
-        "openai": "^4.67.3"
+        "openai": "^4.67.3",
+        "levenshtein-edit-distance": "^3.0.1"
     },
     "volta": {
         "node": "20.10.0",
         "npm": "10.2.3"
-    },
-    "devDependencies": {
     }
 }
