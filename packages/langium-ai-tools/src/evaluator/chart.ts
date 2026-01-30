@@ -145,7 +145,7 @@ export function normalizeData(data: EvaluatorResult[]): EvaluatorResult[] {
     const maxValues = new Map<string, number>();
 
     for (const result of data) {
-        const d = result.data as EvaluatorResultData;
+        const d = result.data;
         for (const [key, value] of Object.entries(d)) {
             if (typeof value !== 'number') {
                 continue;
@@ -158,7 +158,7 @@ export function normalizeData(data: EvaluatorResult[]): EvaluatorResult[] {
     }
 
     for (const result of data) {
-        const d = result.data as EvaluatorResultData;
+        const d = result.data;
         for (const [key, value] of Object.entries(d)) {
             if (typeof value === 'number') {
                 const max = maxValues.get(key) ?? 1;
@@ -221,6 +221,10 @@ export function generateHistoricalChart<T extends EvaluatorResultData>(
             }
 
             const name = result.metadata.runner;
+            // verify string
+            if (typeof name !== 'string') {
+                continue;
+            }
             const existingResults = runnerResultsMap.get(name) ?? [];
 
             const rc = {
@@ -236,8 +240,12 @@ export function generateHistoricalChart<T extends EvaluatorResultData>(
     const allData: unknown[] = [];
 
     // organize by date in ascending order
-    for (let [name, results] of runnerResultsMap) {
+    for (const [name, results] of runnerResultsMap) {
         results.sort((a, b) => {
+            // verify date exists
+            if (!a.metadata.date || !b.metadata.date || typeof a.metadata.date !== 'string' || typeof b.metadata.date !== 'string') {
+                return 0;
+            }
             return new Date(a.metadata.date).getTime() - new Date(b.metadata.date).getTime();
         });
 

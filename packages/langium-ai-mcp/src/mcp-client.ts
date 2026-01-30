@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { getDisplayName } from "@modelcontextprotocol/sdk/shared/metadataUtils.js";
 
-const debug = false
+const _debug = false;
 
 const transport = new StdioClientTransport({
     command: "node",

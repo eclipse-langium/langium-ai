@@ -2,7 +2,6 @@
  * Evaluator tests
  */
 
-import { URI } from 'langium';
 import { createServicesForGrammar } from 'langium/grammar';
 import { describe, expect, it } from 'vitest';
 import {

@@ -9,7 +9,7 @@ import ollama from 'ollama';
 import { Message, Runner } from 'langium-ai-tools';
 import { ChromaClient } from 'chromadb';
 
-async function prompt(model: string, messages: any[]) {
+async function prompt(model: string, messages: Message[]) {
     const response = await ollama.chat({
         model, messages
     });
@@ -23,7 +23,7 @@ function getOllamaRunner(name: string, model: string): Runner {
     return {
         name,
         runner: async (content: string, messages: Message[] = []) => {
-            const newMsgs = [...messages, { role: 'user', content }];
+            const newMsgs: Message[] = [...messages, { role: 'user', content }];
             return (await prompt(model, newMsgs)).message.content;
         }
     };
@@ -85,7 +85,7 @@ function getOllamaRAGRunner(name: string, model: string): Runner {
     return {
         name,
         runner: async (content: string, messages: Message[] = []) => {
-            const newMsgs = [await getRagSystemMessage(content), ...messages, { role: 'user', content }];
+            const newMsgs: Message[] = [await getRagSystemMessage(content), ...messages, { role: 'user', content }];
             return (await prompt(model, newMsgs)).message.content;
         }
     };
@@ -114,7 +114,7 @@ export const runner_qwen_2_5_coder_rag = getOllamaRAGRunner('qwen-2.5-coder 7B w
 export const runner_openai_gpt3_5_turbo: Runner = {
     name: 'openai-gpt3',
     runner: async (content: string, messages: Message[] = []) => {
-        const newMsgs = [...messages, { role: 'user', content }];
+        const newMsgs: Message[] = [...messages, { role: 'user', content }];
 
         const client = new OpenAI({
             apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
@@ -122,7 +122,7 @@ export const runner_openai_gpt3_5_turbo: Runner = {
 
         // prompt & return the first choice
         const chatCompletion = await client.chat.completions.create({
-            messages: newMsgs as any,
+            messages: newMsgs,
             model: 'gpt-3.5-turbo-0125',
         });
         return chatCompletion.choices[0].message.content as string;
@@ -132,7 +132,7 @@ export const runner_openai_gpt3_5_turbo: Runner = {
 export const runner_openai_gpt3_5_turbo_rag: Runner = {
     name: 'openai-gpt3.5-turbo-rag',
     runner: async (content: string, messages: Message[] = []) => {
-        const newMsgs = [await getRagSystemMessage(content), ...messages, { role: 'user', content }];
+        const newMsgs: Message[] = [await getRagSystemMessage(content), ...messages, { role: 'user', content }];
 
         const client = new OpenAI({
             apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
@@ -140,7 +140,7 @@ export const runner_openai_gpt3_5_turbo_rag: Runner = {
 
         // prompt & return the first choice
         const chatCompletion = await client.chat.completions.create({
-            messages: newMsgs as any,
+            messages: newMsgs,
             model: 'gpt-3.5-turbo-0125',
         });
         return chatCompletion.choices[0].message.content as string;
@@ -150,7 +150,7 @@ export const runner_openai_gpt3_5_turbo_rag: Runner = {
 export const runner_openai_gpt4o_mini: Runner = {
     name: 'openai-gpt4o-mini',
     runner: async (content: string, messages: Message[] = []) => {
-        const newMsgs = [...messages, { role: 'user', content }];
+        const newMsgs: Message[] = [...messages, { role: 'user', content }];
 
         const client = new OpenAI({
             apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
@@ -158,7 +158,7 @@ export const runner_openai_gpt4o_mini: Runner = {
 
         // prompt & return the first choice
         const chatCompletion = await client.chat.completions.create({
-            messages: newMsgs as any,
+            messages: newMsgs,
             model: 'gpt-4o-mini',
         });
         return chatCompletion.choices[0].message.content as string;
@@ -168,7 +168,7 @@ export const runner_openai_gpt4o_mini: Runner = {
 export const runner_openai_gpt4o: Runner = {
     name: 'openai-gpt4o',
     runner: async (content: string, messages: Message[] = []) => {
-        const newMsgs = [...messages, { role: 'user', content }];
+        const newMsgs: Message[] = [...messages, { role: 'user', content }];
 
         const client = new OpenAI({
             apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
@@ -176,7 +176,7 @@ export const runner_openai_gpt4o: Runner = {
 
         // prompt & return the first choice
         const chatCompletion = await client.chat.completions.create({
-            messages: newMsgs as any,
+            messages: newMsgs,
             model: 'gpt-4o',
         });
         return chatCompletion.choices[0].message.content as string;
@@ -186,7 +186,7 @@ export const runner_openai_gpt4o: Runner = {
 export const runner_openai_gpt4o_rag: Runner = {
     name: 'openai-gpt4o-rag',
     runner: async (content: string, messages: Message[] = []) => {
-        const newMsgs = [await getRagSystemMessage(content), ...messages, { role: 'user', content }];
+        const newMsgs: Message[] = [await getRagSystemMessage(content), ...messages, { role: 'user', content }];
 
         const client = new OpenAI({
             apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
@@ -194,7 +194,7 @@ export const runner_openai_gpt4o_rag: Runner = {
 
         // prompt & return the first choice
         const chatCompletion = await client.chat.completions.create({
-            messages: newMsgs as any,
+            messages: newMsgs,
             model: 'gpt-4o',
         });
         return chatCompletion.choices[0].message.content as string;
@@ -204,7 +204,7 @@ export const runner_openai_gpt4o_rag: Runner = {
 export const runner_openai_gpt4o_mini_rag: Runner = {
     name: 'openai-gpt4o-mini-rag',
     runner: async (content: string, messages: Message[] = []) => {
-        const newMsgs = [await getRagSystemMessage(content), ...messages, { role: 'user', content }];
+        const newMsgs: Message[] = [await getRagSystemMessage(content), ...messages, { role: 'user', content }];
 
         const client = new OpenAI({
             apiKey: process.env['OPENAI_API_KEY'], // This is the default and can be omitted
@@ -212,7 +212,7 @@ export const runner_openai_gpt4o_mini_rag: Runner = {
 
         // prompt & return the first choice
         const chatCompletion = await client.chat.completions.create({
-            messages: newMsgs as any,
+            messages: newMsgs,
             model: 'gpt-4o-mini',
         });
         return chatCompletion.choices[0].message.content as string;

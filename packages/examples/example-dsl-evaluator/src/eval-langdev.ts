@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /******************************************************************************
  * Copyright 2024 - 2025 TypeFox GmbH
  * This program and the accompanying materials are made available under the
@@ -26,45 +27,45 @@ const langiumServices = createLangiumGrammarServices(EmptyFileSystem);
 /**
  * Runners
  */
-namespace Runners {
+const Runners = {
 
     /**
      * llama3.2 3b runner
      */
-    export const llama3_2_3b: Runner = {
+    llama3_2_3b: {
         name: 'llama3.2 3B',
         runner: async (content: string, messages: Message[] = []) => {
-            const newMsgs = [...messages, { role: 'user', content }];
-            return (await prompt('llama3.2:latest', newMsgs)).message.content;
+            const newMsgs: Message[] =  [...messages, { role: 'user', content }];
+            return (await Runners.prompt('llama3.2:latest', newMsgs)).message.content;
         }
-    };
+    } as Runner,
 
     /**
      * Codellama runner
      */
-    export const codellama: Runner = {
+    codellama: {
         name: 'codellama',
         runner: async (content: string, messages: Message[] = []) => {
-            const newMsgs = [...messages, { role: 'user', content }];
-            return (await prompt('codellama:latest', newMsgs)).message.content;
+            const newMsgs: Message[] =  [...messages, { role: 'user', content }];
+            return (await Runners.prompt('codellama:latest', newMsgs)).message.content;
         }
-    };
+    } as Runner,
 
     /**
      * And a codegemma runner
      */
-    export const codegemma: Runner = {
+    codegemma: {
         name: 'codegemma',
         runner: async (content: string, messages: Message[] = []) => {
-            const newMsgs = [...messages, { role: 'user', content }];
-            return (await prompt('codegemma:latest', newMsgs)).message.content;
+            const newMsgs: Message[] = [...messages, { role: 'user', content }];
+            return (await Runners.prompt('codegemma:latest', newMsgs)).message.content;
         }
-    };
+    } as Runner,
 
     /**
      * Helper to prompt models hosted in Ollama
      */
-    async function prompt(model: string, messages: any[]) {
+    prompt: async function (model: string, messages: Message[]) {
         const response = await ollama.chat({
             model, messages
         });

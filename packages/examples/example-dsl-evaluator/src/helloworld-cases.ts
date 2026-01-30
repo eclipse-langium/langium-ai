@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /******************************************************************************
  * Copyright 2024 - 2025 TypeFox GmbH
  * This program and the accompanying materials are made available under the

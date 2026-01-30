@@ -1,12 +1,30 @@
+/* eslint-disable no-useless-escape */
 /******************************************************************************
  * Copyright 2025 TypeFox GmbH
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
+import { AstNode } from "langium";
 import { ProgramMapper } from "langium-ai-tools";
 import { createLangiumGrammarServices } from "langium/grammar";
 import { NodeFileSystem } from "langium/node";
+
+interface ParserRuleNode {
+    $type: 'ParserRule';
+    name: string;
+    entry: boolean;
+    fragment: boolean;
+    definesHiddenTokens: boolean;
+    dataType: boolean;
+}
+
+interface TerminalRuleNode {
+    $type: 'TerminalRule';
+    name: string;
+    fragment: boolean;
+    hidden: boolean;
+}
 
 export function runExampleProgramMap() {
 
@@ -53,7 +71,11 @@ export function runExampleProgramMap() {
         mappingRules: [
             {
                 predicate: (node) => node.$type === 'ParserRule',
-                map: (node: any) => {
+                map: (n: AstNode) => {
+                    if (n.$type !== 'ParserRule') {
+                        throw new Error('Unexpected node type');
+                    }
+                    const node = n as ParserRuleNode;
                     const ruleName = node.name;
                     const modifiers = [
                         node.entry ? 'entry' : undefined,
@@ -67,7 +89,11 @@ export function runExampleProgramMap() {
             },
             {
                 predicate: (node) => node.$type === 'TerminalRule',
-                map: (node: any) => {
+                map: (n: AstNode) => {
+                    if (n.$type !== 'TerminalRule') {
+                        throw new Error('Unexpected node type');
+                    }
+                    const node = n as TerminalRuleNode;
                     const modifiers = [
                         node.fragment ? 'fragment' : undefined,
                         node.hidden ? 'hidden' : undefined,

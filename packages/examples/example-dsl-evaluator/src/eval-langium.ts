@@ -88,7 +88,7 @@ export function generateChartFromLastResults() {
         'Radar Chart (smaller is better)',
         normalizeData(rawResults),
         './radar-chart.html',
-        (data: MergedEvaluatorResultType, metadata: Record<string, unknown>) => {
+        (data: MergedEvaluatorResultType, _metadata: Record<string, unknown>) => {
             return {
                 'Failures': data.failures,
                 'Errors':   data.errors,
@@ -107,7 +107,7 @@ export function generateChartFromLastResults() {
         'Histogram Chart (smaller is better)',
         normalizeData(rawResults),
         './histogram-chart.html',
-        (data: MergedEvaluatorResultType, metadata: Record<string, unknown>) =>  {
+        (data: MergedEvaluatorResultType, _metadata: Record<string, unknown>) =>  {
             return {
                 'Failures': data.failures,
                 'Errors':   data.errors,
@@ -126,7 +126,7 @@ export function generateChartFromLastResults() {
         'Historical Chart (Approx. Area of Radar Chart)',
         '.langium-ai', // src folder for data
         './historical-chart.html',
-        (data: MergedEvaluatorResultType, metadata: Record<string, unknown>) => {
+        (data: MergedEvaluatorResultType, _metadata: Record<string, unknown>) => {
             return calculateTriangleAreas(data).reduce((a, b) => a + b, 0);
         },
         {
