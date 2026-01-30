@@ -9,7 +9,7 @@
  */
 
 import { EvaluatorResult, EvaluatorResultData, averageAcrossRunners, loadReport } from "./evaluator.js";
-import { writeFileSync, readdirSync, readFileSync } from 'fs';
+import { writeFileSync, readdirSync } from 'fs';
 import * as path from 'path';
 
 /**

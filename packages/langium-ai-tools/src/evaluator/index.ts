@@ -8,3 +8,6 @@ export * from './evaluator.js';
 export * from './langium-evaluator.js';
 export * from './eval-matrix.js';
 export * from './chart.js';
+export * from './document-evaluator.js';
+export * from './eval-case.js';
+export * from './message.js';

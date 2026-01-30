@@ -7,6 +7,8 @@
 import { Evaluator, EvaluatorResult } from "./evaluator.js";
 import fs from 'fs';
 import * as path from 'path';
+import { Message } from "./message.js";
+import { EvalCase } from "./eval-case.js";
 
 /**
  * Configuration for the evaluation matrix
@@ -158,14 +160,6 @@ export class EvalMatrix {
 }
 
 /**
- * General format for histories when prompting
- */
-export interface Message {
-    role: 'user' | 'system' | 'assistant';
-    content: string;
-}
-
-/**
  * Runner interface for running a prompt against a model, a service, or something else that provides a response
  */
 export interface Runner {
@@ -179,42 +173,4 @@ export interface Runner {
 export interface NamedEvaluator {
     name: string;
     eval: Evaluator;
-}
-
-/**
- * Evaluation case revolving around expected output for a given input (prompt + context)
- */
-export interface EvalCase {
-    /**
-     * Name of the case
-     */
-    name: string;
-
-    /**
-     * Optional message history, used for system, user & assistant messages
-     */
-    history?: Message[];
-
-    /**
-     * Input to run with
-     */
-    prompt: string;
-
-    /**
-     * Tags associated with this case
-     * Used to categorize or filter cases
-     * Defaults to an empty array
-     */
-    tags?: string[];
-
-    /**
-     * Expected output response
-     */
-    expected_response: string;
-
-    /**
-     * Whether or not to only check code blocks in the response, and ignore the rest
-     * Defaults to false
-     */
-    only_check_codeblocks?: boolean;
 }

@@ -12,7 +12,7 @@ import { LangiumDocument } from "langium";
 import { LangiumServices } from "langium/lsp";
 import { Diagnostic } from "vscode-languageserver-types";
 import { AbstractDocumentEvaluator, EvaluationContext, FailureAwarenessData } from "./document-evaluator.js";
-import { EvaluatorResult, EvaluatorResultData } from "./evaluator.js";
+import { EvaluatorResult } from "./evaluator.js";
 
 /**
  * Langium-specific evaluator result data

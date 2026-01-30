@@ -51,7 +51,7 @@ export abstract class AbstractDocumentEvaluator<T extends LangiumServices, RD ex
     abstract evaluateDocument(doc: LangiumDocument, ctx: EvaluationContext): Partial<EvaluatorResult<RD>>;
 
 
-    protected handleBuildError(e: unknown, ctx: EvaluationContext): Partial<EvaluatorResult<RD>> {
+    protected handleBuildError(e: unknown, _ctx: EvaluationContext): Partial<EvaluatorResult<RD>> {
         console.error('Error during evaluation: ', e);
         return {
             name: this.constructor.name,
