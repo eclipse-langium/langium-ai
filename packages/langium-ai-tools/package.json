@@ -33,7 +33,8 @@
     "generate": "mkdir -p src/gen && protoc --ts_out=force_disable_services,force_optimize_code_size,eslint_disable:./src/gen --proto_path=src src/interface.proto",
     "watch": "npm run generate && tsc -w",
     "test": "vitest run",
-    "clean": "rimraf ./dist ./src/gen"
+    "clean": "rimraf ./dist ./src/gen",
+    "lint": "eslint ."
   },
   "author": {
     "name": "TypeFox",

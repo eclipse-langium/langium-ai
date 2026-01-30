@@ -14,10 +14,12 @@ export interface EditDistanceEvaluatorResultData extends EvaluatorResultData {
 export class EditDistanceEvaluator extends Evaluator {
     async evaluate(response: string, expected_response: string): Promise<Partial<EvaluatorResult>> {
         const distance = levenshteinEditDistance(response, expected_response);
-        return {
-            data: {
-                edit_distance: distance
-            }
-        };
+        return new Promise((resolve) => {
+            resolve({
+                data: {
+                    edit_distance: distance
+                }
+            });
+        });
     }
 }

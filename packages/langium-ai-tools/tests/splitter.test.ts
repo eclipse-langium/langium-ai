@@ -442,7 +442,7 @@ describe("ProgramMapper", () => {
     });
 
     it("should apply rules in order", () => {
-      let order: string[] = [];
+      const order: string[] = [];
       const mapper = new ProgramMapper(domainModelServices, {
         mappingRules: [
           {

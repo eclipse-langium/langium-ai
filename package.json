@@ -8,7 +8,8 @@
         "test": "npm run test --workspaces",
         "test:ci": "npm run test --workspaces",
         "clean": "npm run clean --workspaces",
-        "watch": "npm run watch --workspaces"
+        "watch": "npm run watch --workspaces",
+        "lint": "eslint ."
     },
     "type": "module",
     "author": {
@@ -22,8 +23,12 @@
         "packages/examples/*"
     ],
     "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^8.54.0",
+        "@typescript-eslint/parser": "^8.54.0",
+        "eslint": "^9.39.2",
+        "rimraf": "^6.0.1",
         "typescript": "^5.4.5",
-        "vitest": "^4.0.16",
-        "rimraf": "^6.0.1"
+        "typescript-eslint": "^8.54.0",
+        "vitest": "^4.0.16"
     }
 }
