@@ -26,11 +26,11 @@ interface SplitterOptions {
 function parseDocument(document: string, services: LangiumServices): LangiumDocument<AstNode> | undefined {
     const langiumDoc = services.shared.workspace.LangiumDocumentFactory.fromString(document, URI.parse('memory://document.langium'));
     if (langiumDoc.parseResult.lexerErrors.length > 0) {
-        console.error('Lexer errors:', langiumDoc.parseResult.lexerErrors);
+        console.error('Lexer errors, returning undefined:', langiumDoc.parseResult.lexerErrors.map(e => '\t- ' + e.message + '\n').join(''));
         return undefined;
     }
     if (langiumDoc.parseResult.parserErrors.length > 0) {
-        console.error('Parser errors:', langiumDoc.parseResult.parserErrors);
+        console.error('Parser errors, returning undefined:\n', langiumDoc.parseResult.parserErrors.map(e => '\t- ' + e.message + '\n').join(''));
         return undefined;
     }
     return langiumDoc;
