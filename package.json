@@ -5,7 +5,7 @@
     "description": "Monorepo for Langium AI and its associated projects",
     "scripts": {
         "build": "npm run build --workspaces",
-        "test": "npm run test --workspaces --continue-on-error",
+        "test": "npm run test --workspaces",
         "test:ci": "npm run test --workspaces",
         "clean": "npm run clean --workspaces",
         "watch": "npm run watch --workspaces"
