@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { Case, Message } from "langium-ai-tools";
+import { EvalCase, Message } from "langium-ai-tools";
 
 /**
  * Common history for all cases here
@@ -50,7 +50,7 @@ Use this information to help answer questions about Langium grammars.
 ` }
 ];
 
-export const cases: Case[] = [
+export const cases: EvalCase[] = [
     {
         name: "Hello World Grammar",
         context: [],

@@ -9,23 +9,23 @@ import { LangiumServices } from "langium/lsp";
 import { splitByNodeToAst } from "./splitter.js";
 
 interface MappingRule {
-    /**
-     * Determines which nodes to map with this rule
-     */
-    predicate: (node: AstNode) => boolean;
+  /**
+   * Determines which nodes to map with this rule
+   */
+  predicate: (node: AstNode) => boolean;
 
-    /**
-     * Determines how to map the node's textual split
-     */
-    map: (node: AstNode) => string;
+  /**
+   * Determines how to map the node's textual split
+   */
+  map: (node: AstNode) => string;
 }
 
 interface ProgramMapOptions {
-    /**
-     * List of mapping rules to apply to the document.
-     * Each rule is a predicate that determines which nodes to map & how to map them
-     */
-    mappingRules: MappingRule[]
+  /**
+   * List of mapping rules to apply to the document.
+   * Each rule is a predicate that determines which nodes to map & how to map them
+   */
+  mappingRules: MappingRule[];
 }
 
 /**
@@ -33,38 +33,39 @@ interface ProgramMapOptions {
  * Leverages the splitter to produce a mapping from split chunks.
  */
 export class ProgramMapper {
+  private services: LangiumServices;
+  private options: ProgramMapOptions;
 
-    private services: LangiumServices;
-    private options: ProgramMapOptions;
+  constructor(services: LangiumServices, options: ProgramMapOptions) {
+    this.services = services;
+    this.options = options;
+  }
 
-    constructor(services: LangiumServices, options: ProgramMapOptions) {
-        this.services = services;
-        this.options = options;
-    }
+  /**
+   * Produces a map from the given document
+   * @param document - The text document to be mapped.
+   * @returns The mapped document as a list of strings, one for each mapped element
+   */
+  public map(document: string): string[] {
+    const mappingRules = this.options.mappingRules;
+    const mapChunks: string[] = [];
 
-    /**
-     * Produces a map from the given document
-     * @param document - The text document to be mapped.
-     * @returns The mapped document as a list of strings, one for each mapped element
-     */
-    public map(document: string): string[] {
-        const mappingRules = this.options.mappingRules;
-        const mapChunks: string[] = [];
+    // get all predicates
+    const predicates = mappingRules.map((rule) => rule.predicate);
 
-        // get all predicates
-        const predicates = mappingRules.map(rule => rule.predicate);
+    // split up nodes, following the Langium AST result
+    const nodes = splitByNodeToAst(document, predicates, this.services);
 
-        const nodes = splitByNodeToAst(document, predicates, this.services);
-
-        for (const node of nodes) {
-            // apply the mapping rule to each node
-            for (const rule of mappingRules) {
-                if (rule.predicate(node)) {
-                    mapChunks.push(rule.map(node));
-                }
-            }
+    for (const node of nodes) {
+      // apply the mapping rule to each node
+      for (const rule of mappingRules) {
+        if (rule.predicate(node)) {
+          mapChunks.push(rule.map(node));
         }
-
-        return mapChunks;
+      }
     }
+
+    // mapped out chunks, resulting from post-processing of marked nodes
+    return mapChunks;
+  }
 }
