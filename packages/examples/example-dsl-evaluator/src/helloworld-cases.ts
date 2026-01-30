@@ -4,9 +4,9 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { EvalCase } from "langium-ai-tools";
+import { Case } from "langium-ai-tools";
 
-export const cases: EvalCase[] = [
+export const cases: Case[] = [
     {
         name: 'No Prompt',
         prompt: 'Generate a simple hello world grammar written in Langium',

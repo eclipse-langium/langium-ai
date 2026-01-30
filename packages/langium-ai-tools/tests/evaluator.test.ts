@@ -155,9 +155,20 @@ describe('Evaluator Utility Functions', () => {
             ];
 
             const averaged = averageAcrossRunners(results);
-            expect(averaged).toHaveLength(3);
+            // 2 runners
+            expect(averaged).toHaveLength(2);
+
+            // runner1 average
             expect(averaged[0].data).toBeDefined();
-            expect(averaged[0].data).toBe(20);
+            expect(averaged[0].data).toStrictEqual({
+                score: 15
+            });
+
+            // runner2 average
+            expect(averaged[1].data).toBeDefined();
+            expect(averaged[1].data).toStrictEqual({
+                score: 30
+            });
         });
 
         it('should preserve runner metadata', () => {

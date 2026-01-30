@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 import { EmptyFileSystem } from 'langium';
-import { averageAcrossCases, EvalCase, EvalMatrix, EvaluatorResult, generateRadarChart, LangiumEvaluator, LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, Message, normalizeData, Runner } from 'langium-ai-tools/evaluator';
+import { averageAcrossCases, Case, EvalMatrix, EvaluatorResult, generateRadarChart, LangiumEvaluator, LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, Message, normalizeData, Runner } from 'langium-ai-tools/evaluator';
 import { createLangiumGrammarServices } from 'langium/grammar';
 import ollama from 'ollama';
 import { EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
@@ -75,7 +75,7 @@ namespace Runners {
 /**
  * A simple case for generating a HelloWorld grammar
  */
-const caseHelloWorld: EvalCase = {
+const caseHelloWorld: Case = {
     name: "Hello World Grammar",
     context: [],
     history: [],
