@@ -48,7 +48,7 @@ export interface EvalMatrixConfig {
     /**
      * Cases to evaluate
      */
-    cases: Case[];
+    cases: EvalCase[];
 }
 
 /**
@@ -166,7 +166,7 @@ export interface Message {
 }
 
 /**
- * Runner interface for running a prompt against a mode, a service, or something else that provides a response
+ * Runner interface for running a prompt against a model, a service, or something else that provides a response
  */
 export interface Runner {
     name: string;
@@ -182,31 +182,39 @@ export interface NamedEvaluator {
 }
 
 /**
- * Case interface for defining an evaluation case
+ * Evaluation case revolving around expected output for a given input (prompt + context)
  */
-export interface Case {
+export interface EvalCase {
     /**
      * Name of the case
      */
     name: string;
 
     /**
-     * Options Message history, used for system, user & assistant messages
+     * Optional message history, used for system, user & assistant messages
      */
     history?: Message[];
 
     /**
-     * Core prompt to run with
+     * Input to run with
      */
     prompt: string;
 
     /**
-     * Context for the prompt, used for RAG applications
+     * Tags associated with this case
+     * Used to categorize or filter cases
+     * Defaults to an empty array
      */
-    context: string[];
+    tags?: string[];
 
     /**
-     * Expected response
+     * Expected output response
      */
     expected_response: string;
+
+    /**
+     * Whether or not to only check code blocks in the response, and ignore the rest
+     * Defaults to false
+     */
+    only_check_codeblocks?: boolean;
 }

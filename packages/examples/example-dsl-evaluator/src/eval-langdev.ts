@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 import { EmptyFileSystem } from 'langium';
-import { averageAcrossCases, Case, EvalMatrix, EvaluatorResult, generateRadarChart, LangiumEvaluator, LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, Message, normalizeData, Runner } from 'langium-ai-tools/evaluator';
+import { averageAcrossCases, EvalCase, EvalMatrix, EvaluatorResult, generateRadarChart, LangiumEvaluator, LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, Message, normalizeData, Runner } from 'langium-ai-tools/evaluator';
 import { createLangiumGrammarServices } from 'langium/grammar';
 import ollama from 'ollama';
 import { EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
@@ -75,9 +75,8 @@ namespace Runners {
 /**
  * A simple case for generating a HelloWorld grammar
  */
-const caseHelloWorld: Case = {
+const caseHelloWorld: EvalCase = {
     name: "Hello World Grammar",
-    context: [],
     history: [],
     prompt: "Generate a simple HelloWorld grammar in Langium.",
     expected_response: `Certainly. Here's an example of a possible HelloWorld grammar written in the Langium grammar language:
