@@ -96,17 +96,20 @@ describe('LangiumDocumentAnalyzer', () => {
 
     it('should compute entropy correctly', () => {
         const statistics = collectSyntaxUsageStatistics(exampleModel);
-        expect(statistics.diversity.entropy).toBeCloseTo(2.28, 1);
+        expect(statistics.diversity).toBeDefined();
+        expect(statistics.diversity!.entropy).toBeCloseTo(2.28, 1);
     });
 
     it('should compute gini coefficient correctly', () => {
         const statistics = collectSyntaxUsageStatistics(exampleModel);
-        expect(statistics.diversity.giniCoefficient).toBeCloseTo(0.65, 1);
+        expect(statistics.diversity).toBeDefined();
+        expect(statistics.diversity!.giniCoefficient).toBeCloseTo(0.65, 1);
     });
 
     it('should compute simpson index correctly', () => {
         const statistics = collectSyntaxUsageStatistics(exampleModel);
-        expect(statistics.diversity.simpsonIndex).toBeCloseTo(0.7, 1);
+        expect(statistics.diversity).toBeDefined();
+        expect(statistics.diversity!.simpsonIndex).toBeCloseTo(0.7, 1);
     });
 
     it('should handle excluded rules', () => {
@@ -136,9 +139,10 @@ describe('LangiumDocumentAnalyzer', () => {
         const statistics = collectSyntaxUsageStatistics('');
         expect(Object.keys(statistics.ruleUsage).length).toBeGreaterThan(0);
         expect(statistics.coverage).toBe(0);
-        expect(statistics.diversity.entropy).toBe(0);
-        expect(statistics.diversity.giniCoefficient).toBe(0);
-        expect(statistics.diversity.simpsonIndex).toBe(0);
+        expect(statistics.diversity).toBeDefined();
+        expect(statistics.diversity!.entropy).toBe(0);
+        expect(statistics.diversity!.giniCoefficient).toBe(0);
+        expect(statistics.diversity!.simpsonIndex).toBe(0);
     });
 
     it('should handle analysis mode NO_STATISTIC', async () => {

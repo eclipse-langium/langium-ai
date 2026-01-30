@@ -47,9 +47,8 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "langium": "~4.1.0",
-    "levenshtein-edit-distance": "^3.0.1",
-    "@protobuf-ts/runtime": "^2.11.1"
+    "@protobuf-ts/runtime": "^2.11.1",
+    "langium": "~4.1.0"
   },
   "devDependencies": {
     "@protobuf-ts/plugin": "^2.11.1"
