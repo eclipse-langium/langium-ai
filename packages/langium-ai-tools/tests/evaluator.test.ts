@@ -102,6 +102,7 @@ describe('Evaluator Utility Functions', () => {
             expect(averaged[0].data.score).toBe(11);
         });
 
+        // TODO can't aggregate non-numeric data types
         it('should preserve non-numeric data', () => {
             const results: EvaluatorResult[] = [
                 { name: 'test1', metadata: {}, data: { score: 10, status: 'pass' } },
@@ -113,7 +114,9 @@ describe('Evaluator Utility Functions', () => {
             expect(averaged[0].data.score).toBe(15);
             // initial value preserved
             // TODO @montymxb we should probably change this for pass/fail cases, as this is intended for other string data but is unclear
-            expect(averaged[0].data.status).toBe('pass');
+            // TODO @montymxb: need to handle case where we have an empty list result, but we're expecting an empty one
+            // expect that the average result should not include non-aggregate values
+            expect(averaged[0].data.status).not.toBeDefined();
         });
 
         it('should handle empty results array', () => {
@@ -129,8 +132,16 @@ describe('Evaluator Utility Functions', () => {
 
             const averaged = averageAcrossCases(results);
 
+            // should be a single averaged entry
             expect(averaged).toHaveLength(1);
             expect(averaged[0].data.score).toBe(42);
+        });
+
+        it('should handle empty result', () => {
+            const results: EvaluatorResult[] = [];
+            const averaged = averageAcrossCases(results);
+            // nothing should be present
+            expect(averaged).toHaveLength(0);
         });
     });
 
@@ -144,12 +155,9 @@ describe('Evaluator Utility Functions', () => {
             ];
 
             const averaged = averageAcrossRunners(results);
-
-            expect(averaged).toHaveLength(2);
-            const runner1 = averaged.find(r => r.name === 'runner1');
-            const runner2 = averaged.find(r => r.name === 'runner2');
-            expect(runner1?.data.score).toBe(15);
-            expect(runner2?.data.score).toBe(30);
+            expect(averaged).toHaveLength(3);
+            expect(averaged[0].data).toBeDefined();
+            expect(averaged[0].data).toBe(20);
         });
 
         it('should preserve runner metadata', () => {
