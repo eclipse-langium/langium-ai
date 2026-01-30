@@ -13,3 +13,4 @@ downloads/
 stores/
 data/
 .langium-ai
+*.local.*
