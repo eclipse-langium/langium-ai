@@ -1,11 +1,12 @@
 # CHANGELOG
 
-## v4.1.5 (Unreleased)
+## v4.1.5
 
 ### New features
 - Introduced yaml -> evalcase decoder for loading evaluator cases in bulk
 
 ### General improvements
+- Updated tools readme with evaluation matrix details
 - Added tests for evaluator + splitter
 - Setup eslint and lint during CI
 - Bump pinned node to v24 via nvmrc + direnv
