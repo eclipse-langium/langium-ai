@@ -33,7 +33,8 @@
     "generate": "mkdir -p src/gen && protoc --ts_out=force_disable_services,force_optimize_code_size,eslint_disable:./src/gen --proto_path=src src/interface.proto",
     "watch": "npm run generate && tsc -w",
     "test": "vitest run",
-    "clean": "rimraf ./dist ./src/gen"
+    "clean": "rimraf ./dist ./src/gen",
+    "lint": "eslint ."
   },
   "author": {
     "name": "TypeFox",
@@ -48,10 +49,12 @@
   "license": "MIT",
   "dependencies": {
     "@protobuf-ts/runtime": "^2.11.1",
+    "js-yaml": "^4.1.1",
     "langium": "~4.1.0"
   },
   "devDependencies": {
-    "@protobuf-ts/plugin": "^2.11.1"
+    "@protobuf-ts/plugin": "^2.11.1",
+    "@types/js-yaml": "^4.0.9"
   },
   "volta": {
     "node": "20.10.0",

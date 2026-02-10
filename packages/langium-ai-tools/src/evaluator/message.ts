@@ -1,13 +1,13 @@
 /******************************************************************************
- * Copyright 2024 - 2025 TypeFox GmbH
+ * Copyright 2026 TypeFox GmbH
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-export * from './evaluator.js';
-export * from './langium-evaluator.js';
-export * from './eval-matrix.js';
-export * from './chart.js';
-export * from './document-evaluator.js';
-export * from './eval-case.js';
-export * from './message.js';
+/**
+ * General format for histories when prompting
+ */
+export interface Message {
+    role: 'user' | 'system' | 'assistant';
+    content: string;
+}

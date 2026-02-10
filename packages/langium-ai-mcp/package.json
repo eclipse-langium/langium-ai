@@ -22,7 +22,8 @@
     "watch": "tsc -w",
     "start": "node .",
     "cstart": "node ./dist/mcp-client.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint ."
   },
   "author": {
     "name": "TypeFox",

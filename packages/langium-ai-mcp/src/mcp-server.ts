@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { LangiumEvaluator, type LangiumEvaluatorResultData } from 'langium-ai-tools';
+import { LangiumEvaluator } from 'langium-ai-tools';
 import { createLangiumGrammarServices } from 'langium/grammar';
 
 import { NodeFileSystem } from 'langium/node';
@@ -35,7 +35,7 @@ export const langiumEvaluator = new LangiumEvaluator(createLangiumGrammarService
 export async function validateLangiumCode(code: string): Promise<string | undefined> {
     const evalResult = await langiumEvaluator.evaluate(code);
     if (evalResult.data) {
-        const langiumData = evalResult.data as LangiumEvaluatorResultData;
+        const langiumData = evalResult.data;
         if (langiumData.diagnostics.length > 0) {
             return langiumData.diagnostics.map(d =>
                 `${asText(d.severity)}: ${d.message} at line ${d.range.start.line + 1}, column ${d.range.start.character + 1}`

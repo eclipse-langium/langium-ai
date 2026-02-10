@@ -4,9 +4,11 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { Evaluator, EvaluatorResult } from "./evaluator.js";
+import { Evaluator, type EvaluatorResult } from "./evaluator.js";
 import fs from 'fs';
 import * as path from 'path';
+import { type Message } from "./message.js";
+import { type EvalCase } from "./eval-case.js";
 
 /**
  * Configuration for the evaluation matrix
@@ -48,7 +50,7 @@ export interface EvalMatrixConfig {
     /**
      * Cases to evaluate
      */
-    cases: Case[];
+    cases: EvalCase[];
 }
 
 /**
@@ -158,15 +160,7 @@ export class EvalMatrix {
 }
 
 /**
- * General format for histories when prompting
- */
-export interface Message {
-    role: 'user' | 'system' | 'assistant';
-    content: string;
-}
-
-/**
- * Runner interface for running a prompt against a mode, a service, or something else that provides a response
+ * Runner interface for running a prompt against a model, a service, or something else that provides a response
  */
 export interface Runner {
     name: string;
@@ -179,34 +173,4 @@ export interface Runner {
 export interface NamedEvaluator {
     name: string;
     eval: Evaluator;
-}
-
-/**
- * Case interface for defining an evaluation case
- */
-export interface Case {
-    /**
-     * Name of the case
-     */
-    name: string;
-
-    /**
-     * Options Message history, used for system, user & assistant messages
-     */
-    history?: Message[];
-
-    /**
-     * Core prompt to run with
-     */
-    prompt: string;
-
-    /**
-     * Context for the prompt, used for RAG applications
-     */
-    context: string[];
-
-    /**
-     * Expected response
-     */
-    expected_response: string;
 }

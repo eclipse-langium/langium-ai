@@ -1,10 +1,11 @@
+/* eslint-disable no-useless-escape */
 /******************************************************************************
  * Copyright 2024 - 2025 TypeFox GmbH
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { Case, Message } from "langium-ai-tools";
+import { type EvalCase, type Message } from "langium-ai-tools";
 
 /**
  * Common history for all cases here
@@ -50,10 +51,9 @@ Use this information to help answer questions about Langium grammars.
 ` }
 ];
 
-export const cases: Case[] = [
+export const cases: EvalCase[] = [
     {
         name: "Hello World Grammar",
-        context: [],
         history,
         prompt: "Generate a simple HelloWorld grammar in Langium.",
         expected_response: `Certainly. Here's an example of a possible HelloWorld grammar written in the Langium grammar language:
@@ -81,7 +81,6 @@ This grammar defines a simple HelloWorld language with two parser rules: Person 
     },
     {
         name: "StateMachine Grammar",
-        context: [],
         history,
         prompt: "Create a simple Statemachine grammar in Langium.",
         expected_response: `Sure. Here's an example of a basic calculator grammar written in the Langium grammar language:
@@ -124,7 +123,6 @@ This grammar defines a simple Statemachine language with events, commands, state
     },
     {
         name: 'Domain Model',
-        context: [],
         history,
         prompt: 'Create a simple Domain Model grammar in Langium.',
         expected_response: `Here's an example of a Domain Model grammar written in the Langium grammar language:
@@ -179,7 +177,6 @@ A Feature can be a single or multiple association with a type.
     },
     {
         name: 'Arithmetics',
-        context: [],
         history,
         prompt: 'Create a simple Arithmetics grammar in Langium.',
         expected_response: `Here's an example of an Arithmetics grammar written in the Langium grammar language:
@@ -238,7 +235,6 @@ This grammar defines an Arithmetics language with expressions & definitions (fun
     },
     {
         name: 'MiniLogo',
-        context: [],
         history,
         prompt: `Create a simple MiniLogo grammar in Langium, using the MiniLogo language (very akin to Turtle in Python and the original Logo language).
 It should support statements & definitions. The statements should be commands & macros, while the definitions should be named functions.

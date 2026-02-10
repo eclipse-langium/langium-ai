@@ -58,5 +58,7 @@ async function main() {
   }
 }
 
-main();
+main().catch((err) => {
+  console.error("Error during execution:", err);
+});
 

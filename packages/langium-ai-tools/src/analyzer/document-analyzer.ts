@@ -6,12 +6,12 @@
  * @author Dennis Hübner
  ******************************************************************************/
 
-import { CstUtils, Grammar, GrammarAST, LangiumDocument, isLeafCstNode } from "langium";
+import { CstUtils, type Grammar, GrammarAST, type LangiumDocument, isLeafCstNode } from "langium";
 import { resolveTransitiveImports, } from 'langium/grammar';
-import { LangiumServices } from "langium/lsp";
-import { EvaluationContext } from "../evaluator/document-evaluator.js";
-import { EvaluatorResult } from "../evaluator/evaluator.js";
-import { LangiumEvaluator, LangiumEvaluatorResultData } from "../evaluator/langium-evaluator.js";
+import { type LangiumServices } from "langium/lsp";
+import { type EvaluationContext } from "../evaluator/document-evaluator.js";
+import { type EvaluatorResult } from "../evaluator/evaluator.js";
+import { LangiumEvaluator, type LangiumEvaluatorResultData } from "../evaluator/langium-evaluator.js";
 import { EvaluatorResultMsg, SyntaxStatistic } from "../gen/interface.js";
 
 
@@ -76,7 +76,7 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
                     };
                 })
             }
-        };
+        } as EvaluatorResult<LangiumEvaluatorResultData> & EvaluatorResultMsg;
     }
 
     collectSyntaxUsageStatistics(doc: LangiumDocument, grammar: Grammar): SyntaxStatistic {
@@ -146,7 +146,9 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
      */
     computeEntropy(ruleUsage: Record<string, number>): number {
         const totalUsage = Object.values(ruleUsage).reduce((sum, count) => sum + count, 0);
-        if (totalUsage === 0) return 0;
+        if (totalUsage === 0) {
+            return 0;
+        }
 
         let entropy = 0;
         for (const count of Object.values(ruleUsage)) {
@@ -165,10 +167,14 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
     computeGiniCoefficient(ruleUsage: Record<string, number>): number {
         const counts = Object.values(ruleUsage).sort((a, b) => a - b);
         const n = counts.length;
-        if (n === 0) return 0;
+        if (n === 0) {
+            return 0;
+        }
 
         const sum = counts.reduce((acc, val) => acc + val, 0);
-        if (sum === 0) return 0;
+        if (sum === 0) {
+            return 0;
+        }
 
         let numerator = 0;
         for (let i = 0; i < n; i++) {
@@ -183,7 +189,9 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
      */
     computeSimpsonIndex(ruleUsage: Record<string, number>): number {
         const totalUsage = Object.values(ruleUsage).reduce((sum, count) => sum + count, 0);
-        if (totalUsage === 0) return 0;
+        if (totalUsage === 0) {
+            return 0;
+        }
 
         let sum = 0;
         for (const count of Object.values(ruleUsage)) {
@@ -202,7 +210,7 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
     extractStatisticsFromResult(result: Partial<EvaluatorResult> | undefined): SyntaxStatistic | undefined {
         const metadata = result?.metadata;
         if (metadata && metadata[LangiumDocumentAnalyzer.METADATA_KEY]) {
-            const value = metadata[LangiumDocumentAnalyzer.METADATA_KEY].value;
+            const value = (metadata[LangiumDocumentAnalyzer.METADATA_KEY] as { value: { oneofKind: string, syntaxStatisticValue: SyntaxStatistic }}).value;
             if (value.oneofKind === 'syntaxStatisticValue') {
                 return value.syntaxStatisticValue;
             }

@@ -1,16 +1,16 @@
+/* eslint-disable no-useless-escape */
 /******************************************************************************
  * Copyright 2024 - 2025 TypeFox GmbH
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { Case } from "langium-ai-tools";
+import { type EvalCase } from "langium-ai-tools";
 
-export const cases: Case[] = [
+export const cases: EvalCase[] = [
     {
         name: 'No Prompt',
         prompt: 'Generate a simple hello world grammar written in Langium',
-        context: [],
         expected_response: `
 Here's a simple Hello World written in Langium:
 
@@ -43,7 +43,6 @@ hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
     You will answer questions, provide examples, and offer guidance on best practices, ensuring clarity and precision in all responses.   
 `
         }],
-        context: [],
         prompt: `Generate a simple hello world program in the Hello World language.`,
         expected_response: `
 Here's a simple Hello World written in Langium:
@@ -106,7 +105,6 @@ Hello Bob!
 \`\`\``
         }],
         prompt: 'Generate a simple program for the Hello World language',
-        context: [],
         expected_response: `
 person John
 person Carly
@@ -169,7 +167,6 @@ Hello Carly!
 \`\`\`
 `}],
         prompt: 'Generate a simple program for the Hello World language',
-        context: [],
         expected_response: `
 person John
 person Carly

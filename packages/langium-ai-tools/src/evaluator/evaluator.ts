@@ -27,7 +27,7 @@ export type EvaluatorResult<T = EvaluatorResultData> = {
   /**
    * Optional metadata, can be used to store additional information
    */
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 
   /**
    * Data for this evaluation
@@ -112,7 +112,11 @@ export function averageAcrossRunners(
   // collect like-results
   for (const result of processedResults) {
     // add this result to the map (grouping by runner)
-    const name = result.metadata.runner;
+    const name: unknown = result.metadata.runner;
+    // collect only if name is a string
+    if (typeof name !== "string") {
+      continue;
+    }
     const existingResult = mappedResults.get(name) ?? [];
     existingResult.push(result);
     mappedResults.set(name, existingResult);
@@ -120,6 +124,12 @@ export function averageAcrossRunners(
 
   // average the results
   for (const [_key, groupedResults] of mappedResults) {
+
+    // don't process where the runner isn't a string
+    if (groupedResults[0].metadata.runner === undefined || typeof groupedResults[0].metadata.runner !== "string") {
+      continue;
+    }
+
     const avgData = groupedResults[0].data;
 
     // sum all results except the first

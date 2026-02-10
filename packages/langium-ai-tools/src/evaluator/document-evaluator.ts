@@ -8,9 +8,9 @@
  * Langium Document Evaluator (evaluates on a Langium document)
  */
 
-import { LangiumDocument, URI } from "langium";
-import { LangiumServices } from "langium/lsp";
-import { Evaluator, EvaluatorResult, EvaluatorResultData } from "./evaluator.js";
+import { type LangiumDocument, URI } from "langium";
+import { type LangiumServices } from "langium/lsp";
+import { Evaluator, type EvaluatorResult, type EvaluatorResultData } from "./evaluator.js";
 
 
 export abstract class AbstractDocumentEvaluator<T extends LangiumServices, RD extends FailureAwarenessData = FailureAwarenessData> extends Evaluator {
@@ -51,7 +51,7 @@ export abstract class AbstractDocumentEvaluator<T extends LangiumServices, RD ex
     abstract evaluateDocument(doc: LangiumDocument, ctx: EvaluationContext): Partial<EvaluatorResult<RD>>;
 
 
-    protected handleBuildError(e: unknown, ctx: EvaluationContext): Partial<EvaluatorResult<RD>> {
+    protected handleBuildError(e: unknown, _ctx: EvaluationContext): Partial<EvaluatorResult<RD>> {
         console.error('Error during evaluation: ', e);
         return {
             name: this.constructor.name,

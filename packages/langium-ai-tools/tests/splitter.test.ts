@@ -406,7 +406,7 @@ describe("ProgramMapper", () => {
         mappingRules: [
           {
             predicate: (node: AstNode) => node.$type === "Entity",
-            map: (node: AstNode) => `Entity: ${(node as any).name}`,
+            map: (node: AstNode) => `Entity: ${(node as unknown as { name: string }).name}`,
           },
         ],
       });
@@ -423,11 +423,11 @@ describe("ProgramMapper", () => {
         mappingRules: [
           {
             predicate: (node: AstNode) => node.$type === "Entity",
-            map: (node: AstNode) => `Entity: ${(node as any).name}`,
+            map: (node: AstNode) => `Entity: ${(node as unknown as { name: string }).name}`,
           },
           {
             predicate: (node: AstNode) => node.$type === "DataType",
-            map: (node: AstNode) => `DataType: ${(node as any).name}`,
+            map: (node: AstNode) => `DataType: ${(node as unknown as { name: string }).name}`,
           },
         ],
       });
@@ -442,21 +442,21 @@ describe("ProgramMapper", () => {
     });
 
     it("should apply rules in order", () => {
-      let order: string[] = [];
+      const order: string[] = [];
       const mapper = new ProgramMapper(domainModelServices, {
         mappingRules: [
           {
             predicate: (node: AstNode) => node.$type === "DataType",
             map: (node: AstNode) => {
               order.push("datatype");
-              return `DataType: ${(node as any).name}`;
+              return `DataType: ${(node as unknown as { name: string }).name}`;
             },
           },
           {
             predicate: (node: AstNode) => node.$type === "Entity",
             map: (node: AstNode) => {
               order.push("entity");
-              return `Entity: ${(node as any).name}`;
+              return `Entity: ${(node as unknown as { name: string }).name}`;
             },
           },
         ],
@@ -473,7 +473,7 @@ describe("ProgramMapper", () => {
         mappingRules: [
           {
             predicate: (node: AstNode) => node.$type === "Entity",
-            map: (node: AstNode) => `${(node as any).name}`,
+            map: (node: AstNode) => `${(node as unknown as { name: string }).name}`,
           },
         ],
       });
@@ -514,7 +514,7 @@ describe("ProgramMapper", () => {
           {
             predicate: (node: AstNode) => node.$type === "Entity",
             map: (node: AstNode) => {
-              const name = (node as any).name;
+              const name = (node as unknown as { name: string }).name;
               return name.toUpperCase();
             },
           },
@@ -534,7 +534,7 @@ describe("ProgramMapper", () => {
           {
             predicate: (node: AstNode) => node.$type === "Entity",
             map: (node: AstNode) => {
-              const entity = node as any;
+              const entity = node as unknown as { name: string; features?: unknown[] };
               const featureCount = entity.features?.length ?? 0;
               return `${entity.name} (${featureCount} features)`;
             },
@@ -553,11 +553,11 @@ describe("ProgramMapper", () => {
         mappingRules: [
           {
             predicate: (node: AstNode) => node.$type === "Entity",
-            map: (node: AstNode) => `A: ${(node as any).name}`,
+            map: (node: AstNode) => `A: ${(node as unknown as { name: string }).name}`,
           },
           {
             predicate: (node: AstNode) => node.$type === "Entity",
-            map: (node: AstNode) => `B: ${(node as any).name}`,
+            map: (node: AstNode) => `B: ${(node as unknown as { name: string }).name}`,
           },
         ],
       });
@@ -576,7 +576,7 @@ describe("ProgramMapper", () => {
         mappingRules: [
           {
             predicate: (node: AstNode) => node.$type === "Entity",
-            map: (node: AstNode) => `${(node as any).name}`,
+            map: (node: AstNode) => `${(node as unknown as { name: string }).name}`,
           },
         ],
       });
@@ -616,7 +616,7 @@ describe("ProgramMapper", () => {
         mappingRules: [
           {
             predicate: (node: AstNode) => node.$type === "Entity",
-            map: (node: AstNode) => `${(node as any).name}`,
+            map: (node: AstNode) => `${(node as unknown as { name: string }).name}`,
           },
         ],
       });

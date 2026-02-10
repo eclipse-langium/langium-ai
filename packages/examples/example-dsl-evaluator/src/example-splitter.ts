@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 /******************************************************************************
  * Copyright 2024 - 2025 TypeFox GmbH
  * This program and the accompanying materials are made available under the
@@ -7,7 +8,6 @@
 import { NodeFileSystem } from "langium/node";
 import { splitByNode } from "langium-ai-tools/splitter";
 import { createLangiumGrammarServices } from "langium/grammar";
-import { LangiumServices } from "langium/lsp";
 
 /**
  * An example of utilizing the splitter in Langium AI
