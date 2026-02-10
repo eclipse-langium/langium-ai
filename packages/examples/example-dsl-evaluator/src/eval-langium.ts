@@ -6,10 +6,10 @@
 
 import { config } from 'dotenv';
 import { EmptyFileSystem } from 'langium';
-import { averageAcrossCases, averageAcrossRunners, EvalMatrix, generateHistogram, generateHistoricalChart, generateRadarChart, LangiumEvaluator, LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, normalizeData } from 'langium-ai-tools/evaluator';
+import { averageAcrossCases, averageAcrossRunners, EvalMatrix, generateHistogram, generateHistoricalChart, generateRadarChart, LangiumEvaluator, type LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, normalizeData } from 'langium-ai-tools/evaluator';
 import { createLangiumGrammarServices } from 'langium/grammar';
-import { EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
-import { EditDistanceEvaluator, EditDistanceEvaluatorResultData } from './edit-distance-evaluator.js';
+import { type EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
+import { EditDistanceEvaluator, type EditDistanceEvaluatorResultData } from './edit-distance-evaluator.js';
 import { cases as langiumCases } from './langium-cases.js';
 import { runner_codegemma, runner_codegemma_rag, runner_codellama, runner_codellama_rag, runner_llama3_1_rag, runner_llama3_2_3b, runner_llama3_2_3b_rag } from './runners.js';
 config();

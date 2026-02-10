@@ -5,7 +5,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { EvalCase, Message } from "langium-ai-tools";
+import { type EvalCase, type Message } from "langium-ai-tools";
 
 /**
  * Common history for all cases here

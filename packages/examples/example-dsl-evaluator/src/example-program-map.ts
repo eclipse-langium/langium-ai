@@ -5,7 +5,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { AstNode } from "langium";
+import { type AstNode } from "langium";
 import { ProgramMapper } from "langium-ai-tools";
 import { createLangiumGrammarServices } from "langium/grammar";
 import { NodeFileSystem } from "langium/node";

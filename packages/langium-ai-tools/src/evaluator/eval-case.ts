@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 import * as yaml from "js-yaml";
-import { Message } from "./message.js";
+import { type Message } from "./message.js";
 
 /**
  * Evaluation case revolving around expected output for a given input (prompt + context)

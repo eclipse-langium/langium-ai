@@ -8,11 +8,11 @@
  * Base Langium DSL validator (taps into Langium's validator messages to provide better results)
  */
 
-import { LangiumDocument } from "langium";
-import { LangiumServices } from "langium/lsp";
+import { type LangiumDocument } from "langium";
+import { type LangiumServices } from "langium/lsp";
 import { Diagnostic } from "vscode-languageserver-types";
-import { AbstractDocumentEvaluator, EvaluationContext, FailureAwarenessData } from "./document-evaluator.js";
-import { EvaluatorResult } from "./evaluator.js";
+import { AbstractDocumentEvaluator, type EvaluationContext, type FailureAwarenessData } from "./document-evaluator.js";
+import { type EvaluatorResult } from "./evaluator.js";
 
 /**
  * Langium-specific evaluator result data

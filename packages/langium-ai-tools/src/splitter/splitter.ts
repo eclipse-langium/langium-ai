@@ -4,8 +4,8 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { AstNode, CstUtils, LangiumDocument, URI } from "langium";
-import { LangiumServices } from "langium/lsp";
+import { type AstNode, CstUtils, type LangiumDocument, URI } from "langium";
+import { type LangiumServices } from "langium/lsp";
 import { AstUtils } from 'langium';
 
 interface SplitterOptions {

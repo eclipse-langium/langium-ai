@@ -8,7 +8,7 @@
  * Simple evaluator that computes the embedding for two strings, and returns the cosine similarity
  */
 
-import { Evaluator, EvaluatorResult } from "langium-ai-tools/evaluator";
+import { Evaluator, type EvaluatorResult } from "langium-ai-tools/evaluator";
 import ollama from 'ollama';
 
 export interface EmbeddingEvaluatorResultData extends EvaluatorResult {

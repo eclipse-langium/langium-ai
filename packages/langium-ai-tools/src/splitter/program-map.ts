@@ -4,8 +4,8 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { AstNode } from "langium";
-import { LangiumServices } from "langium/lsp";
+import { type AstNode } from "langium";
+import { type LangiumServices } from "langium/lsp";
 import { splitByNodeToAst } from "./splitter.js";
 
 interface MappingRule {

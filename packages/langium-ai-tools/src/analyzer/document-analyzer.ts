@@ -6,12 +6,12 @@
  * @author Dennis Hübner
  ******************************************************************************/
 
-import { CstUtils, Grammar, GrammarAST, LangiumDocument, isLeafCstNode } from "langium";
+import { CstUtils, type Grammar, GrammarAST, type LangiumDocument, isLeafCstNode } from "langium";
 import { resolveTransitiveImports, } from 'langium/grammar';
-import { LangiumServices } from "langium/lsp";
-import { EvaluationContext } from "../evaluator/document-evaluator.js";
-import { EvaluatorResult } from "../evaluator/evaluator.js";
-import { LangiumEvaluator, LangiumEvaluatorResultData } from "../evaluator/langium-evaluator.js";
+import { type LangiumServices } from "langium/lsp";
+import { type EvaluationContext } from "../evaluator/document-evaluator.js";
+import { type EvaluatorResult } from "../evaluator/evaluator.js";
+import { LangiumEvaluator, type LangiumEvaluatorResultData } from "../evaluator/langium-evaluator.js";
 import { EvaluatorResultMsg, SyntaxStatistic } from "../gen/interface.js";
 
 

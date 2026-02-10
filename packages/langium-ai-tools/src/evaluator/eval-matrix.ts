@@ -4,11 +4,11 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { Evaluator, EvaluatorResult } from "./evaluator.js";
+import { Evaluator, type EvaluatorResult } from "./evaluator.js";
 import fs from 'fs';
 import * as path from 'path';
-import { Message } from "./message.js";
-import { EvalCase } from "./eval-case.js";
+import { type Message } from "./message.js";
+import { type EvalCase } from "./eval-case.js";
 
 /**
  * Configuration for the evaluation matrix

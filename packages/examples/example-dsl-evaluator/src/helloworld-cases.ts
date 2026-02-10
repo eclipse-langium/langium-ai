@@ -5,7 +5,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { EvalCase } from "langium-ai-tools";
+import { type EvalCase } from "langium-ai-tools";
 
 export const cases: EvalCase[] = [
     {

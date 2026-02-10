@@ -6,10 +6,10 @@
  ******************************************************************************/
 
 import { EmptyFileSystem } from 'langium';
-import { averageAcrossCases, EvalCase, EvalMatrix, EvaluatorResult, generateRadarChart, LangiumEvaluator, LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, Message, normalizeData, Runner } from 'langium-ai-tools/evaluator';
+import { averageAcrossCases, type EvalCase, EvalMatrix, type EvaluatorResult, generateRadarChart, LangiumEvaluator, type LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, type Message, normalizeData, type Runner } from 'langium-ai-tools/evaluator';
 import { createLangiumGrammarServices } from 'langium/grammar';
 import ollama from 'ollama';
-import { EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
+import { type EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
 import * as readline from 'readline/promises';
 
 const rl = readline.createInterface({

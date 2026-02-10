@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 import {levenshteinEditDistance} from 'levenshtein-edit-distance';
-import { Evaluator, EvaluatorResult, EvaluatorResultData } from 'langium-ai-tools/evaluator';
+import { Evaluator, type EvaluatorResult, type EvaluatorResultData } from 'langium-ai-tools/evaluator';
 
 export interface EditDistanceEvaluatorResultData extends EvaluatorResultData {
     edit_distance: number;

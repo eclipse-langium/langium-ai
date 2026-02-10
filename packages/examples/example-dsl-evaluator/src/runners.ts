@@ -6,7 +6,7 @@
 
 import OpenAI from 'openai';
 import ollama from 'ollama';
-import { Message, Runner } from 'langium-ai-tools';
+import { type Message, type Runner } from 'langium-ai-tools';
 import { ChromaClient } from 'chromadb';
 
 async function prompt(model: string, messages: Message[]) {

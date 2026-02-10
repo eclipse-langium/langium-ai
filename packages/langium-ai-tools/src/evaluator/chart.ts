@@ -8,7 +8,7 @@
  * Generates & exports an HTML radar chart report using plotly JS
  */
 
-import { EvaluatorResult, EvaluatorResultData, averageAcrossRunners, loadReport } from "./evaluator.js";
+import { type EvaluatorResult, type EvaluatorResultData, averageAcrossRunners, loadReport } from "./evaluator.js";
 import { writeFileSync, readdirSync } from 'fs';
 import * as path from 'path';
 
