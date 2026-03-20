@@ -1,6 +1,6 @@
 {
   "name": "langium-ai-tools",
-  "version": "4.1.5",
+  "version": "4.2.0",
   "description": "Tooling for building AI Applications that leverage Langium DSLs",
   "repository": {
     "type": "git",
@@ -50,7 +50,7 @@
   "dependencies": {
     "@protobuf-ts/runtime": "^2.11.1",
     "js-yaml": "^4.1.1",
-    "langium": "~4.1.0"
+    "langium": "~4.2.1"
   },
   "devDependencies": {
     "@protobuf-ts/plugin": "^2.11.1",
