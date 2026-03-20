@@ -39,7 +39,7 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.1",
-    "langium-ai-tools": "~4.1.2",
+    "langium-ai-tools": "~4.2.0",
     "langium": "~4.2.1"
   },
   "volta": {
