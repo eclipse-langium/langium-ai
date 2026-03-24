@@ -443,6 +443,73 @@ console.table(averaged.map(r => ({
 
 For more complete examples, see the [example-dsl-evaluator](../examples/example-dsl-evaluator) project.
 
+### Analysis
+
+The `LangiumDocumentAnalyzer` extends the `LangiumEvaluator` with syntax usage analysis. It helps you collects statistics about which Langium grammar rules are used in documents, and it computes diversity metrics. Generally, this is useful for determining the coverage of a set of DSL programs for evaluation or training in regards to what your Langium grammar can express. It won't indicate the exact way rules are expressed, but it will give you quantitative values you can use to determine the breadth & quality of your dataset.
+
+The following is a quick example of how you can leverage the analyzer:
+
+```ts
+import { LangiumDocumentAnalyzer, AnalysisMode } from 'langium-ai-tools/analyzer';
+import { createMyDSLServices } from './my-dsl';
+import { EmptyFileSystem } from 'langium';
+
+const services = createMyDSLServices(EmptyFileSystem).MyDSL;
+
+// create an analyzer
+const analyzer = new LangiumDocumentAnalyzer(services, {
+    analysisMode: AnalysisMode.ALL,
+    // rules to exclude from analysis (WS is always excluded)
+    excludeRules: ['DeprecatedRule'],
+    // include rules from imported grammars (defaults to true)
+    includeImportedRules: true,
+    // include hidden tokens, like comments (defaults to true)
+    includeHiddenRules: true,
+    // compute diversity metrics (defaults to true)
+    computeDiversity: true
+});
+
+// evaluate per usual
+const result = analyzer.evaluate(someGeneratedDSLCode);
+
+// extract syntax statistics from the result
+const stats = analyzer.extractStatisticsFromResult(result);
+if (stats) {
+    // { RuleName: count, ... }
+    console.log('Rule usage:', stats.ruleUsage);
+    // percentage of grammar rules used
+    console.log('Coverage:', stats.coverage);
+    // { entropy, giniCoefficient, simpsonIndex }
+    console.log('Diversity:', stats.diversity);
+}
+```
+
+The analyzer computes the following metrics when parsing is successful:
+
+- **Rule usage**: A map of grammar rule names to the number of times each rule was matched in the document.
+- **Coverage**: The percentage of available grammar rules that are present 1 or more times.
+- **Diversity metrics**:
+  - **Shannon entropy** — higher values indicate more diverse rule usage patterns
+  - **Gini coefficient** — 0 suggests perfectly equal usage, 1 means maximally unequal
+  - **Simpson's diversity index** — higher values suggest more diversity
+
+The `LangiumDocumentAnalyzer` can be used as a drop-in replacement anywhere a regular `LangiumEvaluator` is expected, such as in an `EvalMatrix`:
+
+```ts
+import { EvalMatrix } from 'langium-ai-tools/evaluator';
+import { LangiumDocumentAnalyzer } from 'langium-ai-tools/analyzer';
+
+const matrix = new EvalMatrix({
+    config: { name: 'Analysis Run', history_folder: '.eval-history', num_runs: 1 },
+    runners: [myRunner],
+    evaluators: [{
+        name: 'Langium Analyzer',
+        eval: new LangiumDocumentAnalyzer(services)
+    }],
+    cases: testCases
+});
+```
+
 ## Contributing
 
 If you want to help feel free to open an issue or a PR. As a general note we're open to accept changes that focus on improving how we can support AI application development for Langium DSLs. But we don't want to provide explicit bindings to actual services/providers at this time, such as LLamaIndex, Ollama, LangChain, or others. Similarly this package doesn't provide direct bindings for AI providers such as OpenAI and Anthropic here. Instead these changes will go into a separate package under Langium AI that is intended for this purpose.
