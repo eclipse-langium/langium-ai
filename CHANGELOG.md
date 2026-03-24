@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## v4.2.1 (2026-03-24)
+
+### General improvements
+- Export document syntax analyzer from langium-ai-tools
+
+## v4.2.0 (2026-03-20)
+
+### General improvements
+- Updated to track langium 4.2.x
+- Fix outdated dependency in MCP package
+
 ## v4.1.5
 
 ### New features
