@@ -1,6 +1,6 @@
 {
   "name": "langium-ai-tools",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "description": "Tooling for building AI Applications that leverage Langium DSLs",
   "repository": {
     "type": "git",
@@ -18,6 +18,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./analyzer": {
+      "import": "./dist/analyzer/index.js",
+      "types": "./dist/analyzer/index.d.ts"
     },
     "./splitter": {
       "import": "./dist/splitter/index.js",
