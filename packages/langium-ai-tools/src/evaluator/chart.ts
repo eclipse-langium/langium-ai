@@ -8,7 +8,13 @@
  * Generates & exports an HTML radar chart report using plotly JS
  */
 
-import { type EvaluatorResult, type EvaluatorResultData, averageAcrossRunners, loadReport } from "./evaluator.js";
+import {
+    type EvaluatorResult,
+    type EvaluatorResultData,
+    type EvaluatorResultMetadata,
+    averageAcrossRunners,
+    loadReport,
+} from './evaluator.js';
 import { writeFileSync, readdirSync } from 'fs';
 import * as path from 'path';
 
@@ -24,9 +30,8 @@ export function generateRadarChart<T extends EvaluatorResultData>(
     evalResults: EvaluatorResult[],
     dest: string,
     rFunc: (d: T, metadata: Record<string, unknown>) => Record<string, unknown>,
-    preprocess?: (arr: EvaluatorResult[]) => EvaluatorResult[]
+    preprocess?: (arr: EvaluatorResult[]) => EvaluatorResult[],
 ): void {
-
     // process results first to average out data (either using the user supplied function, or defaulting to average across runners)
     const processedResults = preprocess ? preprocess(evalResults) : averageAcrossRunners(evalResults);
 
@@ -41,7 +46,7 @@ export function generateRadarChart<T extends EvaluatorResultData>(
             r,
             theta,
             fill: 'toself',
-            name: result.name
+            name: result.name,
         };
     });
 
@@ -51,12 +56,12 @@ export function generateRadarChart<T extends EvaluatorResultData>(
         polar: {
             radialaxis: {
                 visible: true,
-                range: [0, 1]
-            }
+                range: [0, 1],
+            },
         },
         showlegend: true,
         width: 1000,
-        height: 800
+        height: 800,
     };
 
     const html = `
@@ -86,9 +91,8 @@ export function generateHistogram<T extends EvaluatorResultData>(
     evalResults: EvaluatorResult[],
     dest: string,
     dataFunc: (d: T, metadata: Record<string, unknown>) => Record<string, unknown>,
-    preprocess?: (arr: EvaluatorResult[]) => EvaluatorResult[]
+    preprocess?: (arr: EvaluatorResult[]) => EvaluatorResult[],
 ) {
-    
     // process results first to average out data (either using the user supplied function, or defaulting to average across runners)
     const processedResults = preprocess ? preprocess(evalResults) : averageAcrossRunners(evalResults);
 
@@ -102,7 +106,7 @@ export function generateHistogram<T extends EvaluatorResultData>(
             x: xData,
             y: yLabels,
             orientation: 'h',
-            name: result.name
+            name: result.name,
         };
     });
 
@@ -111,7 +115,7 @@ export function generateHistogram<T extends EvaluatorResultData>(
         barmode: 'group',
         showlegend: true,
         width: 1000,
-        height: 800
+        height: 800,
     };
 
     const html = `
@@ -172,26 +176,21 @@ export function normalizeData(data: EvaluatorResult[]): EvaluatorResult[] {
 
 /**
  * Generates a historical chart from the provided data, showing runners along the X, and their performance over time along the X axis
- * @param chartName 
- * @param folder 
- * @param dest 
- * @param dataFunc 
- * @param options 
  */
 export function generateHistoricalChart<T extends EvaluatorResultData>(
     chartName: string,
     folder: string,
     dest: string,
-    dataFunc: (d: T, metadata: Record<string, unknown>) => number,
+    dataFunc: (d: T, metadata: EvaluatorResultMetadata) => number,
     options?: {
-        preprocess?: (arr: EvaluatorResult[]) => EvaluatorResult[],
-        filter?: (r: EvaluatorResult) => boolean,
-        take?: number,
-        chartType?: string
-    }
+        preprocess?: (arr: EvaluatorResult[]) => EvaluatorResult[];
+        filter?: (r: EvaluatorResult) => boolean;
+        take?: number;
+        chartType?: string;
+    },
 ) {
     // generate a historical chart by calculating the average for runners in all previous reports, and organizing them in ascending date order
-    let files = readdirSync(folder).filter(f => f.endsWith('.json'));
+    let files = readdirSync(folder).filter((f) => f.endsWith('.json'));
 
     // array of results, where each array of results is presumed to be a stream of results from a collection of historical runs
     const runnerResultsMap: Map<RunnerName, EvaluatorResult[]> = new Map();
@@ -228,7 +227,7 @@ export function generateHistoricalChart<T extends EvaluatorResultData>(
             const existingResults = runnerResultsMap.get(name) ?? [];
 
             const rc = {
-                ...result
+                ...result,
             };
             rc.metadata.date = new Date(date).toISOString();
 
@@ -243,20 +242,25 @@ export function generateHistoricalChart<T extends EvaluatorResultData>(
     for (const [name, results] of runnerResultsMap) {
         results.sort((a, b) => {
             // verify date exists
-            if (!a.metadata.date || !b.metadata.date || typeof a.metadata.date !== 'string' || typeof b.metadata.date !== 'string') {
+            if (
+                !a.metadata.date ||
+                !b.metadata.date ||
+                typeof a.metadata.date !== 'string' ||
+                typeof b.metadata.date !== 'string'
+            ) {
                 return 0;
             }
             return new Date(a.metadata.date).getTime() - new Date(b.metadata.date).getTime();
         });
 
-        const runners = results.map(r => r.metadata.runner);
-        const data = results.map(r => dataFunc(r.data as T, r.metadata)).sort();
+        const runners = results.map((r) => r.metadata.runner);
+        const data = results.map((r) => dataFunc(r.data as T, r.metadata)).sort();
 
         allData.push({
             type: options?.chartType ? options.chartType : 'scatter',
             x: runners,
             y: data,
-            name
+            name,
         });
     }
 
@@ -264,7 +268,7 @@ export function generateHistoricalChart<T extends EvaluatorResultData>(
         title: chartName,
         showlegend: true,
         width: 1000,
-        height: 1000
+        height: 1000,
     };
 
     const html = `
@@ -287,5 +291,4 @@ export function generateHistoricalChart<T extends EvaluatorResultData>(
 
     writeFileSync(dest, html);
     console.log(`Historical report written to: ${dest}`);
-
 }

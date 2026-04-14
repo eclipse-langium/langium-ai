@@ -2,33 +2,45 @@
  * Copyright 2025 TypeFox GmbH
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
- * 
+ *
  * @author Dennis Hübner
  ******************************************************************************/
 
-import { CstUtils, type Grammar, GrammarAST, type LangiumDocument, isLeafCstNode } from "langium";
-import { resolveTransitiveImports, } from 'langium/grammar';
-import { type LangiumServices } from "langium/lsp";
-import { type EvaluationContext } from "../evaluator/document-evaluator.js";
-import { type EvaluatorResult } from "../evaluator/evaluator.js";
-import { LangiumEvaluator, type LangiumEvaluatorResultData } from "../evaluator/langium-evaluator.js";
-import { EvaluatorResultMsg, SyntaxStatistic } from "../gen/interface.js";
+import { CstUtils, type Grammar, GrammarAST, type LangiumDocument, isLeafCstNode } from 'langium';
+import type { LangiumServicesLike } from '../types.js';
+import { type EvaluationContext } from '../evaluator/document-evaluator.js';
+import { type EvaluatorResult } from '../evaluator/evaluator.js';
+import { LangiumEvaluator, type LangiumEvaluatorResultData } from '../evaluator/langium-evaluator.js';
+import { EvaluatorResultMsg, SyntaxStatistic } from '../gen/interface.js';
 
-
+/**
+ * Options for resolving grammar imports when collecting rules.
+ * If provided, the analyzer can follow grammar imports to include
+ * rules from transitively imported grammars.
+ */
+export interface GrammarImportResolver {
+    /**
+     * Resolve all transitively imported grammars and return their grammar objects.
+     * This mirrors the behavior of langium's `resolveTransitiveImports`, which should be passed here
+     */
+    resolveImports(grammar: Grammar): Grammar[];
+}
 
 /**
  * Extends LangiumEvaluator and adds analysis capabilities.
  */
-export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumEvaluator<T> {
-
+export class LangiumDocumentAnalyzer<T extends LangiumServicesLike> extends LangiumEvaluator<T> {
     public static readonly METADATA_KEY = 'syntax_statistics';
 
     private readonly analysisOptions: AnalysisOptions;
+    private readonly importResolver?: GrammarImportResolver;
 
     /**
      * Creates an instance of LangiumDocumentAnalyzer.
      * @param services Langium services
      * @param analysisOptions Analysis options
+     * @param importResolver Optional resolver for grammar imports. If not provided,
+     *        imported grammar rules will not be included even if `includeImportedRules` is true.
      * @example
      * ```typescript
      * const analyzer = new LangiumDocumentAnalyzer(services, {
@@ -38,44 +50,52 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
      * });
      * ```
      */
-    constructor(services: T, analysisOptions: Partial<AnalysisOptions> = {}) {
+    constructor(services: T, analysisOptions: Partial<AnalysisOptions> = {}, importResolver?: GrammarImportResolver) {
         super(services);
         this.analysisOptions = { ...DEFAULT_OPTIONS, ...analysisOptions };
+        this.importResolver = importResolver;
     }
 
     /**
      * Evaluates a Langium document.
      * Here we return protocol compatible object EvaluatorResultMsg.
-     * 
+     *
      * @param doc Langium document to evaluate
      * @param ctx Evaluation context
      * @returns Evaluation result with syntax statistics in metadata
      */
-    evaluateDocument(doc: LangiumDocument, ctx: EvaluationContext): EvaluatorResult<LangiumEvaluatorResultData> & EvaluatorResultMsg {
+    evaluateDocument(
+        doc: LangiumDocument,
+        ctx: EvaluationContext,
+    ): EvaluatorResult<LangiumEvaluatorResultData> & EvaluatorResultMsg {
         const validationResult = super.evaluateDocument(doc, ctx);
-        if (this.analysisOptions.analysisMode !== AnalysisMode.NO_STATISTIC && validationResult.data && validationResult.data.failures === 0) {
-            // Add syntax usage statistics only if build was successful
+        if (
+            this.analysisOptions.analysisMode !== AnalysisMode.NO_STATISTIC &&
+            validationResult.data &&
+            validationResult.data.failures === 0
+        ) {
+            // add syntax usage statistics only if build was successful
             const statistics = this.collectSyntaxUsageStatistics(doc, this.services.Grammar);
             validationResult.metadata[LangiumDocumentAnalyzer.METADATA_KEY] = {
                 value: {
                     oneofKind: 'syntaxStatisticValue',
-                    syntaxStatisticValue: statistics
-                }
+                    syntaxStatisticValue: statistics,
+                },
             };
         }
-        // make sure we fulfill the EvaluatorResultMsg interface 
+        // make sure we fulfill the EvaluatorResultMsg interface
         return {
             ...validationResult,
             data: {
                 ...validationResult.data,
-                diagnostics: validationResult.data.diagnostics.map(diagnostic => {
+                diagnostics: validationResult.data.diagnostics.map((diagnostic) => {
                     const code = typeof diagnostic.code === 'number' ? String(diagnostic.code) : diagnostic.code;
                     return {
                         ...diagnostic,
-                        code
+                        code,
                     };
-                })
-            }
+                }),
+            },
         } as EvaluatorResult<LangiumEvaluatorResultData> & EvaluatorResultMsg;
     }
 
@@ -90,12 +110,12 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
 
         const allRules = includeImportedRules ? this.collectAllRules(grammar) : grammar.rules;
         const ruleUsage: Record<string, number> = {};
-        // Initialize rule usage map, excluding rules specified in excludeRules. Also skip entry rule.
+        // initialize rule usage map, excluding rules specified in excludeRules. Also skip entry rule.
         for (const rule of allRules) {
             if (!isRuleExcluded(rule.name)) {
                 if (
-                    (GrammarAST.isParserRule(rule) && rule.entry)
-                    || (GrammarAST.isTerminalRule(rule) && rule.hidden && !includeHiddenRules)
+                    (GrammarAST.isParserRule(rule) && rule.entry) ||
+                    (GrammarAST.isTerminalRule(rule) && rule.hidden && !includeHiddenRules)
                 ) {
                     continue;
                 }
@@ -113,7 +133,7 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
             };
 
             if (grammarSource && GrammarAST.isRuleCall(grammarSource)) {
-                // For now handle only RuleCalls
+                // for now handle only RuleCalls
                 addIfNotExcluded(grammarSource.rule.ref?.name ?? 'unknown');
             } else if (includeHiddenRules && cstNode.hidden && isLeafCstNode(cstNode)) {
                 addIfNotExcluded(cstNode.tokenType.name);
@@ -125,7 +145,7 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
             diversity = {
                 entropy: this.computeEntropy(ruleUsage),
                 giniCoefficient: this.computeGiniCoefficient(ruleUsage),
-                simpsonIndex: this.computeSimpsonIndex(ruleUsage)
+                simpsonIndex: this.computeSimpsonIndex(ruleUsage),
             };
         }
         const coverage = this.computeCoverage(ruleUsage);
@@ -136,7 +156,7 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
      * Computes coverage as percentage of used rules over all available rules
      */
     computeCoverage(ruleUsage: Record<string, number>): number {
-        const usedRules = Object.values(ruleUsage).filter(count => count > 0).length;
+        const usedRules = Object.values(ruleUsage).filter((count) => count > 0).length;
         return usedRules > 0 ? (usedRules / Object.keys(ruleUsage).length) * 100 : 0;
     }
 
@@ -210,7 +230,11 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
     extractStatisticsFromResult(result: Partial<EvaluatorResult> | undefined): SyntaxStatistic | undefined {
         const metadata = result?.metadata;
         if (metadata && metadata[LangiumDocumentAnalyzer.METADATA_KEY]) {
-            const value = (metadata[LangiumDocumentAnalyzer.METADATA_KEY] as { value: { oneofKind: string, syntaxStatisticValue: SyntaxStatistic }}).value;
+            const value = (
+                metadata[LangiumDocumentAnalyzer.METADATA_KEY] as {
+                    value: { oneofKind: string; syntaxStatisticValue: SyntaxStatistic };
+                }
+            ).value;
             if (value.oneofKind === 'syntaxStatisticValue') {
                 return value.syntaxStatisticValue;
             }
@@ -220,9 +244,15 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
     }
 
     protected collectAllRules(grammar: Grammar): GrammarAST.AbstractRule[] {
+        if (!this.importResolver) {
+            return grammar.rules;
+        }
         try {
             return grammar.rules.concat(
-                resolveTransitiveImports(this.services.shared.workspace.LangiumDocuments, grammar).map(g => g.rules).flat()
+                this.importResolver
+                    .resolveImports(grammar)
+                    .map((g) => g.rules)
+                    .flat(),
             );
         } catch (e) {
             console.error('Error resolving imports: ', e);
@@ -237,8 +267,8 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
             diversity: {
                 entropy: 0,
                 giniCoefficient: 0,
-                simpsonIndex: 0
-            }
+                simpsonIndex: 0,
+            },
         };
     }
 }
@@ -248,7 +278,7 @@ export class LangiumDocumentAnalyzer<T extends LangiumServices> extends LangiumE
  */
 export enum AnalysisMode {
     ALL = 'ALL',
-    NO_STATISTIC = 'NO_STATISTIC'
+    NO_STATISTIC = 'NO_STATISTIC',
 }
 
 interface AnalysisOptions {
@@ -258,7 +288,7 @@ interface AnalysisOptions {
      * Rule WS (whitespace) is always excluded.
      */
     excludeRules: string[];
-    /** 
+    /**
      * Whether to include rules from imported grammars. Default is true.
      */
     includeImportedRules: boolean;
@@ -278,6 +308,5 @@ const DEFAULT_OPTIONS: AnalysisOptions = {
     excludeRules: [],
     includeImportedRules: true,
     includeHiddenRules: true,
-    computeDiversity: true
+    computeDiversity: true,
 };
-

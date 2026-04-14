@@ -17,7 +17,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x'
+        node-version: '24.x'
         cache: 'npm'
     
     - name: Install dependencies
@@ -26,8 +26,11 @@ jobs:
     - name: Build packages
       run: npm run build
 
-    - name: Lint
+    - name: OxLint Check
       run: npm run lint
+
+    - name: Biome Format Check
+      run: npm run format
     
     - name: Run tests
       run: npm run test:ci

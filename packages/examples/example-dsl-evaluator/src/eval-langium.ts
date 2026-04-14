@@ -6,24 +6,46 @@
 
 import { config } from 'dotenv';
 import { EmptyFileSystem } from 'langium';
-import { averageAcrossCases, averageAcrossRunners, EvalMatrix, generateHistogram, generateHistoricalChart, generateRadarChart, LangiumEvaluator, type LangiumEvaluatorResultData, loadLastResults, mergeEvaluators, normalizeData } from 'langium-ai-tools/evaluator';
+import {
+    averageAcrossCases,
+    averageAcrossRunners,
+    EvalMatrix,
+    type EvaluatorResultMetadata,
+    generateHistogram,
+    generateHistoricalChart,
+    generateRadarChart,
+    LangiumEvaluator,
+    type LangiumEvaluatorResultData,
+    loadLastResults,
+    mergeEvaluators,
+    normalizeData,
+} from 'langium-ai-tools/evaluator';
 import { createLangiumGrammarServices } from 'langium/grammar';
 import { type EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
 import { EditDistanceEvaluator, type EditDistanceEvaluatorResultData } from './edit-distance-evaluator.js';
 import { cases as langiumCases } from './langium-cases.js';
-import { runner_codegemma, runner_codegemma_rag, runner_codellama, runner_codellama_rag, runner_llama3_1_rag, runner_llama3_2_3b, runner_llama3_2_3b_rag } from './runners.js';
+import {
+    runner_codegemma,
+    runner_codegemma_rag,
+    runner_codellama,
+    runner_codellama_rag,
+    runner_llama3_1_rag,
+    runner_llama3_2_3b,
+    runner_llama3_2_3b_rag,
+} from './runners.js';
 config();
 
 const langiumServices = createLangiumGrammarServices(EmptyFileSystem);
 
-type MergedEvaluatorResultType = LangiumEvaluatorResultData & EditDistanceEvaluatorResultData & EmbeddingEvaluatorResultData;
+type MergedEvaluatorResultType = LangiumEvaluatorResultData &
+    EditDistanceEvaluatorResultData &
+    EmbeddingEvaluatorResultData;
 
 /**
  * Runs a first set of evals for generating hello-world grammars
  * This is done with just a prompt
  */
 export async function runLangiumEvals() {
-
     const eMat = new EvalMatrix({
         config: {
             // various config options
@@ -31,7 +53,7 @@ export async function runLangiumEvals() {
             description: 'Evaluates Various Generated Grammars using Various Model Stacks',
             history_folder: '.langium-ai',
             // number of runs to average across
-            num_runs: 3
+            num_runs: 3,
         },
         runners: [
             runner_llama3_2_3b,
@@ -50,33 +72,38 @@ export async function runLangiumEvals() {
                 eval: mergeEvaluators(
                     new LangiumEvaluator(langiumServices.grammar),
                     new EditDistanceEvaluator(),
-                    new OllamaEmbeddingEvaluator('nomic-embed-text')
-                )
-            }
+                    new OllamaEmbeddingEvaluator('nomic-embed-text'),
+                ),
+            },
         ],
-        cases: langiumCases
+        cases: langiumCases,
     });
-    
+
     // run & report
     const results = await eMat.run();
     console.log('Evaluation report: ');
-    console.table(results.map(r => {
-        return {
-            name: r.name,
-            ...r.data
-        }
-    }), ['name', 'errors', 'warnings', 'infos', 'hints', 'unassigned', 'edit_distance']);
+    console.table(
+        results.map((r) => {
+            return {
+                name: r.name,
+                ...r.data,
+            };
+        }),
+        ['name', 'errors', 'warnings', 'infos', 'hints', 'unassigned', 'edit_distance'],
+    );
 
     // get average scores too
     const processedResults = averageAcrossCases(results);
     console.log('Average Evaluation report: ');
-    console.table(processedResults.map(r => {
-        return {
-            name: r.name,
-            ...r.data
-        }
-    }), ['name', 'errors', 'warnings', 'infos', 'hints', 'unassigned', 'edit_distance']);
-    
+    console.table(
+        processedResults.map((r) => {
+            return {
+                name: r.name,
+                ...r.data,
+            };
+        }),
+        ['name', 'errors', 'warnings', 'infos', 'hints', 'unassigned', 'edit_distance'],
+    );
 }
 
 export function generateChartFromLastResults() {
@@ -90,16 +117,16 @@ export function generateChartFromLastResults() {
         './radar-chart.html',
         (data: MergedEvaluatorResultType, _metadata: Record<string, unknown>) => {
             return {
-                'Failures': data.failures,
-                'Errors':   data.errors,
-                'Warnings': data.warnings,
+                Failures: data.failures,
+                Errors: data.errors,
+                Warnings: data.warnings,
                 'Semantic Diff': 1.0 - data.similarity, // inverse similarity
-                'Total Diagnostics':    (data.errors + data.warnings + data.infos + data.hints + data.unassigned) / 5.0,
+                'Total Diagnostics': (data.errors + data.warnings + data.infos + data.hints + data.unassigned) / 5.0,
                 'Response Size': data.response_length ?? 0,
                 'Edit Distance': data.edit_distance,
-                'Time': data._runtime ?? 0
-            }
-        }
+                Time: data._runtime ?? 0,
+            };
+        },
     );
 
     // generate a histogram chart for this run
@@ -107,18 +134,18 @@ export function generateChartFromLastResults() {
         'Histogram Chart (smaller is better)',
         normalizeData(rawResults),
         './histogram-chart.html',
-        (data: MergedEvaluatorResultType, _metadata: Record<string, unknown>) =>  {
+        (data: MergedEvaluatorResultType, _metadata: Record<string, unknown>) => {
             return {
-                'Failures': data.failures,
-                'Errors':   data.errors,
-                'Warnings': data.warnings,
+                Failures: data.failures,
+                Errors: data.errors,
+                Warnings: data.warnings,
                 'Semantic Diff': 1.0 - data.similarity,
-                'Total Diagnostics':    (data.errors + data.warnings + data.infos + data.hints + data.unassigned) / 5.0,
+                'Total Diagnostics': (data.errors + data.warnings + data.infos + data.hints + data.unassigned) / 5.0,
                 'Response Size': data.response_length ?? 0,
                 'Edit Distance': data.edit_distance,
-                'Time': data._runtime ?? 0
-            }   
-        }
+                Time: data._runtime ?? 0,
+            };
+        },
     );
 
     // generate a historical chart for all unique runners over time
@@ -126,20 +153,20 @@ export function generateChartFromLastResults() {
         'Historical Chart (Approx. Area of Radar Chart)',
         '.langium-ai', // src folder for data
         './historical-chart.html',
-        (data: MergedEvaluatorResultType, _metadata: Record<string, unknown>) => {
-            return calculateTriangleAreas(data).reduce((a, b) => a + b, 0);
+        (data: MergedEvaluatorResultType, metadata: EvaluatorResultMetadata) => {
+            return calculateTriangleAreas(data, metadata).reduce((a, b) => a + b, 0);
         },
         {
             preprocess: averageAcrossRunners,
             // take: 30,
             // filter: (r) =>  r.name.match(/rag/i) === null
-        }
+        },
     );
 }
 
-function calculateTriangleAreas(data: MergedEvaluatorResultType): number[] {
+function calculateTriangleAreas(data: MergedEvaluatorResultType, metadata: EvaluatorResultMetadata): number[] {
     // order changes area, so be consistent here when checking!
-    const values = [
+    const values: number[] = [
         data.failures ?? 0,
         data.errors,
         data.warnings,
@@ -147,11 +174,11 @@ function calculateTriangleAreas(data: MergedEvaluatorResultType): number[] {
         (data.errors + data.warnings + data.infos + data.hints + data.unassigned) / 5.0, // Total Diagnostics
         data.responseLength ?? 0,
         data.edit_distance,
-        data.runtime ?? 0
+        (metadata.duration as number) ?? 0,
     ];
 
     const n = values.length;
-    const angle = 2 * Math.PI / n;
+    const angle = (2 * Math.PI) / n;
     const areas = [];
 
     for (let i = 0; i < n; i++) {
@@ -163,5 +190,3 @@ function calculateTriangleAreas(data: MergedEvaluatorResultType): number[] {
 
     return areas;
 }
-
-

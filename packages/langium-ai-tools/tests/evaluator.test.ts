@@ -3,13 +3,13 @@
  */
 
 import { createServicesForGrammar } from 'langium/grammar';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
     Evaluator,
     EvaluatorResult,
     averageAcrossCases,
     averageAcrossRunners,
-    mergeEvaluators
+    mergeEvaluators,
 } from '../src/evaluator/evaluator.js';
 import { LangiumEvaluator } from '../src/evaluator/langium-evaluator.js';
 
@@ -52,48 +52,47 @@ terminal ID: /[_a-zA-Z][\\w_]*/;
 hidden terminal ML_COMMENT: /\\/\\*[\\s\\S]*?\\*\\//;
 hidden terminal SL_COMMENT: /\\/\\/[^\\n\\r]*/;
 
-` });
+`,
+});
 
 describe('Evaluator Utility Functions', () => {
-
     describe('averageAcrossCases', () => {
-
         it('should average results with the same name', () => {
             const results: EvaluatorResult[] = [
-                { name: 'test1', metadata: {}, data: { score: 10, runtime: 5 } },
-                { name: 'test1', metadata: {}, data: { score: 20, runtime: 15 } },
-                { name: 'test1', metadata: {}, data: { score: 30, runtime: 25 } }
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 10, runtime: 5 } },
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 20, runtime: 15 } },
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 30, runtime: 25 } },
             ];
 
             const averaged = averageAcrossCases(results);
 
             expect(averaged).toHaveLength(1);
             expect(averaged[0].name).toBe('test1');
-            expect(averaged[0].data.score).toBe(20); 
+            expect(averaged[0].data.score).toBe(20);
             expect(averaged[0].data.runtime).toBe(15);
         });
 
         it('should handle multiple different result names', () => {
             const results: EvaluatorResult[] = [
-                { name: 'test1', metadata: {}, data: { score: 10 } },
-                { name: 'test2', metadata: {}, data: { score: 20 } },
-                { name: 'test1', metadata: {}, data: { score: 30 } }
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 10 } },
+                { name: 'test2', metadata: { duration: 0 }, data: { score: 20 } },
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 30 } },
             ];
 
             const averaged = averageAcrossCases(results);
 
             expect(averaged).toHaveLength(2);
-            const test1 = averaged.find(r => r.name === 'test1');
-            const test2 = averaged.find(r => r.name === 'test2');
+            const test1 = averaged.find((r) => r.name === 'test1');
+            const test2 = averaged.find((r) => r.name === 'test2');
             expect(test1?.data.score).toBe(20);
             expect(test2?.data.score).toBe(20);
         });
 
         it('should round to 2 decimal places', () => {
             const results: EvaluatorResult[] = [
-                { name: 'test1', metadata: {}, data: { score: 10 } },
-                { name: 'test1', metadata: {}, data: { score: 11 } },
-                { name: 'test1', metadata: {}, data: { score: 12 } }
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 10 } },
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 11 } },
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 12 } },
             ];
 
             const averaged = averageAcrossCases(results);
@@ -101,11 +100,10 @@ describe('Evaluator Utility Functions', () => {
             expect(averaged[0].data.score).toBe(11);
         });
 
-        // TODO can't aggregate non-numeric data types
         it('should preserve non-numeric data', () => {
             const results: EvaluatorResult[] = [
-                { name: 'test1', metadata: {}, data: { score: 10, status: 'pass' } },
-                { name: 'test1', metadata: {}, data: { score: 20, status: 'fail' } }
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 10, status: 'pass' } },
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 20, status: 'fail' } },
             ];
 
             const averaged = averageAcrossCases(results);
@@ -125,9 +123,7 @@ describe('Evaluator Utility Functions', () => {
         });
 
         it('should handle single result', () => {
-            const results: EvaluatorResult[] = [
-                { name: 'test1', metadata: {}, data: { score: 42 } }
-            ];
+            const results: EvaluatorResult[] = [{ name: 'test1', metadata: { duration: 0 }, data: { score: 42 } }];
 
             const averaged = averageAcrossCases(results);
 
@@ -145,12 +141,11 @@ describe('Evaluator Utility Functions', () => {
     });
 
     describe('averageAcrossRunners', () => {
-
         it('should average results across runners', () => {
             const results: EvaluatorResult[] = [
-                { name: 'runner1-case1', metadata: { runner: 'runner1' }, data: { score: 10 } },
-                { name: 'runner1-case2', metadata: { runner: 'runner1' }, data: { score: 20 } },
-                { name: 'runner2-case1', metadata: { runner: 'runner2' }, data: { score: 30 } }
+                { name: 'runner1-case1', metadata: { duration: 0, runner: 'runner1' }, data: { score: 10 } },
+                { name: 'runner1-case2', metadata: { duration: 0, runner: 'runner1' }, data: { score: 20 } },
+                { name: 'runner2-case1', metadata: { duration: 0, runner: 'runner2' }, data: { score: 30 } },
             ];
 
             const averaged = averageAcrossRunners(results);
@@ -160,20 +155,20 @@ describe('Evaluator Utility Functions', () => {
             // runner1 average
             expect(averaged[0].data).toBeDefined();
             expect(averaged[0].data).toStrictEqual({
-                score: 15
+                score: 15,
             });
 
             // runner2 average
             expect(averaged[1].data).toBeDefined();
             expect(averaged[1].data).toStrictEqual({
-                score: 30
+                score: 30,
             });
         });
 
         it('should preserve runner metadata', () => {
             const results: EvaluatorResult[] = [
-                { name: 'case1', metadata: { runner: 'runner1', version: '1.0' }, data: { score: 10 } },
-                { name: 'case2', metadata: { runner: 'runner1', version: '1.0' }, data: { score: 20 } }
+                { name: 'case1', metadata: { duration: 0, runner: 'runner1', version: '1.0' }, data: { score: 10 } },
+                { name: 'case2', metadata: { duration: 0, runner: 'runner1', version: '1.0' }, data: { score: 20 } },
             ];
 
             const averaged = averageAcrossRunners(results);
@@ -184,8 +179,8 @@ describe('Evaluator Utility Functions', () => {
 
         it('should handle single runner', () => {
             const results: EvaluatorResult[] = [
-                { name: 'case1', metadata: { runner: 'runner1' }, data: { score: 10 } },
-                { name: 'case2', metadata: { runner: 'runner1' }, data: { score: 20 } }
+                { name: 'case1', metadata: { duration: 0, runner: 'runner1' }, data: { score: 10 } },
+                { name: 'case2', metadata: { duration: 0, runner: 'runner1' }, data: { score: 20 } },
             ];
 
             const averaged = averageAcrossRunners(results);
@@ -196,122 +191,117 @@ describe('Evaluator Utility Functions', () => {
     });
 
     describe('mergeEvaluators', () => {
-
         it('should merge two evaluators', async () => {
             const eval1: Evaluator = {
                 async evaluate(_response: string, _expected: string) {
                     return {
-                        name: 'eval1',
-                        metadata: { source: 'eval1' },
-                        data: { metric1: 10 }
+                        metric1: 10,
                     };
-                }
+                },
             };
 
             const eval2: Evaluator = {
                 async evaluate(_response: string, _expected: string) {
                     return {
-                        name: 'eval2',
-                        metadata: { source: 'eval2' },
-                        data: { metric2: 20 }
+                        metric2: 20,
                     };
-                }
+                },
             };
 
             const merged = mergeEvaluators(eval1, eval2);
             const result = await merged.evaluate('test', 'expected');
 
-            expect(result.metadata).toEqual({ source: 'eval2' });
-            expect(result.data).toEqual({ metric1: 10, metric2: 20 });
+            expect(result).toEqual({ metric1: 10, metric2: 20 });
         });
 
         it('should merge multiple evaluators', async () => {
             const eval1: Evaluator = {
                 async evaluate() {
-                    return { metadata: {}, data: { a: 1 } };
-                }
+                    return { a: 1 };
+                },
             };
 
             const eval2: Evaluator = {
                 async evaluate() {
-                    return { metadata: {}, data: { b: 2 } };
-                }
+                    return { b: 2 };
+                },
             };
 
             const eval3: Evaluator = {
                 async evaluate() {
-                    return { metadata: {}, data: { c: 3 } };
-                }
+                    return { c: 3 };
+                },
             };
 
             const merged = mergeEvaluators(eval1, eval2, eval3);
             const result = await merged.evaluate('test', 'expected');
 
-            expect(result.data).toEqual({ a: 1, b: 2, c: 3 });
+            expect(result).toEqual({ a: 1, b: 2, c: 3 });
         });
 
         it('should allow later evaluators to override earlier ones', async () => {
             const eval1: Evaluator = {
                 async evaluate() {
                     return {
-                        metadata: { version: '1.0' },
-                        data: { score: 10 }
+                        score: 10,
                     };
-                }
+                },
             };
 
             const eval2: Evaluator = {
                 async evaluate() {
                     return {
-                        metadata: { version: '2.0' },
-                        data: { score: 20 }
+                        score: 20,
                     };
-                }
+                },
             };
 
             const merged = mergeEvaluators(eval1, eval2);
             const result = await merged.evaluate('test', 'expected');
 
-            expect(result.data).toBeDefined();
-            expect(result.data!.score).toBe(20);
-            expect(result.metadata).toBeDefined();
-            expect(result.metadata!.version).toBe('2.0');
+            expect(result).toBeDefined();
+            expect(result.score).toBe(20);
         });
 
         it('should handle evaluators with overlapping and non-overlapping keys', async () => {
             const eval1: Evaluator = {
                 async evaluate() {
                     return {
-                        metadata: { a: 1, b: 2 },
-                        data: { x: 10, y: 20 }
+                        a: 1,
+                        b: 2,
+                        x: 10,
+                        y: 20,
                     };
-                }
+                },
             };
 
             const eval2: Evaluator = {
                 async evaluate() {
                     return {
-                        metadata: { b: 3, c: 4 },
-                        data: { y: 30, z: 40 }
+                        b: 3,
+                        c: 4,
+                        y: 30,
+                        z: 40,
                     };
-                }
+                },
             };
 
             const merged = mergeEvaluators(eval1, eval2);
             const result = await merged.evaluate('test', 'expected');
-
-            expect(result.metadata).toEqual({ a: 1, b: 3, c: 4 });
-            expect(result.data).toEqual({ x: 10, y: 30, z: 40 });
+            expect(result).toEqual({ a: 1, b: 3, c: 4, x: 10, y: 30, z: 40 });
         });
     });
 });
 
 describe('LangiumEvaluator', () => {
+    let evaluator: LangiumEvaluator;
 
-    const evaluator = new LangiumEvaluator(domainModelServices);
+    beforeEach(() => {
+        // create a fresh evaluator instance before each test to ensure clean state
+        evaluator = new LangiumEvaluator(domainModelServices);
+    });
 
     describe('Basic validation', () => {
-
         it('should validate correct code with no errors', async () => {
             const validCode = `package foo.bar {
                 datatype String
@@ -367,7 +357,6 @@ describe('LangiumEvaluator', () => {
     });
 
     describe('Code block handling', () => {
-
         it('should extract code from markdown code blocks', async () => {
             const markdownCode = '```langium\npackage test {}\n```';
 
@@ -395,7 +384,6 @@ describe('LangiumEvaluator', () => {
     });
 
     describe('Diagnostic counting', () => {
-
         it('should track response length', async () => {
             const code = `package test {}`;
 
@@ -426,7 +414,6 @@ describe('LangiumEvaluator', () => {
     });
 
     describe('Error handling', () => {
-
         it('should handle build errors gracefully', async () => {
             const malformed = `package test {...`;
 
@@ -448,7 +435,6 @@ describe('LangiumEvaluator', () => {
     });
 
     describe('Result structure', () => {
-
         it('should return properly structured result', async () => {
             const code = `package test {}`;
 

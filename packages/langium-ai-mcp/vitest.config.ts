@@ -6,12 +6,7 @@ export default defineConfig({
         globals: true,
         include: ['tests/**/*.test.ts'],
         typecheck: {
-            tsconfig: 'tsconfig.tests.json'
-        }
+            tsconfig: 'tsconfig.tests.json',
+        },
     },
-    esbuild: {
-        target: 'node20'
-    }
 });
-
-

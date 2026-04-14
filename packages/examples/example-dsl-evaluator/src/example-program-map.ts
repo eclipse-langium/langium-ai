@@ -5,10 +5,10 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { type AstNode } from "langium";
-import { ProgramMapper } from "langium-ai-tools";
-import { createLangiumGrammarServices } from "langium/grammar";
-import { NodeFileSystem } from "langium/node";
+import { type AstNode } from 'langium';
+import { ProgramMapper } from 'langium-ai-tools';
+import { createLangiumGrammarServices } from 'langium/grammar';
+import { NodeFileSystem } from 'langium/node';
 
 interface ParserRuleNode {
     $type: 'ParserRule';
@@ -27,7 +27,6 @@ interface TerminalRuleNode {
 }
 
 export function runExampleProgramMap() {
-
     // simple langium grammar, as an example
     const exampleLangiumDoc = `
     grammar Test
@@ -61,12 +60,12 @@ export function runExampleProgramMap() {
     hidden terminal WS: /\s+/;
     terminal ID: /[_a-zA-Z][\w_]*/;
         `;
-    
+
     // setup your language services (langium's, in this case)
     const langiumServices = createLangiumGrammarServices(NodeFileSystem);
     const grammarServices = langiumServices.grammar;
 
-    // instantiate 
+    // instantiate
     const mapper = new ProgramMapper(grammarServices, {
         mappingRules: [
             {
@@ -81,11 +80,11 @@ export function runExampleProgramMap() {
                         node.entry ? 'entry' : undefined,
                         node.fragment ? 'fragment' : undefined,
                         node.definesHiddenTokens ? 'hidden' : undefined,
-                        node.dataType ? 'datatype' : undefined
-                    ].filter(v => v !== undefined);
+                        node.dataType ? 'datatype' : undefined,
+                    ].filter((v) => v !== undefined);
                     const modifierString = modifiers.length > 0 ? `(${modifiers.join(', ')}) ` : '';
                     return `${modifierString}rule ${ruleName}`;
-                }
+                },
             },
             {
                 predicate: (node) => node.$type === 'TerminalRule',
@@ -97,12 +96,12 @@ export function runExampleProgramMap() {
                     const modifiers = [
                         node.fragment ? 'fragment' : undefined,
                         node.hidden ? 'hidden' : undefined,
-                    ].filter(v => v !== undefined);
+                    ].filter((v) => v !== undefined);
                     const modifierString = modifiers.length > 0 ? `(${modifiers.join(', ')}) ` : '';
                     return `${modifierString}terminal ${node.name}`;
-                }
-            }
-        ]
+                },
+            },
+        ],
     });
     const programMap = mapper.map(exampleLangiumDoc);
     console.log('Program Map Output:');

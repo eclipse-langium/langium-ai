@@ -4,7 +4,10 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
+export * from './types.js';
 export * from './evaluator/index.js';
 export * from './analyzer/index.js';
 export * from './splitter/index.js';
 export * from './gen/interface.js';
+export * from './evals/index.js';
+export * from './evals/runner.js';

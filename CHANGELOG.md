@@ -1,5 +1,52 @@
 # CHANGELOG
 
+## v5.0.0
+
+### Breaking changes
+- **Langium is now a peer dependency** — `langium-ai-tools` no longer pins a specific Langium version. Projects must provide their own `langium` (>=4.0.0 <5.0.0). This decouples `langium-ai-tools` releases from Langium releases.
+- Evaluations now return a 0–1 score instead of pass/fail
+- Decoupled volatile interfaces/types from core package
+
+### New features
+- **CLI (`langium-ai`)** — new Commander.js CLI for bootstrapping AI-powered tooling in Langium projects
+  - `lai init` — interactive project setup with Langium detection
+  - `lai gen descriptor` — generate language descriptors from project analysis
+  - `lai gen sysprompt` — synthesize system prompts from descriptors
+  - `lai validate` — validate descriptor schema and file paths
+  - `lai evaluate` — run `.eval.ts` evaluation suites with verbose mode, custom sysprompts, and progress tracking
+  - `lai history` — view past evaluation runs with `--oneline` support
+  - `lai show` — inspect evaluation run results
+  - `lai compare` — compare two evaluation runs side-by-side
+  - `lai stats` — aggregate statistics across runs with tag filtering
+  - `lai tag` — tag evaluation runs for tracking
+  - `lai export` — export results as CSV or JSON
+  - `lai clean` — clean old evaluation runs
+  - `lai status` — check project status
+- **Evaluation suite API** — vitest-style testing API with `describe`, `evaluation`, `beforeAll`, `afterAll`, `beforeEach`, `afterEach`, `.skip()`, `.only()`, and `evaluation.each()` for parametrized tests
+- **LLM provider support** — pluggable providers for descriptor and sysprompt generation (Claude, OpenAI, Ollama, Gemini, Codex)
+- **Agent skills** — added skill documents for coding agents
+  - LAI CLI usage skill with workflow guidance
+  - Langium framework skill for deep project understanding
+  - `/lai-gen-language-skill` for constructing a skill for your DSL
+  - `/lai-gen-descriptor` for generating & improving a language descriptor
+  - `/lai-gen-sysprompt` for generating & refining a system prompt for your language
+  - `/lai-gen-evals` for generating & updating the evaluation suite for your language (builds off of the base from `lai init`)
+  - `/lai-gen-mcp` for generating an mcp server for your language
+- Automatic Langium project structure detection (grammar, services, validators, built-ins)
+- Automatic Claude Code path detection during init
+- Prompt to install `langium-ai-tools` during init
+- Support for built-in files in descriptors and system prompts
+- Descriptor and sysprompt versioning
+
+### General improvements
+- Switched to Biome for formatting and oxlint for linting
+- Added knip for unused code detection
+- Modernized vitest configs; CLI uses forks pool
+- CI workflow updated with lint and format checks, Node 24.x
+- Comprehensive documentation for generated evaluation files
+- Updated and improved READMEs across packages
+- npm audit fixes and dependency bumps
+
 ## v4.2.1 (2026-03-24)
 
 ### General improvements

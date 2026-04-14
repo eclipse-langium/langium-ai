@@ -4,17 +4,17 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { type AstNode, CstUtils, type LangiumDocument, URI } from "langium";
-import { type LangiumServices } from "langium/lsp";
+import { type AstNode, CstUtils, type LangiumDocument, URI } from 'langium';
 import { AstUtils } from 'langium';
+import type { LangiumServicesLike } from '../types.js';
 
 interface SplitterOptions {
     /**
      * List of comment rule names to include in the chunk.
      * If not provided comments are ignored.
      * Default: ['ML_COMMENT', 'SL_COMMENT']
-    */
-    commentRuleNames?: string[]
+     */
+    commentRuleNames?: string[];
 }
 
 /**
@@ -23,14 +23,23 @@ interface SplitterOptions {
  * @param services Associated Langium services for parsing
  * @returns The parsed LangiumDocument or undefined if there were errors
  */
-function parseDocument(document: string, services: LangiumServices): LangiumDocument<AstNode> | undefined {
-    const langiumDoc = services.shared.workspace.LangiumDocumentFactory.fromString(document, URI.parse('memory://document.langium'));
+function parseDocument(document: string, services: LangiumServicesLike): LangiumDocument<AstNode> | undefined {
+    const langiumDoc = services.shared.workspace.LangiumDocumentFactory.fromString(
+        document,
+        URI.parse('memory://document.langium'),
+    );
     if (langiumDoc.parseResult.lexerErrors.length > 0) {
-        console.error('Lexer errors, returning undefined:', langiumDoc.parseResult.lexerErrors.map(e => '\t- ' + e.message + '\n').join(''));
+        console.error(
+            'Lexer errors, returning undefined:',
+            langiumDoc.parseResult.lexerErrors.map((e) => '\t- ' + e.message + '\n').join(''),
+        );
         return undefined;
     }
     if (langiumDoc.parseResult.parserErrors.length > 0) {
-        console.error('Parser errors, returning undefined:\n', langiumDoc.parseResult.parserErrors.map(e => '\t- ' + e.message + '\n').join(''));
+        console.error(
+            'Parser errors, returning undefined:\n',
+            langiumDoc.parseResult.parserErrors.map((e) => '\t- ' + e.message + '\n').join(''),
+        );
         return undefined;
     }
     return langiumDoc;
@@ -47,7 +56,7 @@ function parseDocument(document: string, services: LangiumServices): LangiumDocu
 function getMatchingAstNodes(
     document: string,
     nodePredicates: Array<(node: AstNode) => boolean> | ((node: AstNode) => boolean),
-    services: LangiumServices
+    services: LangiumServicesLike,
 ): AstNode[] {
     if (document.trim() === '') {
         return [];
@@ -66,7 +75,7 @@ function getMatchingAstNodes(
     // Stream nodes from the AST and filter them based on the predicates
     const stream = AstUtils.streamAst(langiumDoc.parseResult.value);
     for (const node of stream) {
-        if (predicates.some(p => p(node))) {
+        if (predicates.some((p) => p(node))) {
             astNodes.push(node);
         }
     }
@@ -85,8 +94,8 @@ function getMatchingAstNodes(
 export function splitByNode(
     document: string,
     nodePredicates: Array<(node: AstNode) => boolean> | ((node: AstNode) => boolean),
-    services: LangiumServices,
-    options: SplitterOptions = { commentRuleNames: ['ML_COMMENT', 'SL_COMMENT'] }
+    services: LangiumServicesLike,
+    options: SplitterOptions = { commentRuleNames: ['ML_COMMENT', 'SL_COMMENT'] },
 ): string[] {
     const astNodes = getMatchingAstNodes(document, nodePredicates, services);
 
@@ -114,12 +123,12 @@ export function splitByNode(
         const chunk = txtDoc.getText({
             start: {
                 line: start?.line || 0,
-                character: start?.character || 0
+                character: start?.character || 0,
             },
             end: {
                 line: end?.line || 0,
-                character: end?.character || 0
-            }
+                character: end?.character || 0,
+            },
         });
 
         if (chunk.trim().length > 0) {
@@ -140,7 +149,7 @@ export function splitByNode(
 export function splitByNodeToAst(
     document: string,
     nodePredicates: Array<(node: AstNode) => boolean> | ((node: AstNode) => boolean),
-    services: LangiumServices
+    services: LangiumServicesLike,
 ): AstNode[] {
     return getMatchingAstNodes(document, nodePredicates, services);
 }
