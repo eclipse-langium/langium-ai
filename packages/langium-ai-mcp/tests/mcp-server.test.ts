@@ -3,8 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { validateLangiumCode } from '../src/mcp-server';
 
 describe('validateLangiumCode', () => {
-
-
     it('should return undefined for valid grammar code', async () => {
         const validCode = `
                 grammar HelloWorld
@@ -27,6 +25,8 @@ describe('validateLangiumCode', () => {
 
         const result = await validateLangiumCode(invalidCode);
         expect(result).toBeDefined();
-        expect(result).toContain("Error: Could not resolve reference to AbstractRule named 'Person'. at line 3, column 35");
+        expect(result).toContain(
+            "Error: Could not resolve reference to AbstractRule named 'Person'. at line 3, column 35",
+        );
     });
 });

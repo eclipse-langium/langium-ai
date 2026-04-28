@@ -4,11 +4,11 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { Evaluator, type EvaluatorResult } from "./evaluator.js";
+import { Evaluator, type EvaluatorResult } from './evaluator.js';
 import fs from 'fs';
 import * as path from 'path';
-import { type Message } from "./message.js";
-import { type EvalCase } from "./eval-case.js";
+import { type Message } from './message.js';
+import { type EvalCase } from './eval-case.js';
 
 /**
  * Configuration for the evaluation matrix
@@ -35,7 +35,7 @@ export interface EvalMatrixConfig {
          * Note this will trigger evaluation for all registered evaluators for each run
          */
         num_runs: number;
-    },
+    };
 
     /**
      * Runners to evaluate
@@ -67,14 +67,13 @@ export class EvalMatrix {
      * Run the evaluation matrix, getting all results back
      */
     async run(): Promise<EvaluatorResult[]> {
-
         // get the current timestamp
         const start = new Date();
 
         const results: EvaluatorResult[] = [];
 
         // verify that all runners have unique names first
-        const runnerNames = this.config.runners.map(r => r.name);
+        const runnerNames = this.config.runners.map((r) => r.name);
         const uniqueRunnerNames = new Set();
         for (const name of runnerNames) {
             if (uniqueRunnerNames.has(name)) {
@@ -84,11 +83,12 @@ export class EvalMatrix {
         }
 
         console.log(`Running evaluation matrix: ${this.config.config.name}`);
-        console.log(`Found ${this.config.runners.length * this.config.cases.length * this.config.evaluators.length} runner-evaluator-case combinations to handle`);
+        console.log(
+            `Found ${this.config.runners.length * this.config.cases.length * this.config.evaluators.length} runner-evaluator-case combinations to handle`,
+        );
 
         // run all runners
         for (const runner of this.config.runners) {
-
             console.log(`* Runner: ${runner.name}`);
 
             // run all cases for this runner
@@ -104,23 +104,20 @@ export class EvalMatrix {
                     // run all evaluators on this response
                     for (const evaluator of this.config.evaluators) {
                         console.log(`    * Evaluator: ${evaluator.name} (run ${iteration + 1})`);
-                        const result = await evaluator.eval.evaluate(response, testCase.expected_response);
-                        if (!result.name) {
-                            result.name = `${runner.name} - ${testCase.name} - ${evaluator.name}`;
-                        }
-                        // add runtime there too, so we have access to it
-                        result.data!.runtime = (runnerEndTime.getTime() - runnerStartTime.getTime()) / 1000.0; // in seconds
-
-                        result.metadata = {
-                            runner: runner.name,
-                            evaluator: evaluator.name,
-                            testCase: { ...testCase },
-                            actual_response: response,
-                            duration: (runnerEndTime.getTime() - runnerStartTime.getTime()) / 1000.0, // in seconds
-                            run_count: iteration + 1
+                        const evaluatorResultData = await evaluator.eval.evaluate(response, testCase.expected_response);
+                        const evaluatorResult: EvaluatorResult = {
+                            name: `${runner.name} - ${testCase.name} - ${evaluator.name}`,
+                            metadata: {
+                                runner: runner.name,
+                                evaluator: evaluator.name,
+                                testCase: { ...testCase },
+                                actual_response: response,
+                                duration: (runnerEndTime.getTime() - runnerStartTime.getTime()) / 1000.0, // in seconds
+                                run_count: iteration + 1,
+                            },
+                            data: evaluatorResultData,
                         };
-
-                        results.push(result as EvaluatorResult);
+                        results.push(evaluatorResult);
                     }
                 }
             }
@@ -148,7 +145,7 @@ export class EvalMatrix {
             config: this.config.config,
             date: dateStr,
             runTime: `${runTime}s`,
-            results
+            results,
         };
         fs.writeFileSync(path.join(this.config.config.history_folder, fileName), JSON.stringify(report, null, 2));
 

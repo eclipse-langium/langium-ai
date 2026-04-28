@@ -8,17 +8,16 @@
  * Base Langium DSL validator (taps into Langium's validator messages to provide better results)
  */
 
-import { type LangiumDocument } from "langium";
-import { type LangiumServices } from "langium/lsp";
-import { Diagnostic } from "vscode-languageserver-types";
-import { AbstractDocumentEvaluator, type EvaluationContext, type FailureAwarenessData } from "./document-evaluator.js";
-import { type EvaluatorResult } from "./evaluator.js";
+import { type LangiumDocument } from 'langium';
+import { Diagnostic } from 'vscode-languageserver-types';
+import type { LangiumServicesLike } from '../types.js';
+import { AbstractDocumentEvaluator, type EvaluationContext, type FailureAwarenessData } from './document-evaluator.js';
+import { type EvaluatorResult } from './evaluator.js';
 
 /**
  * Langium-specific evaluator result data
  */
 export interface LangiumEvaluatorResultData extends FailureAwarenessData {
-
     /**
      * Number of errors
      */
@@ -55,14 +54,14 @@ export interface LangiumEvaluatorResultData extends FailureAwarenessData {
     diagnostics: Diagnostic[];
 }
 
-export class LangiumEvaluator<T extends LangiumServices> extends AbstractDocumentEvaluator<T, LangiumEvaluatorResultData> {
-
-
+export class LangiumEvaluator<T extends LangiumServicesLike> extends AbstractDocumentEvaluator<
+    T,
+    LangiumEvaluatorResultData
+> {
     /**
      * Validate an agent response as if it's a langium program. If we can parse it, we attempt to validate it.
      */
     evaluateDocument(doc: LangiumDocument, ctx: EvaluationContext): EvaluatorResult<LangiumEvaluatorResultData> {
-
         const validationResults = doc.diagnostics ?? [];
 
         const evalData: LangiumEvaluatorResultData = this.createEmptyResultData();
@@ -70,7 +69,6 @@ export class LangiumEvaluator<T extends LangiumServices> extends AbstractDocumen
         evalData.response_length = ctx.input.length;
         // include the diagnostics for debugging if desired
         evalData.diagnostics = validationResults;
-
 
         for (const diagnostic of validationResults) {
             if (diagnostic.severity) {
@@ -96,8 +94,11 @@ export class LangiumEvaluator<T extends LangiumServices> extends AbstractDocumen
 
         return {
             name: this.constructor.name,
-            metadata: {},
-            data: evalData
+            metadata: {
+                // no duration available
+                duration: 0,
+            },
+            data: evalData,
         };
     }
 
@@ -110,7 +111,7 @@ export class LangiumEvaluator<T extends LangiumServices> extends AbstractDocumen
             hints: 0,
             unassigned: 0,
             responseLength: 0,
-            diagnostics: []
+            diagnostics: [],
         };
     }
 }

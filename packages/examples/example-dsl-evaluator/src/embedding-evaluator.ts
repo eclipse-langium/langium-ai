@@ -8,7 +8,7 @@
  * Simple evaluator that computes the embedding for two strings, and returns the cosine similarity
  */
 
-import { Evaluator, type EvaluatorResult } from "langium-ai-tools/evaluator";
+import { Evaluator, type EvaluatorResult } from 'langium-ai-tools/evaluator';
 import ollama from 'ollama';
 
 export interface EmbeddingEvaluatorResultData extends EvaluatorResult {
@@ -31,29 +31,31 @@ export class OllamaEmbeddingEvaluator extends Evaluator {
      */
     async evaluate(response: string, expected_response: string): Promise<Partial<EvaluatorResult>> {
         // compute the embedding for both strings
-        const responseEmbedding = (await this.computeEmbedding(response));
-        const expectedEmbedding = (await this.computeEmbedding(expected_response));
+        const responseEmbedding = await this.computeEmbedding(response);
+        const expectedEmbedding = await this.computeEmbedding(expected_response);
 
         // compute the cosine similarity between the two embeddings
         const similarity = this.cosineSimilarity(responseEmbedding, expectedEmbedding);
 
         return {
             data: {
-                similarity
-            }
+                similarity,
+            },
         };
     }
 
     /**
      * Computes the embedding for a given text
-     * @returns 
+     * @returns
      */
     private async computeEmbedding(text: string): Promise<number[]> {
-        return (await ollama.embed({
-            model: this.embeddingModel,
-            input: [text],
-            keep_alive: 30
-        })).embeddings[0];
+        return (
+            await ollama.embed({
+                model: this.embeddingModel,
+                input: [text],
+                keep_alive: 30,
+            })
+        ).embeddings[0];
     }
 
     /**

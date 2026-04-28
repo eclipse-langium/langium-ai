@@ -1,0 +1,27 @@
+{
+    "$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxc-project/oxlint-schema/npm/oxlint/configuration_schema.json",
+    "ignorePatterns": [
+        "**/dist/**",
+        "**/node_modules/**",
+        "**/src/gen/**",
+        "**/templates/**",
+        "**/*.js",
+        "**/*.mjs",
+        "**/*.cjs"
+    ],
+    "rules": {
+        "curly": "error",
+        "prefer-const": "error",
+        "no-var": "error",
+        "eqeqeq": "error",
+        "@typescript-eslint/no-explicit-any": "warn",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_",
+                "caughtErrorsIgnorePattern": "^_"
+            }
+        ]
+    }
+}

@@ -11,7 +11,8 @@ import { ChromaClient } from 'chromadb';
 
 async function prompt(model: string, messages: Message[]) {
     const response = await ollama.chat({
-        model, messages
+        model,
+        messages,
     });
     return response;
 }
@@ -25,7 +26,7 @@ function getOllamaRunner(name: string, model: string): Runner {
         runner: async (content: string, messages: Message[] = []) => {
             const newMsgs: Message[] = [...messages, { role: 'user', content }];
             return (await prompt(model, newMsgs)).message.content;
-        }
+        },
     };
 }
 
@@ -35,11 +36,11 @@ function getOllamaRunner(name: string, model: string): Runner {
 async function getRagSystemMessage(content: string): Promise<Message> {
     return {
         role: 'system',
-        content: `Additionally, utilize the following context to answer the user's question: \n\n${(await ragLookup(content)).join('\n======\n')}`
+        content: `Additionally, utilize the following context to answer the user's question: \n\n${(await ragLookup(content)).join('\n======\n')}`,
     };
 }
 
-const LangiumDSLCollection = "langium-collection";
+const LangiumDSLCollection = 'langium-collection';
 
 /**
  * Helper to perform a ChromaDB lookup to provide context for a RAG application, given some content
@@ -53,21 +54,25 @@ async function ragLookup(content: string): Promise<string[][]> {
         name: LangiumDSLCollection,
         embeddingFunction: {
             generate: async (texts: string[]) => {
-                return (await ollama.embed({
-                    model: 'nomic-embed-text',
-                    input: texts,
-                    keep_alive: 30
-                })).embeddings;
-            }
-        }
+                return (
+                    await ollama.embed({
+                        model: 'nomic-embed-text',
+                        input: texts,
+                        keep_alive: 30,
+                    })
+                ).embeddings;
+            },
+        },
     });
 
     // embed
-    const queryEmbeddings = (await ollama.embed({
-        model: 'nomic-embed-text',
-        input: content,
-        keep_alive: 30
-    })).embeddings;
+    const queryEmbeddings = (
+        await ollama.embed({
+            model: 'nomic-embed-text',
+            input: content,
+            keep_alive: 30,
+        })
+    ).embeddings;
 
     // query
     const results = await collection.query({
@@ -87,7 +92,7 @@ function getOllamaRAGRunner(name: string, model: string): Runner {
         runner: async (content: string, messages: Message[] = []) => {
             const newMsgs: Message[] = [await getRagSystemMessage(content), ...messages, { role: 'user', content }];
             return (await prompt(model, newMsgs)).message.content;
-        }
+        },
     };
 }
 
@@ -109,8 +114,6 @@ export const runner_codegemma_rag = getOllamaRAGRunner('codegemma w/ RAG', 'code
 export const runner_deepseek_coder_v2_rag = getOllamaRAGRunner('deepseek-coder-v2 w/ RAG', 'deepseek-coder-v2');
 export const runner_qwen_2_5_coder_rag = getOllamaRAGRunner('qwen-2.5-coder 7B w/ RAG', 'qwen2.5-coder');
 
-
-
 export const runner_openai_gpt3_5_turbo: Runner = {
     name: 'openai-gpt3',
     runner: async (content: string, messages: Message[] = []) => {
@@ -126,7 +129,7 @@ export const runner_openai_gpt3_5_turbo: Runner = {
             model: 'gpt-3.5-turbo-0125',
         });
         return chatCompletion.choices[0].message.content as string;
-    }
+    },
 };
 
 export const runner_openai_gpt3_5_turbo_rag: Runner = {
@@ -144,7 +147,7 @@ export const runner_openai_gpt3_5_turbo_rag: Runner = {
             model: 'gpt-3.5-turbo-0125',
         });
         return chatCompletion.choices[0].message.content as string;
-    }
+    },
 };
 
 export const runner_openai_gpt4o_mini: Runner = {
@@ -162,7 +165,7 @@ export const runner_openai_gpt4o_mini: Runner = {
             model: 'gpt-4o-mini',
         });
         return chatCompletion.choices[0].message.content as string;
-    }
+    },
 };
 
 export const runner_openai_gpt4o: Runner = {
@@ -180,7 +183,7 @@ export const runner_openai_gpt4o: Runner = {
             model: 'gpt-4o',
         });
         return chatCompletion.choices[0].message.content as string;
-    }
+    },
 };
 
 export const runner_openai_gpt4o_rag: Runner = {
@@ -198,7 +201,7 @@ export const runner_openai_gpt4o_rag: Runner = {
             model: 'gpt-4o',
         });
         return chatCompletion.choices[0].message.content as string;
-    }
+    },
 };
 
 export const runner_openai_gpt4o_mini_rag: Runner = {
@@ -216,5 +219,5 @@ export const runner_openai_gpt4o_mini_rag: Runner = {
             model: 'gpt-4o-mini',
         });
         return chatCompletion.choices[0].message.content as string;
-    }
+    },
 };

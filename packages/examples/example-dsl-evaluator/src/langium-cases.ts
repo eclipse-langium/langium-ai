@@ -5,7 +5,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { type EvalCase, type Message } from "langium-ai-tools";
+import { type EvalCase, type Message } from 'langium-ai-tools';
 
 /**
  * Common history for all cases here
@@ -48,14 +48,15 @@ hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
 \`\`\`
 
 Use this information to help answer questions about Langium grammars.
-` }
+`,
+    },
 ];
 
 export const cases: EvalCase[] = [
     {
-        name: "Hello World Grammar",
+        name: 'Hello World Grammar',
         history,
-        prompt: "Generate a simple HelloWorld grammar in Langium.",
+        prompt: 'Generate a simple HelloWorld grammar in Langium.',
         expected_response: `Certainly. Here's an example of a possible HelloWorld grammar written in the Langium grammar language:
 
 \`\`\`langium
@@ -77,12 +78,12 @@ hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
 \`\`\`
 
-This grammar defines a simple HelloWorld language with two parser rules: Person and Greeting. The entry rule Model allows for an arbitrary sequence of Person and Greeting elements. A Person is defined by the keyword 'person' followed by an ID terminal, which represents the person's name. A Greeting consists of the word 'Hello' followed by a reference to a Person and an exclamation mark. The grammar also includes terminal rules for whitespace, identifiers, and comments.`
+This grammar defines a simple HelloWorld language with two parser rules: Person and Greeting. The entry rule Model allows for an arbitrary sequence of Person and Greeting elements. A Person is defined by the keyword 'person' followed by an ID terminal, which represents the person's name. A Greeting consists of the word 'Hello' followed by a reference to a Person and an exclamation mark. The grammar also includes terminal rules for whitespace, identifiers, and comments.`,
     },
     {
-        name: "StateMachine Grammar",
+        name: 'StateMachine Grammar',
         history,
-        prompt: "Create a simple Statemachine grammar in Langium.",
+        prompt: 'Create a simple Statemachine grammar in Langium.',
         expected_response: `Sure. Here's an example of a basic calculator grammar written in the Langium grammar language:
 
 \`\`\`langium
@@ -119,7 +120,7 @@ hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
 \`\`\`
 
 This grammar defines a simple Statemachine language with events, commands, states, and an initial state. The Statemachine rule starts with the keyword 'statemachine' followed by an ID representing the name of the statemachine. It can include lists of events and commands, an initial state, and a sequence of states. Each event and command is defined by an ID. A state consists of a name, optional actions, and a list of zero or more transitions, followed by 'end'.
-`
+`,
     },
     {
         name: 'Domain Model',
@@ -173,7 +174,7 @@ A Type can be a DataType or an Entity.
 A DataType is defined by the keyword 'datatype' followed by an ID terminal.
 An Entity is defined by the keyword 'entity' followed by an ID terminal, an optional super type, and a block of zero or more features. 
 A Feature can be a single or multiple association with a type.
-`
+`,
     },
     {
         name: 'Arithmetics',
@@ -231,7 +232,7 @@ hidden terminal ML_COMMENT: /\/\*[\s\S]*?\*\//;
 hidden terminal SL_COMMENT: /\/\/[^\n\r]*/;
 \`\`\`
 
-This grammar defines an Arithmetics language with expressions & definitions (functions). It effectively allows for regular arithmetic operations, including addition, subtraction, multiplication, division, exponentiation, and modulo operations.` 
+This grammar defines an Arithmetics language with expressions & definitions (functions). It effectively allows for regular arithmetic operations, including addition, subtraction, multiplication, division, exponentiation, and modulo operations.`,
     },
     {
         name: 'MiniLogo',
@@ -295,6 +296,6 @@ hidden terminal SL_COMMENT:     /\/\/[^\n\r]*/;
 
 This grammar defines a MiniLogo language with statements and definitions. The Model rule allows for an arbitrary sequence of statements and definitions. A statement can be a command or a macro, while a definition is a named function. The commands include pen, move, color, and for, which is a simple loop mechanic. The expressions support arithmetic operations like addition, subtraction, multiplication, and division.
 You can use this grammar to create MiniLogo programs for drawing shapes and patterns.
-`
-    }
+`,
+    },
 ];

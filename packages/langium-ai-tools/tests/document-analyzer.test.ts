@@ -1,6 +1,6 @@
 import { URI } from 'langium';
 import { createServicesForGrammar } from 'langium/grammar';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AnalysisMode, LangiumDocumentAnalyzer } from '../src/analyzer/document-analyzer.js';
 
 const domainModelServices = await createServicesForGrammar({
@@ -41,9 +41,10 @@ terminal ID: /[_a-zA-Z][\\w_]*/;
 hidden terminal ML_COMMENT: /\\/\\*[\\s\\S]*?\\*\\//;
 hidden terminal SL_COMMENT: /\\/\\/[^\\n\\r]*/;
 
-` });
+`,
+});
 
-const docAnalyzer = new LangiumDocumentAnalyzer(domainModelServices);
+let docAnalyzer: LangiumDocumentAnalyzer;
 
 const exampleModel = `package foo.bar {
     datatype Complex
@@ -53,14 +54,21 @@ const exampleModel = `package foo.bar {
         nested: Complex
         time: Complex
     }
-}`
+}`;
 
-function collectSyntaxUsageStatistics(model: string, analyzer = docAnalyzer) {
-    const doc = domainModelServices.shared.workspace.LangiumDocumentFactory.fromString(model, URI.parse('memory:/test.txt'));
-    return analyzer.collectSyntaxUsageStatistics(doc, domainModelServices.Grammar);
+function collectSyntaxUsageStatistics(model: string, analyzer?: LangiumDocumentAnalyzer) {
+    const doc = domainModelServices.shared.workspace.LangiumDocumentFactory.fromString(
+        model,
+        URI.parse('memory:/test.txt'),
+    );
+    return (analyzer || docAnalyzer).collectSyntaxUsageStatistics(doc, domainModelServices.Grammar);
 }
 
 describe('LangiumDocumentAnalyzer', () => {
+    beforeEach(() => {
+        // create a fresh analyzer instance before each test to ensure clean state
+        docAnalyzer = new LangiumDocumentAnalyzer(domainModelServices);
+    });
 
     it('should collect syntax usage statistics from string', async () => {
         const result = await docAnalyzer.evaluate('package foo.bar {}');
@@ -73,10 +81,9 @@ describe('LangiumDocumentAnalyzer', () => {
         expect(statistics.ruleUsage['ID']).toBe(2);
     });
 
-
     it('should compute coverage correctly', () => {
         const statistics = collectSyntaxUsageStatistics('package foo.bar {}');
-        expect(Object.values(statistics.ruleUsage).filter(count => count > 0).length, 'Used rules number').toBe(4);
+        expect(Object.values(statistics.ruleUsage).filter((count) => count > 0).length, 'Used rules number').toBe(4);
         expect(statistics.coverage).toBeCloseTo(40.0, 1);
     });
 
@@ -87,12 +94,11 @@ describe('LangiumDocumentAnalyzer', () => {
         expect(statistics.ruleUsage['ML_COMMENT']).toBe(1);
 
         const noHidden = new LangiumDocumentAnalyzer(domainModelServices, {
-            includeHiddenRules: false
+            includeHiddenRules: false,
         });
         const statisticsNoHidden = collectSyntaxUsageStatistics(model, noHidden);
         expect(statisticsNoHidden.ruleUsage['ML_COMMENT']).toBeUndefined();
     });
-
 
     it('should compute entropy correctly', () => {
         const statistics = collectSyntaxUsageStatistics(exampleModel);
@@ -114,7 +120,7 @@ describe('LangiumDocumentAnalyzer', () => {
 
     it('should handle excluded rules', () => {
         const analyzerWithExcludedRules = new LangiumDocumentAnalyzer(domainModelServices, {
-            excludeRules: ['Feature', 'DataType']
+            excludeRules: ['Feature', 'DataType'],
         });
 
         const testModel = 'package foo.bar { entity TestEntity { } }';
@@ -147,7 +153,7 @@ describe('LangiumDocumentAnalyzer', () => {
 
     it('should handle analysis mode NO_STATISTIC', async () => {
         const noStatAnalyzer = new LangiumDocumentAnalyzer(domainModelServices, {
-            analysisMode: AnalysisMode.NO_STATISTIC
+            analysisMode: AnalysisMode.NO_STATISTIC,
         });
         const result = await noStatAnalyzer.evaluate('package foo.bar { entity TestEntity { } }');
         const statistics = noStatAnalyzer.extractStatisticsFromResult(result);

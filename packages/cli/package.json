@@ -1,0 +1,40 @@
+{
+    "name": "langium-ai",
+    "version": "0.2.0",
+    "description": "AI application development tooling for Langium-based DSL projects",
+    "type": "module",
+    "bin": {
+        "lai": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc && npm run copy-templates",
+        "copy-templates": "mkdir -p dist/templates && cp -r templates/* dist/templates/",
+        "dev": "tsx watch src/index.ts",
+        "prepublishOnly": "npm run build",
+        "test": "vitest run"
+    },
+    "keywords": ["langium", "ai", "llm", "dsl", "cli"],
+    "author": "Langium Team",
+    "license": "MIT",
+    "dependencies": {
+        "chalk": "^5.3.0",
+        "commander": "^12.0.0",
+        "fs-extra": "^11.2.0",
+        "glob": "^10.3.10",
+        "langium-ai-tools": "~5.0.0",
+        "ora": "^8.0.1",
+        "prompts": "^2.4.2",
+        "yaml": "^2.3.4"
+    },
+    "devDependencies": {
+        "@types/fs-extra": "^11.0.4",
+        "@types/node": "^20.11.0",
+        "@types/prompts": "^2.4.9",
+        "tsx": "^4.7.0",
+        "typescript": "^5.3.3",
+        "vitest": "^4.1.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

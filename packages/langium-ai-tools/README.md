@@ -22,17 +22,13 @@ LLMs (and transformers in general), are evolving quite rapidly. With this approa
 
 ## Installation
 
-Langium AI tools tracks tightly with Langium releases. If you're using Langium 3.X or 4.X in your project, you'll want to install the corresponding version of Langium AI Tools that matches it.
+Langium AI Tools treats Langium as a **peer dependency**, supporting Langium 4.x and up. Your project provides its own Langium version, and `langium-ai-tools` works alongside it.
 
 ```bash
-# if you're using Langium 4.1.X
-npm i --save langium-ai-tools@^4.1.0
-
-# or 3.5.X
-npm i --save langium-ai-tools@^3.5.0
+npm i --save langium-ai-tools
 ```
 
-We don't actively support Langium 2.X or earlier.
+Make sure your project already has a compatible version of `langium` installed (4.x or later).
 
 ## Usage
 
@@ -150,6 +146,59 @@ console.log(es);
 You can also define custom evaluators that are more tuned to the needs of your DSL. This could be handling diagnostics in a very specific fashion, extracting code out of the response itself to check, using an evaluation model to grade the response, or using a combination of techniques to get a more accurate score for your model's output.
 
 In general we stick to focusing on what Langium can do to help with evaluation, but leave the opportunity open for you to extend, supplement, or modify evaluation logic as you see fit.
+
+### Testing API
+
+Langium AI Tools provides a vitest-style testing API for writing programmatic evaluation test suites. This allows you to define test cases in TypeScript with familiar features like:
+
+- **Test suites** with `describe()`, `describe.skip()`, and `describe.only()`
+- **Lifecycle hooks**: `beforeAll()`, `afterAll()`, `beforeEach()`, `afterEach()`
+- **Parametrized tests** with `evaluation.each()` for testing multiple data sets
+- **Test filtering** with `.skip()` and `.only()` modifiers
+
+```typescript
+import { describe, evaluation, beforeAll, afterAll, beforeEach } from 'langium-ai-tools/testing';
+
+describe('DSL Generation Tests', () => {
+  let model;
+
+  beforeAll(async () => {
+    // runs once before all tests
+    model = await setupModel();
+  });
+
+  beforeEach(() => {
+    // runs before each test
+    clearCache();
+  });
+
+  evaluation('generates valid syntax', async (ctx) => {
+    const result = await generateCode(model, ctx.systemPrompt);
+    return {
+      passed: validateSyntax(result),
+      error: !validateSyntax(result) ? 'Invalid syntax' : undefined
+    };
+  });
+
+  // parametrized tests
+  evaluation.each([
+    { input: 'person Alice', expected: 'Alice' },
+    { input: 'person Bob', expected: 'Bob' }
+  ])('extracts name $expected', (data) => async (ctx) => {
+    const parsed = parse(data.input);
+    return {
+      passed: parsed.name === data.expected
+    };
+  });
+
+  afterAll(() => {
+    // cleanup after all tests
+    cleanupModel();
+  });
+});
+```
+
+**For detailed documentation on the Testing API**, see the [Testing API Reference](../cli/docs/testing-api.md).
 
 ### Evaluation Matrix
 
