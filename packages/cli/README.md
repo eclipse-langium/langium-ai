@@ -302,10 +302,28 @@ This approach is pretty versatile, and allows us to drive evaluations in a consi
 
 ## Skills
 
-Langium AI ships with two [agent skills](https://agentskills.io/home) that enhance your AI-assisted development workflow. Agent skills are compatible with most coding agents today, including Claude Code, Codex, Gemini, Copilot, and others.
+Langium AI ships with numerous [agent skills](https://agentskills.io/home) that enhance your AI-assisted development workflow. Agent skills are compatible with most coding agents today, including Claude Code, Codex, Gemini, Copilot, and others. You can also find these skills from the [main repo readme](https://github.com/eclipse-langium/langium-ai#3-agent-skills)
 
-- **LAI** — guides agents through the LAI CLI workflow (descriptors, system prompts, evaluations)
-- **Langium** — teaches agents how Langium-based projects work (grammar, parsing, validation, scoping, LSP)
+#### Reference Skills
+
+These skills provide background knowledge that agents draw on when working with your project:
+
+| Skill | Description |
+|---|---|
+| **lai** | Guide for using the LAI CLI — commands, configuration, evaluation workflow, and analysis |
+| **langium** | Comprehensive reference for how Langium projects work — grammar, parsing, validation, scoping, DI, and LSP integration |
+
+#### Actionable Skills (user-invocable)
+
+These skills are invoked directly to perform specific generation or refinement tasks. You can invoke them yourself, or let your agent decide when it's best to use one of these:
+
+| Skill | Description |
+|---|---|
+| **lai-gen-descriptor** | Generate or refine a `language.descriptor.yml` — bootstraps a new descriptor if none exists, then guides refinement of paths, services, examples, and documentation |
+| **lai-gen-sysprompt** | Generate or refine a system prompt — bootstraps from the descriptor if none exists, then guides targeted improvements based on evaluation results |
+| **lai-gen-evals** | Expand the evaluation suite with comprehensive coverage — syntactic correctness, semantic validity, user intent matching, edge cases, and language understanding |
+| **lai-gen-mcp** | Generate an MCP server that exposes your DSL's parser and validator as a tool for any MCP-compatible client (Claude Code, Cursor, VS Code, etc.). Handles monorepo detection and output location |
+| **lai-gen-language-skill** | Produce a standalone skill document that teaches an agent how to understand and work with your specific DSL — covering syntax, semantics, patterns, and edge cases |
 
 To install both skills into your project, use [skills](https://www.npmjs.com/package/skills):
 
