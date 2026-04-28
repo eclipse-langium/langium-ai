@@ -2,6 +2,12 @@
     "name": "langium-ai",
     "version": "0.2.0",
     "description": "AI application development tooling for Langium-based DSL projects",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/eclipse-langium/langium-ai.git",
+        "directory": "packages/cli"
+    },
+    "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
     "type": "module",
     "bin": {
         "lai": "./dist/index.js"
@@ -11,7 +17,8 @@
         "copy-templates": "mkdir -p dist/templates && cp -r templates/* dist/templates/",
         "dev": "tsx watch src/index.ts",
         "prepublishOnly": "npm run build",
-        "test": "vitest run"
+        "test": "vitest run",
+        "clean": "rm -rf ./dist"
     },
     "keywords": ["langium", "ai", "llm", "dsl", "cli"],
     "author": "Langium Team",

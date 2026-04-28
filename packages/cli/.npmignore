@@ -4,3 +4,5 @@ tsconfig.json
 *.spec.ts
 .DS_Store
 node_modules/
+docs
+vitest.config.ts
