@@ -149,7 +149,7 @@ export async function generateResponse(
 export function extractCodeBlock(text: string, language?: string): string | null {
     const pattern = language
         ? new RegExp(`\`\`\`${language}\\n([\\s\\S]*?)\`\`\``)
-        : /```[\w]*\n([\s\S]*?)```/;
+        : /```[\w-]*\n([\s\S]*?)```/;
     const match = text.match(pattern);
     return match ? match[1].trim() : null;
 }
