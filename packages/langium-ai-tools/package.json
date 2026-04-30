@@ -48,6 +48,9 @@
     },
     "keywords": ["langium", "ai", "tools", "llm"],
     "license": "MIT",
+    "engines": {
+        "node": ">=22.0.0"
+    },
     "dependencies": {
         "@protobuf-ts/runtime": "^2.11.1",
         "js-yaml": "^4.1.1",

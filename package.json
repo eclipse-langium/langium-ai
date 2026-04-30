@@ -19,6 +19,9 @@
         "name": "TypeFox",
         "url": "https://www.typefox.io"
     },
+    "engines": {
+        "node": ">=22.0.0"
+    },
     "license": "MIT",
     "workspaces": ["packages/langium-ai-tools", "packages/langium-ai-mcp", "packages/cli", "packages/examples/*"],
     "devDependencies": {
