@@ -85,46 +85,73 @@ interface EvalSuite {
     only?: boolean;
 }
 
-const suites: EvalSuite[] = [];
-let currentSuite: EvalSuite | null = null;
+/**
+ * Shared registry state by unique key
+ */
+const EVALS_SYMBOL_KEY = Symbol.for('langium-ai-tools:evals');
+
+/**
+ * Evaluation suite state.
+ * Contains all suites + current suite
+ */
+interface EvalsState {
+    suites: EvalSuite[];
+    currentSuite: EvalSuite | null;
+}
+
+/**
+ * Getter to retrieve the current eval state from the global env
+ */
+function getState(): EvalsState {
+    const g = globalThis as Record<symbol, EvalsState | undefined>;
+    if (!g[EVALS_SYMBOL_KEY]) {
+        // create fresh state
+        g[EVALS_SYMBOL_KEY] = { suites: [], currentSuite: null };
+    }
+    return g[EVALS_SYMBOL_KEY]!;
+}
 
 /**
  * Define a test suite
  */
 export function describe(name: string, fn: () => void): void {
-    const parentSuite = currentSuite;
-    currentSuite = { name, evaluations: [] };
+    const state = getState();
+    const parentSuite = state.currentSuite;
+    state.currentSuite = { name, evaluations: [] };
     fn();
-    suites.push(currentSuite);
-    currentSuite = parentSuite;
+    state.suites.push(state.currentSuite);
+    state.currentSuite = parentSuite;
 }
 
 /**
  * Define a test suite that will be skipped
  */
 describe.skip = function (name: string, fn: () => void): void {
-    const parentSuite = currentSuite;
-    currentSuite = { name, evaluations: [], skip: true };
+    const state = getState();
+    const parentSuite = state.currentSuite;
+    state.currentSuite = { name, evaluations: [], skip: true };
     fn();
-    suites.push(currentSuite);
-    currentSuite = parentSuite;
+    state.suites.push(state.currentSuite);
+    state.currentSuite = parentSuite;
 };
 
 /**
  * Define a test suite that will run exclusively (skips all other tests)
  */
 describe.only = function (name: string, fn: () => void): void {
-    const parentSuite = currentSuite;
-    currentSuite = { name, evaluations: [], only: true };
+    const state = getState();
+    const parentSuite = state.currentSuite;
+    state.currentSuite = { name, evaluations: [], only: true };
     fn();
-    suites.push(currentSuite);
-    currentSuite = parentSuite;
+    state.suites.push(state.currentSuite);
+    state.currentSuite = parentSuite;
 };
 
 /**
  * Define an evaluation case
  */
 export function evaluation(name: string, fn: EvaluatorFunction): void {
+    const { currentSuite } = getState();
     if (!currentSuite) {
         throw new Error('evaluation() must be called inside describe()');
     }
@@ -135,6 +162,7 @@ export function evaluation(name: string, fn: EvaluatorFunction): void {
  * Define an evaluation case that will be skipped
  */
 evaluation.skip = function (name: string, fn: EvaluatorFunction): void {
+    const { currentSuite } = getState();
     if (!currentSuite) {
         throw new Error('evaluation.skip() must be called inside describe()');
     }
@@ -145,6 +173,7 @@ evaluation.skip = function (name: string, fn: EvaluatorFunction): void {
  * Define an evaluation case that will run exclusively (skips all other tests)
  */
 evaluation.only = function (name: string, fn: EvaluatorFunction): void {
+    const { currentSuite } = getState();
     if (!currentSuite) {
         throw new Error('evaluation.only() must be called inside describe()');
     }
@@ -164,6 +193,7 @@ evaluation.only = function (name: string, fn: EvaluatorFunction): void {
  */
 evaluation.each = function <T>(cases: T[]): (name: string, fn: (data: T) => EvaluatorFunction) => void {
     return (name: string, fn: (data: T) => EvaluatorFunction): void => {
+        const { currentSuite } = getState();
         if (!currentSuite) {
             throw new Error('evaluation.each() must be called inside describe()');
         }
@@ -206,6 +236,7 @@ evaluation.each = function <T>(cases: T[]): (name: string, fn: (data: T) => Eval
  * Define a hook that runs before each evaluation in the suite
  */
 export function beforeEach(fn: () => void | Promise<void>): void {
+    const { currentSuite } = getState();
     if (!currentSuite) {
         throw new Error('beforeEach() must be called inside describe()');
     }
@@ -216,6 +247,7 @@ export function beforeEach(fn: () => void | Promise<void>): void {
  * Define a hook that runs after each evaluation in the suite
  */
 export function afterEach(fn: () => void | Promise<void>): void {
+    const { currentSuite } = getState();
     if (!currentSuite) {
         throw new Error('afterEach() must be called inside describe()');
     }
@@ -226,6 +258,7 @@ export function afterEach(fn: () => void | Promise<void>): void {
  * Define a hook that runs once before all evaluations in the suite
  */
 export function beforeAll(fn: () => void | Promise<void>): void {
+    const { currentSuite } = getState();
     if (!currentSuite) {
         throw new Error('beforeAll() must be called inside describe()');
     }
@@ -236,6 +269,7 @@ export function beforeAll(fn: () => void | Promise<void>): void {
  * Define a hook that runs once after all evaluations in the suite
  */
 export function afterAll(fn: () => void | Promise<void>): void {
+    const { currentSuite } = getState();
     if (!currentSuite) {
         throw new Error('afterAll() must be called inside describe()');
     }
@@ -246,8 +280,9 @@ export function afterAll(fn: () => void | Promise<void>): void {
  * Export collected suites for runner
  */
 export function getCollectedSuites(): EvalSuite[] {
-    const collected = [...suites];
-    suites.length = 0;
+    const state = getState();
+    const collected = [...state.suites];
+    state.suites.length = 0;
     return collected;
 }
 
@@ -255,8 +290,9 @@ export function getCollectedSuites(): EvalSuite[] {
  * Clear all collected suites
  */
 export function clearSuites(): void {
-    suites.length = 0;
-    currentSuite = null;
+    const state = getState();
+    state.suites.length = 0;
+    state.currentSuite = null;
 }
 
 // re-export runner types and functions

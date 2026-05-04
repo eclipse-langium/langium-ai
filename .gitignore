@@ -14,3 +14,4 @@ stores/
 data/
 .langium-ai
 *.local.*
+packages/langium-ai-tools/src/gen

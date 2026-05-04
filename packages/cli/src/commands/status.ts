@@ -52,7 +52,7 @@ export async function statusCommand(): Promise<void> {
 
     if (evalsDirExists) {
         const evalFiles = (await fs.readdir(evalsDir)).filter((f) => f.endsWith('.eval.ts'));
-        logDetected('Test cases', `${evalFiles.length} found`, evalFiles.length > 0);
+        logDetected('Eval files', `${evalFiles.length} found`, evalFiles.length > 0);
     }
 
     console.log();

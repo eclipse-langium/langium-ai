@@ -57,6 +57,9 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
             return;
         }
         const systemPrompt = await fs.readFile(syspromptPath, 'utf-8');
+        if (options.verbose) {
+            info(`Running with sysprompt ${syspromptPath}`);
+        }
 
         // find evals directory
         const evalsDir = path.join(process.cwd(), config.evaluations.directory);
@@ -66,9 +69,22 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
             return;
         }
 
+        if (options.verbose) {
+            info(`Running in evals directory ${evalsDir}`);
+        }
+
         // discover .eval.ts files
         const files = await fs.readdir(evalsDir);
+
+        if (options.verbose) {
+            info(`Found ${files.length} files inside evals folder...`);
+        }
+
         const evalFiles = files.filter((f) => f.endsWith('.eval.ts')).map((f) => path.join(evalsDir, f));
+
+        if (options.verbose) {
+            info(`Found ${evalFiles.length} .eval.ts files`);
+        }
 
         if (evalFiles.length === 0) {
             error('No .eval.ts files found in evals directory.');
@@ -82,8 +98,15 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
                 // use tsx's ESM loader (Node 20.6+ compatible)
                 register('tsx/esm', import.meta.url);
                 tsxLoaderRegistered = true;
+
+                if (options.verbose) {
+                    info(`Registering TSX loader`);
+                }
             } catch (_error) {
                 // tsx may not be available, continue anyway (silence since it may still work)
+                if (options.verbose) {
+                    info(`Issue encountered while loading TSX loader, continuing`);
+                }
             }
         }
 
@@ -93,15 +116,25 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
             project: { name: config.project.name },
         };
 
+        if (options.verbose) {
+            info(`Counting eval cases in files`);
+        }
+
         // count total test cases across all files
         let totalCases = 0;
         for (const file of evalFiles) {
             try {
+                info(`Checking ${file} for cases`);
                 const count = await countEvalCases(file);
+                info(`Found ${count} cases`);
                 totalCases += count;
-            } catch (_err) {
+            } catch (err) {
                 // if counting fails, we'll just show files count instead
                 totalCases = 0;
+                if (options.verbose) {
+                    info(`Failed while counting eval cases! Defaulting to 0`);
+                    error(err as string);
+                }
                 break;
             }
         }
@@ -110,7 +143,7 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
         if (totalCases > 0) {
             info(`Running ${totalCases} evaluation case(s) across ${evalFiles.length} file(s)...\n`);
         } else {
-            info(`Running ${evalFiles.length} evaluation file(s)...\n`);
+            info(`Running ${evalFiles.length} evaluation file(s) with ${totalCases} cases...\n`);
         }
 
         const startTime = Date.now();
