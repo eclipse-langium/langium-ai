@@ -15,7 +15,7 @@
     "private": false,
     "files": ["dist"],
     "scripts": {
-        "clean": "rm -rf ./dist",
+        "clean": "rimraf ./dist",
         "build": "npm run clean && tsc",
         "watch": "tsc -w",
         "start": "node .",
