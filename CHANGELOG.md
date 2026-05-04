@@ -1,6 +1,18 @@
 # CHANGELOG
 
-## v5.0.0
+## v5.0.1 langium-ai-tools, v0.2.1 langium-ai
+
+Pair of small patch releases to resolve some issues, primarily related to CLI and tools interop.
+
+### Fixes
+
+- Fix an issue with eval suite collection where CLI could report 0 evals for files, despite cases being present
+- Correct some wording with regards to 'test' vs. 'eval'
+- Bump engines to node22
+- Update docs to point to the new skills that were made, rather than the 2 we began with
+- Chores for updating dependencies
+
+## v5.0.0 langium-ai-tools, v0.2.0 langium-ai
 
 ### Breaking changes
 - **Langium is now a peer dependency** — `langium-ai-tools` no longer pins a specific Langium version. Projects must provide their own `langium` (>=4.0.0 <5.0.0). This decouples `langium-ai-tools` releases from Langium releases.
