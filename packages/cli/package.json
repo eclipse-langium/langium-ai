@@ -1,53 +1,47 @@
 {
-  "name": "langium-ai",
-  "version": "0.2.3",
-  "description": "AI application development tooling for Langium-based DSL projects",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/eclipse-langium/langium-ai.git",
-    "directory": "packages/cli"
-  },
-  "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
-  "type": "module",
-  "bin": {
-    "lai": "./dist/index.js"
-  },
-  "scripts": {
-    "build": "tsc && npm run copy-templates",
-    "copy-templates": "mkdir -p dist/templates && cp -r templates/* dist/templates/",
-    "dev": "tsx watch src/index.ts",
-    "prepublishOnly": "npm run build",
-    "test": "vitest run",
-    "clean": "rimraf ./dist"
-  },
-  "keywords": [
-    "langium",
-    "ai",
-    "llm",
-    "dsl",
-    "cli"
-  ],
-  "author": "Langium Team",
-  "license": "MIT",
-  "dependencies": {
-    "chalk": "^5.6.0",
-    "commander": "^14.0.0",
-    "fs-extra": "^11.3.0",
-    "glob": "^13.0.0",
-    "langium-ai-tools": "~5.0.3",
-    "ora": "^9.0.0",
-    "prompts": "^2.4.2",
-    "yaml": "^2.3.4"
-  },
-  "devDependencies": {
-    "@types/fs-extra": "^11.0.4",
-    "@types/node": "^20.11.0",
-    "@types/prompts": "^2.4.9",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3",
-    "vitest": "^4.1.0"
-  },
-  "engines": {
-    "node": ">=22.0.0"
-  }
+    "name": "langium-ai",
+    "version": "0.2.3",
+    "description": "AI application development tooling for Langium-based DSL projects",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/eclipse-langium/langium-ai.git",
+        "directory": "packages/cli"
+    },
+    "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
+    "type": "module",
+    "bin": {
+        "lai": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc && npm run copy-templates",
+        "copy-templates": "mkdir -p dist/templates && cp -r templates/* dist/templates/",
+        "dev": "tsx watch src/index.ts",
+        "prepublishOnly": "npm run build",
+        "test": "vitest run",
+        "clean": "rimraf ./dist"
+    },
+    "keywords": ["langium", "ai", "llm", "dsl", "cli"],
+    "author": "Langium Team",
+    "license": "MIT",
+    "dependencies": {
+        "chalk": "^5.6.0",
+        "commander": "^14.0.0",
+        "fs-extra": "^11.3.0",
+        "glob": "^13.0.0",
+        "langium-ai-tools": "~5.0.3",
+        "ora": "^9.0.0",
+        "prompts": "^2.4.2",
+        "yaml": "^2.3.4"
+    },
+    "devDependencies": {
+        "@types/fs-extra": "^11.0.4",
+        "@types/node": "^20.11.0",
+        "@types/prompts": "^2.4.9",
+        "tsx": "^4.7.0",
+        "typescript": "^5.3.3",
+        "vitest": "^4.1.0"
+    },
+    "engines": {
+        "node": ">=22.0.0"
+    }
 }
