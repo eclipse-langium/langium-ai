@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v5.0.3 langium-ai-tools, v0.2.3 langium-ai
+
+Dependency updates and lockfile maintenance.
+
+### Maintenance
+- Bump `glob` to v13, `commander` to v14, `ora` to v9, `chalk` to v5.6, `fs-extra` to v11.3
+- Update lockfile
+
+## v5.0.2 langium-ai-tools, v0.2.2 langium-ai
+
+Lockfile bump.
+
 ## v5.0.1 langium-ai-tools, v0.2.1 langium-ai
 
 Pair of small patch releases to resolve some issues, primarily related to CLI and tools interop.
