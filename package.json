@@ -23,7 +23,12 @@
         "node": ">=22.0.0"
     },
     "license": "MIT",
-    "workspaces": ["packages/langium-ai-tools", "packages/langium-ai-mcp", "packages/cli", "packages/examples/*"],
+    "workspaces": [
+        "packages/langium-ai-tools",
+        "packages/langium-ai-mcp",
+        "packages/cli",
+        "packages/examples/*"
+    ],
     "devDependencies": {
         "@biomejs/biome": "^1.9.0",
         "@emnapi/core": "^1.9.2",

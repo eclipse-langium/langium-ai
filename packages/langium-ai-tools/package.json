@@ -11,7 +11,9 @@
     "type": "module",
     "main": "dist/index.js",
     "private": false,
-    "files": ["dist"],
+    "files": [
+        "dist"
+    ],
     "exports": {
         ".": {
             "import": "./dist/index.js",
@@ -46,7 +48,12 @@
         "name": "TypeFox",
         "url": "https://www.typefox.io"
     },
-    "keywords": ["langium", "ai", "tools", "llm"],
+    "keywords": [
+        "langium",
+        "ai",
+        "tools",
+        "llm"
+    ],
     "license": "MIT",
     "engines": {
         "node": ">=22.0.0"
