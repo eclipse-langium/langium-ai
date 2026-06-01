@@ -17,7 +17,10 @@ const program = new Command();
 
 const LAI_CUR_VERSION = '0.2.5';
 
-program.name('lai').description('Langium-AI CLI for bootstrapping AI-powered language tooling').version(LAI_CUR_VERSION);
+program
+    .name('lai')
+    .description('Langium-AI CLI for bootstrapping AI-powered language tooling')
+    .version(LAI_CUR_VERSION);
 
 program.command('init').description('Initialize LAI in your Langium project').action(initCommand);
 
