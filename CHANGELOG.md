@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.2.5 langium-ai
+
+Dependency updates + update reported version in the CLI
+
 ## v5.0.3 langium-ai-tools, v0.2.3 langium-ai
 
 Dependency updates and lockfile maintenance.

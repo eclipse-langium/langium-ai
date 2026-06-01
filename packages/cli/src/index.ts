@@ -15,8 +15,9 @@ import { validateCommand } from './commands/validate.js';
 
 const program = new Command();
 
-// TODO @montymxb keep version up to date
-program.name('lai').description('Langium-AI CLI for bootstrapping AI-powered language tooling').version('0.2.1');
+const LAI_CUR_VERSION = '0.2.5';
+
+program.name('lai').description('Langium-AI CLI for bootstrapping AI-powered language tooling').version(LAI_CUR_VERSION);
 
 program.command('init').description('Initialize LAI in your Langium project').action(initCommand);
 
