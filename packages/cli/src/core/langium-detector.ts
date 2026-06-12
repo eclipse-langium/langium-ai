@@ -314,7 +314,7 @@ function extractServiceOverrides(content: string): Array<{ category: string; ser
         //   ServiceName: (services) => new ClassName(services)
         //   ServiceName: () => new ClassName()
         //   ServiceName: (services) => new ClassName(services),
-        const serviceRegex = /(\w+)\s*:\s*(?:\([^)]*\)\s*=>|function\s*\([^)]*\)\s*\{)[^}]*?\bnew\s+(\w+)/g;
+        const serviceRegex = /(\w+)\s*:\s*(?:\([^)]*\)|[^)]*\s*=>|function\s*\([^)]*\)\s*\{)[^}]*?\bnew\s+(\w+)/g;
         let serviceMatch: RegExpExecArray | null;
 
         while ((serviceMatch = serviceRegex.exec(categoryBody)) !== null) {
