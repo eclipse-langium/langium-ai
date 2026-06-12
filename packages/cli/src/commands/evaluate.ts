@@ -1,8 +1,9 @@
-import fs from 'fs-extra';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'path';
 import { register } from 'node:module';
 import chalk from 'chalk';
 import { loadConfig } from '../core/config.js';
+import { pathExists } from '../utils/fs.js';
 import { error, info, success, spinner } from '../utils/console.js';
 import { runEvalFile } from 'langium-ai-tools/evals';
 import type { EvalContext, EvaluationCaseResult } from 'langium-ai-tools/evals';
@@ -49,21 +50,21 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
             ? path.resolve(process.cwd(), options.sysprompt)
             : path.join(process.cwd(), config.sysprompt.path);
 
-        if (!(await fs.pathExists(syspromptPath))) {
+        if (!(await pathExists(syspromptPath))) {
             const hint = options.sysprompt
                 ? `File not found: ${syspromptPath}`
                 : 'System prompt not found. Run `lai gen sysprompt` first.';
             error(hint);
             return;
         }
-        const systemPrompt = await fs.readFile(syspromptPath, 'utf-8');
+        const systemPrompt = await readFile(syspromptPath, 'utf-8');
         if (options.verbose) {
             info(`Running with sysprompt ${syspromptPath}`);
         }
 
         // find evals directory
         const evalsDir = path.join(process.cwd(), config.evaluations.directory);
-        if (!(await fs.pathExists(evalsDir))) {
+        if (!(await pathExists(evalsDir))) {
             error(`Evaluation directory not found: ${evalsDir}`);
             info('Run `lai init` to set up evaluations.');
             return;
@@ -74,7 +75,7 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
         }
 
         // discover .eval.ts files
-        const files = await fs.readdir(evalsDir);
+        const files = await readdir(evalsDir);
 
         if (options.verbose) {
             info(`Found ${files.length} files inside evals folder...`);
@@ -399,7 +400,7 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
         let outputPath: string;
         if (options.output) {
             outputPath = path.join(process.cwd(), options.output);
-            await fs.writeJSON(outputPath, runData, { spaces: 2 });
+            await writeFile(outputPath, JSON.stringify(runData, null, 2));
         } else {
             outputPath = await saveRunData(runData);
         }

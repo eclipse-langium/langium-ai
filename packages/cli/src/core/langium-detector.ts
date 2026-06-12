@@ -1,12 +1,77 @@
-import fs from 'fs-extra';
+import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'path';
 import type { Services, LangiumProjectStructure } from '../types.js';
 import { findProjectRoot, findFile, findFiles, findDirectory, findDirectories, makeRelative } from '../utils/fs.js';
 
 /**
+ * Maps known Langium base classes to our Services interface keys.
+ * These class names are part of Langium's stable API surface — when a user's class
+ * extends one of these, we know which service is being overridden.
+ */
+const KNOWN_BASE_CLASSES: Record<string, keyof Services> = {
+    // parser
+    DefaultAsyncParser: 'async_parser',
+    AbstractThreadedAsyncParser: 'async_parser',
+    LangiumParser: 'langium_parser',
+    AbstractLangiumParser: 'langium_parser',
+    LangiumParserErrorMessageProvider: 'parser_error_message_provider',
+    AbstractParserErrorMessageProvider: 'parser_error_message_provider',
+    DefaultLexerErrorMessageProvider: 'lexer_error_message_provider',
+    LangiumCompletionParser: 'completion_parser',
+    DefaultTokenBuilder: 'token_builder',
+    DefaultLexer: 'lexer',
+    DefaultValueConverter: 'value_converter',
+    // documentation
+    DefaultCommentProvider: 'comment_provider',
+    JSDocDocumentationProvider: 'documentation_provider',
+    // references
+    DefaultLinker: 'linker',
+    DefaultNameProvider: 'name_provider',
+    DefaultReferences: 'references',
+    DefaultScopeProvider: 'scope_provider',
+    DefaultScopeComputation: 'scope_computation',
+    // serializer
+    DefaultHydrator: 'hydrator',
+    DefaultJsonSerializer: 'json_serializer',
+    // validation
+    DefaultDocumentValidator: 'validator',
+    // LSP
+    DefaultCompletionProvider: 'completion_provider',
+    DefaultDocumentHighlightProvider: 'document_highlight_provider',
+    DefaultDocumentSymbolProvider: 'document_symbol_provider',
+    AstNodeHoverProvider: 'hover_provider',
+    MultilineCommentHoverProvider: 'hover_provider',
+    DefaultFoldingRangeProvider: 'folding_range_provider',
+    DefaultDefinitionProvider: 'definition_provider',
+    AbstractTypeDefinitionProvider: 'type_provider',
+    AbstractGoToImplementationProvider: 'implementation_provider',
+    DefaultReferencesProvider: 'references_provider',
+    AbstractSemanticTokenProvider: 'semantic_token_provider',
+    DefaultRenameProvider: 'rename_provider',
+    AbstractFormatter: 'formatter',
+    AbstractSignatureHelpProvider: 'signature_help_provider',
+    AbstractCallHierarchyProvider: 'call_hierarchy_provider',
+    AbstractTypeHierarchyProvider: 'type_hierarchy_provider',
+    AbstractInlayHintProvider: 'inlay_hint_provider',
+};
+
+/**
+ * Maps known Langium interfaces to Services keys for services that have no default/abstract class.
+ * Weaker heuristic — we also verify the interface is imported from 'langium' to reduce false positives.
+ */
+const KNOWN_INTERFACES: Record<string, keyof Services> = {
+    CodeActionProvider: 'code_action_provider',
+    CodeLensProvider: 'code_lens_provider',
+    DeclarationProvider: 'declaration_provider',
+    DocumentLinkProvider: 'document_link_provider',
+};
+
+/**
  * Fallback mapping for categories when a service name doesn't match any known key.
  * This handles custom AddedServices (e.g., MyLangValidator under validation)
  * that every Langium project defines with its own language-specific names.
+ * Used by the module-parse fallback path.
  */
 const CATEGORY_FALLBACK_MAP: Partial<Record<string, keyof Services>> = {
     validation: 'validator',
@@ -14,7 +79,7 @@ const CATEGORY_FALLBACK_MAP: Partial<Record<string, keyof Services>> = {
 
 /**
  * Maps Langium service names (as they appear in modules) to our Services interface keys.
- * Organized by the nested category they appear under in the module object.
+ * Used by the module-parse fallback path.
  */
 const SERVICE_KEY_MAP: Record<string, Record<string, keyof Services>> = {
     parser: {
@@ -89,7 +154,7 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
         const relativeFiles = configFiles.map((f) => makeRelative(root, f));
         throw new Error(
             `Multiple Langium projects detected (by langium-config.json files):\n${relativeFiles.map((f) => `  - ${f}`).join('\n')}\n\n` +
-                `This appears to be a monorepo with multiple Langium projects.\n` +
+                `This might be a monorepo with multiple Langium projects.\n` +
                 `Please run 'lai init' from within a specific project directory, not from the monorepo root.`,
         );
     }
@@ -107,8 +172,8 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
         const relativeFiles = grammarFiles.map((f) => makeRelative(root, f));
         throw new Error(
             `Multiple Langium projects detected (by .langium grammar files):\n${relativeFiles.map((f) => `  - ${f}`).join('\n')}\n\n` +
-                `This appears to be a monorepo with multiple Langium projects.\n` +
-                `Please run 'lai init' from within a specific project directory, not from the monorepo root.`,
+                `This might be a monorepo with multiple Langium projects.\n` +
+                `Please run 'lai init' from within a specific langium project directory, not from the monorepo root.`,
         );
     }
 
@@ -119,14 +184,12 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
             !file.includes('/node_modules/') && !file.includes('\\node_modules\\') && !file.includes('/generated/'),
     );
 
-    // 5. detect custom services by parsing the module file
+    // 5. detect custom services using inheritance scan + module-parse fallback
     const services: Services = {
         module: moduleFiles[0],
     };
 
-    if (moduleFiles[0]) {
-        await parseModuleServices(moduleFiles[0], services);
-    }
+    await detectCustomServices(root, moduleFiles[0], services);
 
     // 6. find package.json
     const packageJson = await findFile(root, 'package.json');
@@ -147,7 +210,141 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
 }
 
 /**
+ * Result from scanning a source file for class inheritance or interface implementation.
+ */
+interface ServiceOverride {
+    className: string;
+    serviceKey: keyof Services;
+    filePath: string;
+}
+
+/**
+ * Detect custom services using two complementary strategies:
+ * 1. Primary: scan source files for classes extending known Langium base classes
+ * 2. Fallback: parse the DI module file for service wiring (handles AddedServices, factory patterns, etc.)
+ *
+ * The inheritance scan takes priority since base class names are part of Langium's stable API.
+ * The module-parse fills in gaps for services that might be missed by the 1st check
+ * (e.g., GrammarConfig, ValidationRegistry, custom AddedServices validators).
+ */
+async function detectCustomServices(root: string, modulePath: string | undefined, services: Services): Promise<void> {
+    // primary: scan all source files for class inheritance / interface implementation
+    const inheritanceOverrides = await scanSourceFilesForOverrides(root);
+
+    // if multiple classes override the same service, prefer the one wired in the module
+    const moduleImportMap = modulePath ? await buildModuleImportMap(modulePath) : new Map<string, string>();
+
+    // group overrides by serviceKey to handle conflicts
+    const overridesByKey = new Map<keyof Services, ServiceOverride[]>();
+    for (const override of inheritanceOverrides) {
+        const existing = overridesByKey.get(override.serviceKey);
+        if (existing) {
+            existing.push(override);
+        } else {
+            overridesByKey.set(override.serviceKey, [override]);
+        }
+    }
+
+    // resolve each service key to a single file path
+    for (const [serviceKey, overrides] of overridesByKey) {
+        if (overrides.length === 1) {
+            services[serviceKey] = overrides[0].filePath;
+        } else {
+            // prefer the class that appears in the module's imports
+            let resolved: ServiceOverride | undefined;
+            for (const override of overrides) {
+                if (moduleImportMap.has(override.className)) {
+                    resolved = override;
+                    break;
+                }
+            }
+            services[serviceKey] = (resolved ?? overrides[0]).filePath;
+        }
+    }
+
+    // fallback: parse the module file for anything the inheritance scan missed
+    if (modulePath) {
+        await parseModuleServices(modulePath, services);
+    }
+}
+
+/**
+ * Scan all TypeScript source files under the project root for classes that
+ * extend known Langium base classes or implement known Langium interfaces.
+ */
+async function scanSourceFilesForOverrides(root: string): Promise<ServiceOverride[]> {
+    const allFiles = await findFiles(root, '**/*.ts');
+    // assumes the following are off limits
+    // TODO @montymxb, can leverage the .gitignore to dynamically pick up additional paths & files to avoid
+    const sourceFiles = allFiles.filter(
+        (f) =>
+            !f.includes('/node_modules/') &&
+            !f.includes('\\node_modules\\') &&
+            !f.includes('/generated/') &&
+            !f.endsWith('.test.ts') &&
+            !f.endsWith('.spec.ts'),
+    );
+
+    const results: ServiceOverride[] = [];
+    const extendsRegex = /class\s+(\w+)\s+extends\s+(\w+)/g;
+    const implementsRegex = /class\s+(\w+)\s+implements\s+(\w+)/g;
+
+    for (const filePath of sourceFiles) {
+        let content: string;
+        try {
+            content = await readFile(filePath, 'utf-8');
+        } catch {
+            continue;
+        }
+
+        // check for class extends KnownBaseClass
+        let match: RegExpExecArray | null;
+        while ((match = extendsRegex.exec(content)) !== null) {
+            const className = match[1];
+            const baseClass = match[2];
+            const serviceKey = KNOWN_BASE_CLASSES[baseClass];
+            if (serviceKey) {
+                results.push({ className, serviceKey, filePath });
+            }
+        }
+
+        // check for class implements KnownInterface (for services with no default class)
+        // only count if the interface is imported from 'langium' or 'langium/lsp'
+        const hasLangiumImport = /from\s+['"]langium(?:\/lsp)?['"]/.test(content);
+        if (hasLangiumImport) {
+            while ((match = implementsRegex.exec(content)) !== null) {
+                const className = match[1];
+                const iface = match[2];
+                const serviceKey = KNOWN_INTERFACES[iface];
+                if (serviceKey) {
+                    results.push({ className, serviceKey, filePath });
+                }
+            }
+        }
+    }
+
+    return results;
+}
+
+/**
+ * Build an import map from the module file (className -> resolved file path).
+ * Used for conflict resolution when multiple classes extend the same base.
+ */
+async function buildModuleImportMap(modulePath: string): Promise<Map<string, string>> {
+    let content: string;
+    try {
+        content = await readFile(modulePath, 'utf-8');
+    } catch {
+        return new Map();
+    }
+    return buildImportMap(content, path.dirname(modulePath));
+}
+
+/**
  * Parse a Langium DI module file to extract overridden services and resolve their source file paths.
+ * This is the fallback path — it only fills in services that haven't already been detected by the
+ * inheritance scan. Handles services like GrammarConfig, ValidationRegistry, and custom
+ * AddedServices validators that don't extend a known Langium base class.
  *
  * Module files follow this pattern:
  * ```ts
@@ -161,16 +358,11 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
  *     }
  * };
  * ```
- *
- * We extract:
- * 1. The import map (class name -> relative file path)
- * 2. The service overrides (category.ServiceName -> class name)
- * Then resolve them to absolute file paths in the Services object.
  */
 async function parseModuleServices(modulePath: string, services: Services): Promise<void> {
     let content: string;
     try {
-        content = await fs.readFile(modulePath, 'utf-8');
+        content = await readFile(modulePath, 'utf-8');
     } catch {
         return;
     }
@@ -183,7 +375,7 @@ async function parseModuleServices(modulePath: string, services: Services): Prom
     // extract service overrides from the module object
     const overrides = extractServiceOverrides(content);
 
-    // map each override to the Services interface
+    // map each override to the Services interface, only if not already detected
     for (const { category, serviceName, className } of overrides) {
         const categoryMap = SERVICE_KEY_MAP[category];
         if (!categoryMap) {
@@ -193,6 +385,11 @@ async function parseModuleServices(modulePath: string, services: Services): Prom
         // try exact match first, then fall back to category default for AddedServices
         const serviceKey = categoryMap[serviceName] ?? CATEGORY_FALLBACK_MAP[category];
         if (!serviceKey) {
+            continue;
+        }
+
+        // skip if already detected by the inheritance scan
+        if (services[serviceKey]) {
             continue;
         }
 
@@ -311,10 +508,11 @@ function extractServiceOverrides(content: string): Array<{ category: string; ser
 
         // parse service assignments within the category
         // patterns:
-        //   ServiceName: (services) => new ClassName(services)
+        //   ServiceName: (services) => new ClassName(services) (w/ or w/out a trailing ,)
         //   ServiceName: () => new ClassName()
-        //   ServiceName: (services) => new ClassName(services),
-        const serviceRegex = /(\w+)\s*:\s*(?:\([^)]*\)|[^)]*\s*=>|function\s*\([^)]*\)\s*\{)[^}]*?\bnew\s+(\w+)/g;
+        //   ServiceName: (services) => new ClassName(services) (w/ or w/out a trailing ,)
+        //   ServiceName: services => new ClassName(services) (w/ or w/out a trailing ,)
+        const serviceRegex = /(\w+)\s*:\s*(?:\([^)]*\)\s*=>|function\s*\([^)]*\)\s*\{)[^}]*?\bnew\s+(\w+)/g;
         let serviceMatch: RegExpExecArray | null;
 
         while ((serviceMatch = serviceRegex.exec(categoryBody)) !== null) {
@@ -375,7 +573,7 @@ export function getProjectName(structure: LangiumProjectStructure): string {
     // try to extract from package.json if available
     if (structure.packageJson) {
         try {
-            const pkg = require(structure.packageJson);
+            const pkg = JSON.parse(readFileSync(structure.packageJson, 'utf-8'));
             if (pkg.name) {
                 return pkg.name;
             }
@@ -448,4 +646,6 @@ export const _testing = {
     resolveImportPath,
     findModuleObjectStart,
     extractBalancedBraces,
+    scanSourceFilesForOverrides,
+    detectCustomServices,
 };

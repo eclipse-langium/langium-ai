@@ -1,6 +1,7 @@
-import fs from 'fs-extra';
+import { readdir, readFile, mkdir, writeFile, rm, stat } from 'node:fs/promises';
 import path from 'path';
 import type { EvaluationCaseResult } from 'langium-ai-tools/evals';
+import { pathExists } from './fs.js';
 
 /**
  * evaluation run data with metadata wrapper
@@ -54,11 +55,11 @@ function getLogsDir(): string {
 export async function getAllRunFiles(): Promise<RunFile[]> {
     const logsDir = getLogsDir();
 
-    if (!(await fs.pathExists(logsDir))) {
+    if (!(await pathExists(logsDir))) {
         return [];
     }
 
-    const files = await fs.readdir(logsDir);
+    const files = await readdir(logsDir);
     const evalFiles = files.filter((f) => f.startsWith('eval-') && f.endsWith('.json'));
 
     const runFiles: RunFile[] = [];
@@ -84,7 +85,7 @@ export async function getAllRunFiles(): Promise<RunFile[]> {
  * load run data from a file, handling both old and new formats
  */
 export async function loadRunData(filePath: string): Promise<EvaluationRunData> {
-    const content = await fs.readJSON(filePath);
+    const content = JSON.parse(await readFile(filePath, 'utf-8'));
 
     // detect old format (array at root)
     if (Array.isArray(content)) {
@@ -99,8 +100,8 @@ export async function loadRunData(filePath: string): Promise<EvaluationRunData> 
             timestamp = `${parts[0]}-${parts[1]}-${parts[2]}T${parts[3]}:${parts[4]}:${parts[5]}.000Z`;
         } else {
             // fallback to file modification time
-            const stats = await fs.stat(filePath);
-            timestamp = stats.mtime.toISOString();
+            const s = await stat(filePath);
+            timestamp = s.mtime.toISOString();
         }
 
         // calculate total time from results
@@ -148,7 +149,7 @@ export async function getRunById(idOrLatestOrPath: string | number): Promise<Run
                 : path.join(process.cwd(), idOrLatestOrPath);
 
             // check if file exists
-            if (await fs.pathExists(filePath)) {
+            if (await pathExists(filePath)) {
                 const data = await loadRunData(filePath);
                 const fileName = path.basename(filePath);
                 return { path: filePath, fileName, data };
@@ -217,7 +218,7 @@ export function calculateRunSummary(run: EvaluationRunData, fileName: string): R
  */
 export async function saveRunData(data: EvaluationRunData): Promise<string> {
     const logsDir = getLogsDir();
-    await fs.ensureDir(logsDir);
+    await mkdir(logsDir, { recursive: true });
 
     // generate timestamp for filename: YYYY-MM-DD-HH-mm-ss
     const timestamp = new Date(data.timestamp).toISOString().replace(/:/g, '-').replace(/\..+/, '').replace('T', '-');
@@ -225,7 +226,7 @@ export async function saveRunData(data: EvaluationRunData): Promise<string> {
     const fileName = `eval-${timestamp}.json`;
     const filePath = path.join(logsDir, fileName);
 
-    await fs.writeJSON(filePath, data, { spaces: 2 });
+    await writeFile(filePath, JSON.stringify(data, null, 2));
 
     return filePath;
 }
@@ -249,7 +250,7 @@ export async function addTagsToRun(idOrLatestOrPath: number | string, tags: stri
     run.data.tags = Array.from(existingTags);
 
     // save back to file
-    await fs.writeJSON(run.path, run.data, { spaces: 2 });
+    await writeFile(run.path, JSON.stringify(run.data, null, 2));
 }
 
 /**
@@ -261,7 +262,7 @@ export async function deleteRuns(runIds: number[]): Promise<void> {
     for (const runId of runIds) {
         const file = files.find((f) => f.data.runId === runId);
         if (file) {
-            await fs.remove(file.path);
+            await rm(file.path);
         }
     }
 }

@@ -1,6 +1,6 @@
-import prompts from 'prompts';
 import chalk from 'chalk';
 import { error, success, info } from '../utils/console.js';
+import { confirm } from '../utils/prompt.js';
 import { getAllRunFiles, deleteRuns } from '../utils/runs.js';
 
 interface CleanOptions {
@@ -85,14 +85,9 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
 
         // prompt for confirmation unless --yes flag is set
         if (!options.yes) {
-            const response = await prompts({
-                type: 'confirm',
-                name: 'confirmed',
-                message: 'Are you sure you want to delete these runs?',
-                initial: false,
-            });
+            const confirmed = await confirm('Are you sure you want to delete these runs?');
 
-            if (!response.confirmed) {
+            if (!confirmed) {
                 info('Cancelled');
                 return;
             }

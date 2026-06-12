@@ -68,6 +68,7 @@
     },
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.11.1",
-        "@types/js-yaml": "^4.0.9"
+        "@types/js-yaml": "^4.0.9",
+        "@types/node": "^25.9.3"
     }
 }

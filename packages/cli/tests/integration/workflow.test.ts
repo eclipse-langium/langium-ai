@@ -1,10 +1,11 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import fs from 'fs-extra';
+import fs from 'node:fs/promises';
 import path from 'path';
 import os from 'os';
 import { saveConfig, loadConfig } from '../../src/core/config.js';
 import { detectLangiumProject } from '../../src/core/langium-detector.js';
 import { generateDescriptor, saveDescriptor } from '../../src/core/descriptor.js';
+import { pathExists } from '../../src/utils/fs.js';
 import type { LaiConfig } from '../../src/types.js';
 
 describe('CLI Workflow Integration', () => {
@@ -19,22 +20,22 @@ describe('CLI Workflow Integration', () => {
 
     afterEach(async () => {
         process.chdir(originalCwd);
-        await fs.remove(tempDir);
+        await fs.rm(tempDir, { recursive: true, force: true });
     });
 
     it('should complete full workflow: detect -> config -> generate', async () => {
         // step 1: setup a langium project
-        await fs.writeJSON(path.join(tempDir, 'package.json'), {
+        await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({
             name: 'workflow-test-dsl',
             version: '1.0.0',
-        });
+        }, null, 2));
 
-        await fs.writeJSON(path.join(tempDir, 'langium-config.json'), {
+        await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify({
             projectName: 'workflow-test-dsl',
-        });
+        }, null, 2));
 
         const grammarPath = path.join(tempDir, 'src', 'grammar.langium');
-        await fs.ensureDir(path.dirname(grammarPath));
+        await fs.mkdir(path.dirname(grammarPath), { recursive: true });
         await fs.writeFile(
             grammarPath,
             `
@@ -118,7 +119,7 @@ export const WorkflowTestModule: Module<WorkflowTestServices, PartialLangiumServ
         expect(savedDescriptor).toMatch(/grammar\.langium/);
 
         // verify all expected files exist
-        expect(await fs.pathExists(path.join(tempDir, 'lai.config.jsonc'))).toBe(true);
-        expect(await fs.pathExists(path.join(tempDir, 'language.descriptor.yml'))).toBe(true);
+        expect(await pathExists(path.join(tempDir, 'lai.config.jsonc'))).toBe(true);
+        expect(await pathExists(path.join(tempDir, 'language.descriptor.yml'))).toBe(true);
     });
 });

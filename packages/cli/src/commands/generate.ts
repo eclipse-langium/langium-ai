@@ -1,5 +1,4 @@
-import prompts from 'prompts';
-import fs from 'fs-extra';
+import { writeFile, readFile, mkdir } from 'node:fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -8,7 +7,8 @@ import { detectLangiumProject, getLanguageName } from '../core/langium-detector.
 import { generateDescriptor, saveDescriptor } from '../core/descriptor.js';
 import { loadDescriptor, generateSystemPrompt, saveSystemPrompt } from '../core/sysprompt.js';
 import { error, success, info, spinner } from '../utils/console.js';
-import { makeRelative } from '../utils/fs.js';
+import { pathExists, makeRelative } from '../utils/fs.js';
+import { confirm } from '../utils/prompt.js';
 import { LaiConfig, LangiumProjectStructure } from '../types.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -49,13 +49,8 @@ async function generateDescriptorCommand(config: LaiConfig, options: GenerateOpt
     const descriptorPath = path.join(cwd, config.descriptor.path);
 
     // check if descriptor exists and handle overwrite/versioning
-    if ((await fs.pathExists(descriptorPath)) && !options.fresh) {
-        const { overwrite } = await prompts({
-            type: 'confirm',
-            name: 'overwrite',
-            message: `Descriptor already exists at ${config.descriptor.path}. Overwrite?`,
-            initial: false,
-        });
+    if ((await pathExists(descriptorPath)) && !options.fresh) {
+        const overwrite = await confirm(`Descriptor already exists at ${config.descriptor.path}. Overwrite?`);
 
         if (!overwrite) {
             console.log('Descriptor generation cancelled.');
@@ -113,7 +108,7 @@ async function generateSysPromptCommand(config: LaiConfig, options: GenerateOpti
     const descriptorPath = path.join(cwd, config.descriptor.path);
 
     // check if descriptor exists
-    if (!(await fs.pathExists(descriptorPath))) {
+    if (!(await pathExists(descriptorPath))) {
         error(`Descriptor not found at ${config.descriptor.path}`);
         console.log('Run `lai gen descriptor` first to create a descriptor.');
         return;
@@ -128,13 +123,8 @@ async function generateSysPromptCommand(config: LaiConfig, options: GenerateOpti
     const fullSyspromptPath = path.join(cwd, syspromptPath);
 
     // check if sysprompt exists and handle overwrite
-    if ((await fs.pathExists(fullSyspromptPath)) && !options.fresh) {
-        const { overwrite } = await prompts({
-            type: 'confirm',
-            name: 'overwrite',
-            message: `System prompt already exists at ${syspromptPath}. Overwrite?`,
-            initial: false,
-        });
+    if ((await pathExists(fullSyspromptPath)) && !options.fresh) {
+        const overwrite = await confirm(`System prompt already exists at ${syspromptPath}. Overwrite?`);
 
         if (!overwrite) {
             console.log('System prompt generation cancelled.');
@@ -215,13 +205,8 @@ async function generateMcpCommand(config: LaiConfig, _options: GenerateOptions):
     const targetPath = path.join(mcpDir, 'mcp-server.ts');
 
     // check if mcp-server.ts already exists
-    if (await fs.pathExists(targetPath)) {
-        const { overwrite } = await prompts({
-            type: 'confirm',
-            name: 'overwrite',
-            message: 'mcp/mcp-server.ts already exists. Overwrite?',
-            initial: false,
-        });
+    if (await pathExists(targetPath)) {
+        const overwrite = await confirm('mcp/mcp-server.ts already exists. Overwrite?');
 
         if (!overwrite) {
             console.log('MCP server generation cancelled.');
@@ -233,13 +218,13 @@ async function generateMcpCommand(config: LaiConfig, _options: GenerateOptions):
     const genSpinner = spinner('Generating MCP server...');
     try {
         const templatePath = path.join(__dirname, '..', 'templates', 'mcp-server.ts');
-        if (!(await fs.pathExists(templatePath))) {
+        if (!(await pathExists(templatePath))) {
             genSpinner.fail('MCP server template not found');
             error('Could not locate the bundled mcp-server.ts template.');
             return;
         }
 
-        let templateContent = await fs.readFile(templatePath, 'utf-8');
+        let templateContent = await readFile(templatePath, 'utf-8');
 
         // resolve the services module path relative to the mcp/ output directory
         const servicesModulePath = makeRelative(mcpDir, structure.services.module).replace(/\.ts$/, '.js');
@@ -259,8 +244,8 @@ async function generateMcpCommand(config: LaiConfig, _options: GenerateOptions):
             .replace(/\{\{ DISPLAY_NAME \}\}/g, projectName);
 
         // write the output
-        await fs.ensureDir(mcpDir);
-        await fs.writeFile(targetPath, templateContent, 'utf-8');
+        await mkdir(mcpDir, { recursive: true });
+        await writeFile(targetPath, templateContent, 'utf-8');
         genSpinner.succeed('MCP server generated');
     } catch (err) {
         genSpinner.fail('Failed to generate MCP server');

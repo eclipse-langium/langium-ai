@@ -1,9 +1,9 @@
-import fs from 'fs-extra';
-import path from 'path';
+import path from 'node:path';
 import { loadConfig } from '../core/config.js';
 import { loadDescriptor } from '../core/sysprompt.js';
 import { validateDescriptor, formatValidationErrors } from '../core/descriptor-schema.js';
 import { error, success, warning, header, spinner } from '../utils/console.js';
+import { pathExists } from '../utils/fs.js';
 
 export async function validateCommand(): Promise<void> {
     let config;
@@ -18,7 +18,7 @@ export async function validateCommand(): Promise<void> {
     const descriptorPath = path.join(cwd, config.descriptor.path);
 
     // check descriptor exists
-    if (!(await fs.pathExists(descriptorPath))) {
+    if (!(await pathExists(descriptorPath))) {
         error(`Descriptor not found at ${config.descriptor.path}`);
         console.log('Run `lai gen descriptor` first to create a descriptor.');
         return;
@@ -55,7 +55,7 @@ export async function validateCommand(): Promise<void> {
     // grammar
     if (descriptor.grammar) {
         const grammarPath = path.join(cwd, descriptor.grammar);
-        if (!(await fs.pathExists(grammarPath))) {
+        if (!(await pathExists(grammarPath))) {
             warning(`grammar: file not found at ${descriptor.grammar}`);
             warnings++;
         }
@@ -64,7 +64,7 @@ export async function validateCommand(): Promise<void> {
     // builtins
     if (descriptor.builtins) {
         const builtinsPath = path.join(cwd, descriptor.builtins);
-        if (!(await fs.pathExists(builtinsPath))) {
+        if (!(await pathExists(builtinsPath))) {
             warning(`builtins: file not found at ${descriptor.builtins}`);
             warnings++;
         }
@@ -73,7 +73,7 @@ export async function validateCommand(): Promise<void> {
     // langium config
     if (descriptor.langium_config) {
         const configPath = path.join(cwd, descriptor.langium_config);
-        if (!(await fs.pathExists(configPath))) {
+        if (!(await pathExists(configPath))) {
             warning(`langium_config: file not found at ${descriptor.langium_config}`);
             warnings++;
         }
@@ -84,7 +84,7 @@ export async function validateCommand(): Promise<void> {
         for (const [name, filePath] of Object.entries(descriptor.services)) {
             if (filePath) {
                 const fullPath = path.join(cwd, filePath);
-                if (!(await fs.pathExists(fullPath))) {
+                if (!(await pathExists(fullPath))) {
                     warning(`services.${name}: file not found at ${filePath}`);
                     warnings++;
                 }
@@ -97,7 +97,7 @@ export async function validateCommand(): Promise<void> {
         for (const [idx, example] of descriptor.examples.entries()) {
             if (example.file) {
                 const examplePath = path.join(cwd, example.file);
-                if (!(await fs.pathExists(examplePath))) {
+                if (!(await pathExists(examplePath))) {
                     warning(`examples[${idx}].file: file not found at ${example.file}`);
                     warnings++;
                 }
@@ -109,7 +109,7 @@ export async function validateCommand(): Promise<void> {
     if (descriptor.tests) {
         for (const testPath of descriptor.tests) {
             const testsPath = path.join(cwd, testPath);
-            if (!(await fs.pathExists(testsPath))) {
+            if (!(await pathExists(testsPath))) {
                 warning(`tests: directory not found at ${testPath}`);
                 warnings++;
             }

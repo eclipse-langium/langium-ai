@@ -1,12 +1,12 @@
-import prompts from 'prompts';
-import fs from 'fs-extra';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { detectLangiumProject, getProjectName, getLanguageName } from '../core/langium-detector.js';
 import { saveConfig, configExists } from '../core/config.js';
-import { makeRelative, detectPackageManager } from '../utils/fs.js';
+import { pathExists, makeRelative, detectPackageManager } from '../utils/fs.js';
+import { confirm, text } from '../utils/prompt.js';
 import { header, section, success, error, warning, logDetected, spinner } from '../utils/console.js';
 import type { LaiConfig } from '../types.js';
 
@@ -21,12 +21,7 @@ export async function initCommand(): Promise<void> {
     // check if already initialized
     if (await configExists(cwd)) {
         warning('LAI is already initialized in this project (lai.config.jsonc exists)');
-        const { overwrite } = await prompts({
-            type: 'confirm',
-            name: 'overwrite',
-            message: 'Reinitialize and overwrite existing configuration?',
-            initial: false,
-        });
+        const overwrite = await confirm('Reinitialize and overwrite existing configuration?');
 
         if (!overwrite) {
             console.log('Initialization cancelled.');
@@ -170,22 +165,15 @@ export async function initCommand(): Promise<void> {
     console.log();
 
     // interactive configuration
-    const responses = await prompts([
-        {
-            type: 'text',
-            name: 'projectName',
-            message: 'Project name:',
-            initial: projectName,
-        },
-    ]);
+    const projectNameInput = await text('Project name', projectName);
 
     // handle cancellation
-    if (!responses.projectName) {
+    if (!projectNameInput) {
         console.log('Initialization cancelled.');
         return;
     }
 
-    const languageName = responses.projectName;
+    const languageName = projectNameInput;
 
     // create config
     const config: LaiConfig = {
@@ -221,12 +209,7 @@ export async function initCommand(): Promise<void> {
 
     // offer to install langium-ai-tools
     const pm = await detectPackageManager(cwd);
-    const { installTools } = await prompts({
-        type: 'confirm',
-        name: 'installTools',
-        message: `Install the latest langium-ai-tools? (using ${pm})`,
-        initial: true,
-    });
+    const installTools = await confirm(`Install the latest langium-ai-tools? (using ${pm})`, true);
 
     if (installTools) {
         const installCmd = pm === 'pnpm' ? 'pnpm add langium-ai-tools@latest' : 'npm install langium-ai-tools@latest';
@@ -244,38 +227,31 @@ export async function initCommand(): Promise<void> {
     const evalsSpinner = spinner('Setting up evaluations...');
     try {
         const evalsDir = path.join(cwd, 'evals');
-        await fs.ensureDir(evalsDir);
+        await fs.mkdir(evalsDir, { recursive: true });
 
         // copy utils.ts template
         const utilsTemplatePath = path.join(__dirname, '..', 'templates', 'utils.ts');
         const utilsTargetPath = path.join(evalsDir, 'utils.ts');
-        if (await fs.pathExists(utilsTemplatePath)) {
-            await fs.copy(utilsTemplatePath, utilsTargetPath);
+        if (await pathExists(utilsTemplatePath)) {
+            await fs.copyFile(utilsTemplatePath, utilsTargetPath);
         }
 
         // check if basic.eval.ts already exists
         const evalTargetPath = path.join(evalsDir, 'basic.eval.ts');
         let shouldCopyEvalFile = true;
 
-        if (await fs.pathExists(evalTargetPath)) {
+        if (await pathExists(evalTargetPath)) {
             evalsSpinner.stop();
-            const { overwriteEval } = await prompts({
-                type: 'confirm',
-                name: 'overwriteEval',
-                message: 'basic.eval.ts already exists. Overwrite?',
-                initial: false,
-            });
-
-            shouldCopyEvalFile = overwriteEval;
+            shouldCopyEvalFile = await confirm('basic.eval.ts already exists. Overwrite?');
             evalsSpinner.start('Setting up evaluations...');
         }
 
         // copy and process basic.eval.ts template with placeholder substitution
         if (shouldCopyEvalFile) {
             const evalTemplatePath = path.join(__dirname, '..', 'templates', 'basic.eval.ts');
-            if (await fs.pathExists(evalTemplatePath)) {
+            if (await pathExists(evalTemplatePath)) {
                 // read template
-                let templateContent = await fs.readFile(evalTemplatePath, 'utf-8');
+                let templateContent = await readFile(evalTemplatePath, 'utf-8');
 
                 // extract language name for services
                 const languageName = getLanguageName(structure);
@@ -292,7 +268,7 @@ export async function initCommand(): Promise<void> {
                     .replace(/\{\{ SERVICES_MODULE_PATH \}\}/g, servicesModulePath);
 
                 // write processed template
-                await fs.writeFile(evalTargetPath, templateContent, 'utf-8');
+                await writeFile(evalTargetPath, templateContent, 'utf-8');
             }
         }
 

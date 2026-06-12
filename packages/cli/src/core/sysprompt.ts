@@ -1,12 +1,13 @@
-import fs from 'fs-extra';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
 import type { Descriptor } from '../types.js';
+import { pathExists } from '../utils/fs.js';
 
 // system prompt generation from descriptor templates
 
 export async function loadDescriptor(descriptorPath: string): Promise<Descriptor> {
-    const content = await fs.readFile(descriptorPath, 'utf-8');
+    const content = await readFile(descriptorPath, 'utf-8');
     return YAML.parse(content);
 }
 
@@ -44,8 +45,8 @@ async function loadContent(descriptor: Descriptor, cwd: string): Promise<Array<[
     // grammar
     if (descriptor.grammar) {
         const grammarPath = path.join(cwd, descriptor.grammar);
-        if (await fs.pathExists(grammarPath)) {
-            const grammarContent = await fs.readFile(grammarPath, 'utf-8');
+        if (await pathExists(grammarPath)) {
+            const grammarContent = await readFile(grammarPath, 'utf-8');
             content.push([
                 'Grammar',
                 `The language grammar is defined as follows:\n\n\`\`\`langium\n${grammarContent}\n\`\`\``,
@@ -56,8 +57,8 @@ async function loadContent(descriptor: Descriptor, cwd: string): Promise<Array<[
     // built-in library definitions
     if (descriptor.builtins) {
         const builtinsPath = path.join(cwd, descriptor.builtins);
-        if (await fs.pathExists(builtinsPath)) {
-            const builtinsContent = await fs.readFile(builtinsPath, 'utf-8');
+        if (await pathExists(builtinsPath)) {
+            const builtinsContent = await readFile(builtinsPath, 'utf-8');
             content.push([
                 'Built-in Library',
                 `The following built-in types and functions are available by default in ${descriptor.name}. These are always in scope and do not need to be imported or defined by the user.\n\n\`\`\`\n${builtinsContent}\n\`\`\``,
@@ -68,8 +69,8 @@ async function loadContent(descriptor: Descriptor, cwd: string): Promise<Array<[
     // validation rules (conditional on validator service)
     if (descriptor.services?.validator) {
         const validatorPath = path.join(cwd, descriptor.services.validator);
-        if (await fs.pathExists(validatorPath)) {
-            const validatorContent = await fs.readFile(validatorPath, 'utf-8');
+        if (await pathExists(validatorPath)) {
+            const validatorContent = await readFile(validatorPath, 'utf-8');
             content.push([
                 'Validation Rules',
                 `Semantic validation rules:\n\n\`\`\`typescript\n${validatorContent}\n\`\`\``,
@@ -84,8 +85,8 @@ async function loadContent(descriptor: Descriptor, cwd: string): Promise<Array<[
             examplesToLoad.map(async (ex) => {
                 const examplePath = path.join(cwd, ex.file);
                 let code = '';
-                if (await fs.pathExists(examplePath)) {
-                    code = await fs.readFile(examplePath, 'utf-8');
+                if (await pathExists(examplePath)) {
+                    code = await readFile(examplePath, 'utf-8');
                 }
                 return `#### ${ex.name}\n${ex.description}\n${ex.tags ? `Tags: ${ex.tags.join(', ')}` : ''}\n\n\`\`\`\n${code}\n\`\`\``;
             }),
@@ -142,6 +143,6 @@ export async function saveSystemPrompt(syspromptPath: string, content: string): 
     const fullPath = path.join(cwd, syspromptPath);
 
     // write sysprompt as markdown
-    await fs.writeFile(fullPath, content, 'utf-8');
+    await writeFile(fullPath, content, 'utf-8');
     return fullPath;
 }

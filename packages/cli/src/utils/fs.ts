@@ -1,16 +1,20 @@
-import fs from 'fs-extra';
+import { access, stat, readFile } from 'node:fs/promises';
 import path from 'path';
 import { glob as nodeGlob } from 'glob';
 
 // file system helpers
+
+export async function pathExists(p: string): Promise<boolean> {
+    return access(p).then(() => true, () => false);
+}
 
 export async function findProjectRoot(cwd: string): Promise<string> {
     let current = cwd;
 
     while (current !== path.parse(current).root) {
         // check for package.json or langium-config.json
-        const hasPackageJson = await fs.pathExists(path.join(current, 'package.json'));
-        const hasLangiumConfig = await fs.pathExists(path.join(current, 'langium-config.json'));
+        const hasPackageJson = await pathExists(path.join(current, 'package.json'));
+        const hasLangiumConfig = await pathExists(path.join(current, 'langium-config.json'));
 
         if (hasPackageJson || hasLangiumConfig) {
             return current;
@@ -45,9 +49,9 @@ export async function findServiceFile(root: string, patterns: string[]): Promise
 export async function findDirectory(root: string, names: string[]): Promise<string | undefined> {
     for (const name of names) {
         const dir = path.join(root, name);
-        if (await fs.pathExists(dir)) {
-            const stat = await fs.stat(dir);
-            if (stat.isDirectory()) {
+        if (await pathExists(dir)) {
+            const s = await stat(dir);
+            if (s.isDirectory()) {
                 return dir;
             }
         }
@@ -70,9 +74,9 @@ export async function findDirectories(root: string, names: string[]): Promise<st
         });
         // filter to only actual directories
         for (const match of matches) {
-            if (await fs.pathExists(match)) {
-                const stat = await fs.stat(match);
-                if (stat.isDirectory()) {
+            if (await pathExists(match)) {
+                const s = await stat(match);
+                if (s.isDirectory()) {
                     results.push(match);
                 }
             }
@@ -90,16 +94,16 @@ export async function findDirectories(root: string, names: string[]): Promise<st
  */
 export async function detectPackageManager(root: string): Promise<'pnpm' | 'npm'> {
     // check for pnpm lockfile
-    const hasPnpmLock = await fs.pathExists(path.join(root, 'pnpm-lock.yaml'));
+    const hasPnpmLock = await pathExists(path.join(root, 'pnpm-lock.yaml'));
     if (hasPnpmLock) {
         return 'pnpm';
     }
 
     // check packageManager field in package.json
     const pkgJsonPath = path.join(root, 'package.json');
-    if (await fs.pathExists(pkgJsonPath)) {
+    if (await pathExists(pkgJsonPath)) {
         try {
-            const pkgJson = await fs.readJson(pkgJsonPath);
+            const pkgJson = JSON.parse(await readFile(pkgJsonPath, 'utf-8'));
             if (typeof pkgJson.packageManager === 'string' && pkgJson.packageManager.startsWith('pnpm')) {
                 return 'pnpm';
             }

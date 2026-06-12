@@ -15,8 +15,8 @@ import {
     averageAcrossRunners,
     loadReport,
 } from './evaluator.js';
-import { writeFileSync, readdirSync } from 'fs';
-import * as path from 'path';
+import { writeFileSync, readdirSync } from 'node:fs';
+import * as path from 'node:path';
 
 /**
  * Generates an HTML radar chart from the provided data

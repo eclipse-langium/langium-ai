@@ -1,6 +1,6 @@
 {
     "name": "langium-ai",
-    "version": "0.2.5",
+    "version": "0.3.0",
     "description": "AI application development tooling for Langium-based DSL projects",
     "repository": {
         "type": "git",
@@ -10,10 +10,14 @@
     "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
     "type": "module",
     "bin": {
-        "lai": "dist/index.js"
+        "lai": "dist/lai.js"
     },
+    "files": [
+        "dist/lai.js",
+        "dist/templates"
+    ],
     "scripts": {
-        "build": "tsc && npm run copy-templates",
+        "build": "node esbuild.js && npm run copy-templates",
         "copy-templates": "mkdir -p dist/templates && cp -r templates/* dist/templates/",
         "dev": "tsx watch src/index.ts",
         "prepublishOnly": "npm run build",
@@ -32,17 +36,14 @@
     "dependencies": {
         "chalk": "^5.6.2",
         "commander": "^15.0.0",
-        "fs-extra": "^11.3.5",
         "glob": "^13.0.6",
         "langium-ai-tools": "~5.0.3",
         "ora": "^9.4.0",
-        "prompts": "^2.4.2",
         "yaml": "^2.3.4"
     },
     "devDependencies": {
-        "@types/fs-extra": "^11.0.4",
-        "@types/node": "^20.11.0",
-        "@types/prompts": "^2.4.9",
+        "@types/node": "^20.19.43",
+        "esbuild": "^0.28.1",
         "tsx": "^4.7.0",
         "typescript": "^5.3.3",
         "vitest": "^4.1.0"

@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { Command } from 'commander';
 import { initCommand } from './commands/init.js';
 import { generateCommand } from './commands/generate.js';
@@ -15,7 +14,7 @@ import { validateCommand } from './commands/validate.js';
 
 const program = new Command();
 
-const LAI_CUR_VERSION = '0.2.5';
+const LAI_CUR_VERSION = '0.3.0';
 
 program
     .name('lai')

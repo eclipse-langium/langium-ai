@@ -1,9 +1,12 @@
 {
     "compilerOptions": {
         "target": "ES2022",
-        "module": "nodenext",
+        "module": "esnext",
         "lib": ["ES2022"],
-        "moduleResolution": "nodenext",
+        "moduleResolution": "bundler",
+        "types": [
+            "node"
+        ],
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
@@ -16,6 +19,6 @@
         "outDir": "./dist",
         "rootDir": "./src"
     },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "tests/**/*"],
     "exclude": ["node_modules", "dist", "templates/basic.eval.ts"]
 }

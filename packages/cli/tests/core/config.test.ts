@@ -1,9 +1,10 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import fs from 'fs-extra';
+import fs from 'node:fs/promises';
 import path from 'path';
 import os from 'os';
 import { loadConfig, saveConfig, configExists } from '../../src/core/config.js';
 import type { LaiConfig } from '../../src/types.js';
+import { pathExists } from '../../src/utils/fs.js';
 
 describe('Config Management', () => {
     let tempDir: string;
@@ -13,7 +14,7 @@ describe('Config Management', () => {
     });
 
     afterEach(async () => {
-        await fs.remove(tempDir);
+        await fs.rm(tempDir, { recursive: true, force: true });
     });
 
     const createMockConfig = (): LaiConfig => ({
@@ -38,7 +39,7 @@ describe('Config Management', () => {
 
     describe('configExists', () => {
         it('should return true when config exists', async () => {
-            await fs.writeJSON(path.join(tempDir, 'lai.config.jsonc'), createMockConfig());
+            await fs.writeFile(path.join(tempDir, 'lai.config.jsonc'), JSON.stringify(createMockConfig(), null, 2));
 
             const exists = await configExists(tempDir);
             expect(exists).toBe(true);
@@ -57,9 +58,9 @@ describe('Config Management', () => {
             await saveConfig(config, tempDir);
 
             const configPath = path.join(tempDir, 'lai.config.jsonc');
-            expect(await fs.pathExists(configPath)).toBe(true);
+            expect(await pathExists(configPath)).toBe(true);
 
-            const saved = await fs.readJSON(configPath);
+            const saved = JSON.parse(await fs.readFile(configPath, 'utf-8'));
             expect(saved).toEqual(config);
         });
 
@@ -91,7 +92,7 @@ describe('Config Management', () => {
     describe('loadConfig', () => {
         it('should load config from file', async () => {
             const config = createMockConfig();
-            await fs.writeJSON(path.join(tempDir, 'lai.config.jsonc'), config);
+            await fs.writeFile(path.join(tempDir, 'lai.config.jsonc'), JSON.stringify(config, null, 2));
 
             const loaded = await loadConfig(tempDir);
             expect(loaded).toEqual(config);

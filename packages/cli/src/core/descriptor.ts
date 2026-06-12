@@ -1,10 +1,10 @@
-import fs from 'fs-extra';
+import { existsSync, readFileSync } from 'node:fs';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'path';
 import YAML from 'yaml';
-import type { Descriptor, LangiumProjectStructure, LaiConfig, Services } from '../types.js';
+import type { Descriptor, LaiConfig, LangiumProjectStructure, Services } from '../types.js';
 import { makeRelative } from '../utils/fs.js';
-import { validateDescriptor, formatValidationErrors } from './descriptor-schema.js';
-import { readFileSync } from 'fs';
+import { formatValidationErrors, validateDescriptor } from './descriptor-schema.js';
 
 // descriptor generation and management
 
@@ -21,14 +21,14 @@ export async function generateDescriptor(
     // read example files if present
     let examplesContent: Array<{ name: string; content: string }> = [];
     if (structure.examples) {
-        const exampleFiles = await fs.readdir(structure.examples);
+        const exampleFiles = await readdir(structure.examples);
         // read up to 3 example files (sorted for deterministic ordering)
         const exampleFilesToRead = exampleFiles.sort().slice(0, 3);
 
         examplesContent = await Promise.all(
             exampleFilesToRead.map(async (file) => ({
                 name: file,
-                content: await fs.readFile(path.join(structure.examples!, file), 'utf-8'),
+                content: await readFile(path.join(structure.examples!, file), 'utf-8'),
             })),
         );
     }
@@ -88,7 +88,7 @@ export async function saveDescriptor(descriptorPath: string, descriptor: Descrip
         lineWidth: 0, // disable line wrapping
     });
 
-    await fs.writeFile(fullPath, yamlContent, 'utf-8');
+    await writeFile(fullPath, yamlContent, 'utf-8');
     return fullPath;
 }
 
@@ -175,7 +175,7 @@ function createDefaultDocumentation(structure: LangiumProjectStructure) {
 
     // check for README
     const readmePath = path.join(structure.root, 'README.md');
-    if (fs.existsSync(readmePath)) {
+    if (existsSync(readmePath)) {
         docs.push({
             src: makeRelative(cwd, readmePath),
             description: 'Project README',

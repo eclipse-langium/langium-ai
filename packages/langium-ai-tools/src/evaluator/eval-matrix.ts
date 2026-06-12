@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 import { Evaluator, type EvaluatorResult } from './evaluator.js';
-import fs from 'fs';
+import fs from 'node:fs';
 import * as path from 'path';
 import { type Message } from './message.js';
 import { type EvalCase } from './eval-case.js';

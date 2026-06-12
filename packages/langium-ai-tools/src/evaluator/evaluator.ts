@@ -8,7 +8,7 @@
  * Baseline Validator Class
  */
 
-import { readFileSync, existsSync, readdirSync } from 'fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import * as path from 'path';
 
 /**

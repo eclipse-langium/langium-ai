@@ -1,6 +1,7 @@
-import fs from 'fs-extra';
+import { readdir } from 'node:fs/promises';
 import path from 'path';
 import { loadConfig } from '../core/config.js';
+import { pathExists } from '../utils/fs.js';
 import { error, header, section, logDetected } from '../utils/console.js';
 
 export async function statusCommand(): Promise<void> {
@@ -22,19 +23,19 @@ export async function statusCommand(): Promise<void> {
 
     // check descriptor
     section('Descriptor');
-    const descriptorExists = await fs.pathExists(path.join(cwd, config.descriptor.path));
+    const descriptorExists = await pathExists(path.join(cwd, config.descriptor.path));
     logDetected('File', config.descriptor.path, descriptorExists);
 
     // check sysprompt(s)
     section('System Prompt');
-    const syspromptExists = await fs.pathExists(path.join(cwd, config.sysprompt.path));
+    const syspromptExists = await pathExists(path.join(cwd, config.sysprompt.path));
     logDetected('Default', config.sysprompt.path, syspromptExists);
 
     // check for other template-based prompts
     const syspromptDir = path.dirname(path.join(cwd, config.sysprompt.path));
     const syspromptBase = path.basename(config.sysprompt.path, '.md');
-    if (await fs.pathExists(syspromptDir)) {
-        const files = await fs.readdir(syspromptDir);
+    if (await pathExists(syspromptDir)) {
+        const files = await readdir(syspromptDir);
         const templatePrompts = files.filter(
             (f) => f.startsWith(syspromptBase) && f !== path.basename(config.sysprompt.path) && f.endsWith('.md'),
         );
@@ -47,11 +48,11 @@ export async function statusCommand(): Promise<void> {
     // check evaluations
     section('Evaluations');
     const evalsDir = path.join(cwd, config.evaluations.directory);
-    const evalsDirExists = await fs.pathExists(evalsDir);
+    const evalsDirExists = await pathExists(evalsDir);
     logDetected('Directory', config.evaluations.directory, evalsDirExists);
 
     if (evalsDirExists) {
-        const evalFiles = (await fs.readdir(evalsDir)).filter((f) => f.endsWith('.eval.ts'));
+        const evalFiles = (await readdir(evalsDir)).filter((f) => f.endsWith('.eval.ts'));
         logDetected('Eval files', `${evalFiles.length} found`, evalFiles.length > 0);
     }
 

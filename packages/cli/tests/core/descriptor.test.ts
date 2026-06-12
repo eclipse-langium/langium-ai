@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import fs from 'fs-extra';
+import fs from 'node:fs/promises';
 import path from 'path';
 import os from 'os';
 import YAML from 'yaml';
@@ -17,7 +17,7 @@ describe('Descriptor Generation', () => {
 
     afterEach(async () => {
         process.chdir(originalCwd);
-        await fs.remove(tempDir);
+        await fs.rm(tempDir, { recursive: true, force: true });
     });
 
     const createMockConfig = (): LaiConfig => ({
@@ -105,7 +105,7 @@ describe('Descriptor Generation', () => {
         it('should include examples when directory exists', async () => {
             const config = createMockConfig();
             const examplesDir = path.join(tempDir, 'examples');
-            await fs.ensureDir(examplesDir);
+            await fs.mkdir(examplesDir, { recursive: true });
             await fs.writeFile(path.join(examplesDir, 'example1.dsl'), 'content1');
             await fs.writeFile(path.join(examplesDir, 'example2.dsl'), 'content2');
 
@@ -140,7 +140,7 @@ describe('Descriptor Generation', () => {
         it('should include tests path when tests directory exists', async () => {
             const config = createMockConfig();
             const testsDir = path.join(tempDir, 'tests');
-            await fs.ensureDir(testsDir);
+            await fs.mkdir(testsDir, { recursive: true });
 
             const structure: LangiumProjectStructure = {
                 ...createMockStructure(),

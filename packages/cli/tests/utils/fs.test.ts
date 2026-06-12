@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import fs from 'fs-extra';
+import fs from 'node:fs/promises';
 import path from 'path';
 import os from 'os';
 import {
@@ -21,23 +21,23 @@ describe('File System Utils', () => {
 
     afterEach(async () => {
         // cleanup temp directory
-        await fs.remove(tempDir);
+        await fs.rm(tempDir, { recursive: true, force: true });
     });
 
     describe('findProjectRoot', () => {
         it('should find root with package.json', async () => {
-            await fs.writeJSON(path.join(tempDir, 'package.json'), { name: 'test' });
+            await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test' }, null, 2));
             const subDir = path.join(tempDir, 'src', 'nested');
-            await fs.ensureDir(subDir);
+            await fs.mkdir(subDir, { recursive: true });
 
             const root = await findProjectRoot(subDir);
             expect(root).toBe(tempDir);
         });
 
         it('should find root with langium-config.json', async () => {
-            await fs.writeJSON(path.join(tempDir, 'langium-config.json'), {});
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify({}, null, 2));
             const subDir = path.join(tempDir, 'src');
-            await fs.ensureDir(subDir);
+            await fs.mkdir(subDir, { recursive: true });
 
             const root = await findProjectRoot(subDir);
             expect(root).toBe(tempDir);
@@ -92,7 +92,7 @@ describe('File System Utils', () => {
 
         it('should try multiple patterns in order', async () => {
             const validationDir = path.join(tempDir, 'validation');
-            await fs.ensureDir(validationDir);
+            await fs.mkdir(validationDir, { recursive: true });
             const validatorFile = path.join(validationDir, 'index.ts');
             await fs.writeFile(validatorFile, 'export class Validator {}');
 
@@ -109,7 +109,7 @@ describe('File System Utils', () => {
     describe('findDirectory', () => {
         it('should find directory from list of names', async () => {
             const testsDir = path.join(tempDir, 'tests');
-            await fs.ensureDir(testsDir);
+            await fs.mkdir(testsDir, { recursive: true });
 
             const found = await findDirectory(tempDir, ['test', 'tests', '__tests__']);
             expect(found).toBe(testsDir);
@@ -118,8 +118,8 @@ describe('File System Utils', () => {
         it('should return first matching directory', async () => {
             const testDir = path.join(tempDir, 'test');
             const testsDir = path.join(tempDir, 'tests');
-            await fs.ensureDir(testDir);
-            await fs.ensureDir(testsDir);
+            await fs.mkdir(testDir, { recursive: true });
+            await fs.mkdir(testsDir, { recursive: true });
 
             const found = await findDirectory(tempDir, ['test', 'tests']);
             expect(found).toBe(testDir);

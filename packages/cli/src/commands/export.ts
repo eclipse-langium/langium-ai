@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import { writeFile } from 'node:fs/promises';
 import path from 'path';
 import { error, success } from '../utils/console.js';
 import { getRunById } from '../utils/runs.js';
@@ -67,7 +67,7 @@ async function exportCSV(
     // save to file or output to stdout
     if (outputPath) {
         const fullPath = path.resolve(process.cwd(), outputPath);
-        await fs.writeFile(fullPath, csv, 'utf-8');
+        await writeFile(fullPath, csv, 'utf-8');
         success(`Exported to: ${outputPath}`);
     } else {
         console.log(csv);
@@ -83,7 +83,7 @@ async function exportJSON(runData: unknown, outputPath?: string): Promise<void> 
     // save to file or output to stdout
     if (outputPath) {
         const fullPath = path.resolve(process.cwd(), outputPath);
-        await fs.writeFile(fullPath, json, 'utf-8');
+        await writeFile(fullPath, json, 'utf-8');
         success(`Exported to: ${outputPath}`);
     } else {
         console.log(json);
