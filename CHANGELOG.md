@@ -1,11 +1,15 @@
 # CHANGELOG
 
-## v0.3.0 langium-ai (PENDING)
+## v0.3.0 langium-ai (PENDING), v5.0.4 langium-ai-tools
 
+### langium-ai (lai)
 - Improved Langium service detection logic, to pick up services that were otherwise missed automatically.
 In most cases the `lai` skill resolved all of these
 - Bundle up the CLI properly
 - Remove various dependencies that were unneeded (or lead to bundling issues)
+
+### langium-ai-tools (lib)
+- Similar removal of extra dependencies
 
 ## v0.2.5 langium-ai
 

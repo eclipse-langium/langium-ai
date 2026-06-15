@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises';
 import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
@@ -227,13 +227,13 @@ export async function initCommand(): Promise<void> {
     const evalsSpinner = spinner('Setting up evaluations...');
     try {
         const evalsDir = path.join(cwd, 'evals');
-        await fs.mkdir(evalsDir, { recursive: true });
+        await mkdir(evalsDir, { recursive: true });
 
         // copy utils.ts template
         const utilsTemplatePath = path.join(__dirname, '..', 'templates', 'utils.ts');
         const utilsTargetPath = path.join(evalsDir, 'utils.ts');
         if (await pathExists(utilsTemplatePath)) {
-            await fs.copyFile(utilsTemplatePath, utilsTargetPath);
+            await copyFile(utilsTemplatePath, utilsTargetPath);
         }
 
         // check if basic.eval.ts already exists
