@@ -37,6 +37,23 @@ Interactive setup that:
 - Creates `lai.config.jsonc` with detected paths and provider config
 - Sets up an `evals/` directory with a starter evaluation file
 
+### Reinitializing Parts of the Setup
+
+If you need to reinitialize just the config or just the evals without running the full init flow:
+
+```bash
+# reinitialize only the lai.config.jsonc file (re-detects project structure)
+lai init config
+
+# reinitialize only the evals/ directory and regenerate template files
+# requires an existing lai.config.jsonc — run `lai init` first if you don't have one
+lai init evals
+```
+
+`lai init config` re-detects your Langium project structure and regenerates `lai.config.jsonc`. This is useful if your project structure has changed (e.g., moved grammar files or added new services) and you want to update the config without touching evals.
+
+`lai init evals` regenerates the `evals/` directory with fresh template files (`utils.ts` and `basic.eval.ts`). It prompts before overwriting `basic.eval.ts` if it already exists. This is useful if templates have been updated in a newer version of LAI or if you want a clean starting point for your evaluations.
+
 The resulting `lai.config.jsonc` looks like:
 
 ```jsonc
@@ -379,6 +396,8 @@ For generating an MCP server for your DSL, use the separate `lai-gen-mcp` skill.
 
 ```bash
 lai init                              # one-time project setup
+lai init config                       # reinitialize config only
+lai init evals                        # reinitialize evals only
 lai gen descriptor                    # generate descriptor from project
 lai gen descriptor --fresh            # regenerate from scratch
 lai validate                          # validate descriptor schema and file paths

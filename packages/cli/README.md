@@ -8,7 +8,7 @@ There are many ways to get an LLM to generate valid code reliably in your DSL, b
 
 LAI primarily contributes once you get into an evaluation loop, where you can incrementally expand & refine your AI tooling. From setup to evaluation, the workflow generally proceeds as follows:
 
-1. **`lai init`** — detects your Langium project structure, configures your LLM provider, and scaffolds an `evals/` directory with starter files
+1. **`lai init`** — detects your Langium project structure, configures your LLM provider, and scaffolds an `evals/` directory with starter files. You can also reinitialize parts of the setup individually with `lai init config` (config only) or `lai init evals` (evals only)
 2. **`lai gen descriptor`** — generates a structured YAML descriptor that maps your grammar, services, and examples into a form suitable for prompt generation
 3. **`lai gen sysprompt`** — synthesizes a system prompt from the descriptor
 4. **`lai evaluate`** — runs your evaluation suite against the system prompt via your configured LLM, recording pass/fail and timing for each test case
@@ -28,6 +28,12 @@ npm install -g langium-ai
 # one-time setup from the root of your Langium project
 # detects Langium structure, installs langium-ai-tools, and scaffolds evals
 lai init
+
+# reinitialize just the config file (re-detects project structure)
+lai init config
+
+# reinitialize just the evals/ directory and regenerate template files
+lai init evals
 
 # generate a YAML descriptor mapping your language's grammar, services, and examples
 lai gen descriptor

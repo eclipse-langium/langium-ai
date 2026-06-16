@@ -51,6 +51,11 @@ Four npm workspaces under `packages/`:
 
 **Core workflow**: `init` → `gen descriptor` → refine → `gen sysprompt` → `evaluate` → analyze → iterate
 
+**Init subcommands**:
+- `lai init` — full project setup (config + install tools + evals)
+- `lai init config` — reinitialize just `lai.config.jsonc` (re-detects project structure)
+- `lai init evals` — reinitialize just the `evals/` directory and template files (requires existing config)
+
 ## Code Style
 
 - **Formatter**: Biome — 4-space indent, 120 char width, single quotes, always semicolons, trailing commas

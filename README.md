@@ -46,6 +46,8 @@ The LAI cli exposes a number of commands to line up quite nicely with the loop p
 | Command | Purpose |
 |---|---|
 | `lai init` | One-time project setup — detects Langium structure, configures LLM provider, scaffolds evals |
+| `lai init config` | Reinitialize just the `lai.config.jsonc` file (re-detects project structure) |
+| `lai init evals` | Reinitialize the `evals/` directory and regenerate template files |
 | `lai gen descriptor` | Generate a structured YAML descriptor mapping your Langium project |
 | `lai gen sysprompt` | Synthesize a system prompt from the descriptor |
 | `lai evaluate` | Run evaluation suites against your system prompt via your configured LLM |
