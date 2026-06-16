@@ -1,5 +1,14 @@
 # Langium AI
 
+[![CI](https://img.shields.io/github/actions/workflow/status/eclipse-langium/langium-ai/ci.yml?style=flat-square&logo=githubactions&logoColor=white&label=CI)](https://github.com/eclipse-langium/langium-ai/actions/workflows/ci.yml)
+
+## Packages
+
+| Package | Version | Downloads | License |
+|---|---|---|---|
+| [`langium-ai`](https://www.npmjs.com/package/langium-ai) | [![npm](https://img.shields.io/npm/v/langium-ai?style=flat-square&logo=npm)](https://www.npmjs.com/package/langium-ai) | [![downloads](https://img.shields.io/npm/dm/langium-ai?style=flat-square)](https://www.npmjs.com/package/langium-ai) | [![license](https://img.shields.io/npm/l/langium-ai?style=flat-square)](https://www.npmjs.com/package/langium-ai) |
+| [`langium-ai-tools`](https://www.npmjs.com/package/langium-ai-tools) | [![npm](https://img.shields.io/npm/v/langium-ai-tools?style=flat-square&logo=npm)](https://www.npmjs.com/package/langium-ai-tools) | [![downloads](https://img.shields.io/npm/dm/langium-ai-tools?style=flat-square)](https://www.npmjs.com/package/langium-ai-tools) | [![license](https://img.shields.io/npm/l/langium-ai-tools?style=flat-square)](https://www.npmjs.com/package/langium-ai-tools) |
+
 ## Overview
 
 Langium AI is a suite of tools that make it easier to integrate AI applications with [Langium](https://langium.org/) DSLs. It provides a core library, a CLI, and a set of agent skills that together form a workflow for building, evaluating, and refining AI-powered tooling around your domain-specific language.

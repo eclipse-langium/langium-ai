@@ -1,5 +1,10 @@
 # langium-ai (LAI)
 
+[![CI](https://img.shields.io/github/actions/workflow/status/eclipse-langium/langium-ai/ci.yml?style=flat-square&logo=githubactions&logoColor=white&label=CI)](https://github.com/eclipse-langium/langium-ai/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/langium-ai?style=flat-square&logo=npm)](https://www.npmjs.com/package/langium-ai)
+[![downloads](https://img.shields.io/npm/dm/langium-ai?style=flat-square)](https://www.npmjs.com/package/langium-ai)
+[![license](https://img.shields.io/npm/l/langium-ai?style=flat-square)](https://www.npmjs.com/package/langium-ai)
+
 `lai` is a CLI for bootstrapping and iteratively refining AI-powered tooling around [Langium](https://langium.org/) DSLs. If you're building a coding assistant, agent, or any other LLM-driven workflow for a Langium-based domain-specific language, LAI gives you the framework and feedback loop to make your job much easier.
 
 There are many ways to get an LLM to generate valid code reliably in your DSL, but typically we see a need for a robust system prompt that accurately describes your language, evaluation tests to measure output quality, and a way to track improvements over time. Additionally supporting tooling, mcp, and more is often needed to build a really great application. Building all of that from scratch for each project is tedious — and without a consistent measurement approach, it's easy to make changes that feel right but don't actually improve results. LAI seeks to help in this process, so you can make changes and check your work without burdening yourself in the process.

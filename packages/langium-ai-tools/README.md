@@ -1,5 +1,11 @@
 # Langium AI Tools
 
+[![CI](https://img.shields.io/github/actions/workflow/status/eclipse-langium/langium-ai/ci.yml?style=flat-square&logo=githubactions&logoColor=white&label=CI)](https://github.com/eclipse-langium/langium-ai/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/langium-ai-tools?style=flat-square&logo=npm)](https://www.npmjs.com/package/langium-ai-tools)
+[![downloads](https://img.shields.io/npm/dm/langium-ai-tools?style=flat-square)](https://www.npmjs.com/package/langium-ai-tools)
+[![license](https://img.shields.io/npm/l/langium-ai-tools?style=flat-square)](https://www.npmjs.com/package/langium-ai-tools)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/langium-ai-tools?style=flat-square)](https://bundlephobia.com/package/langium-ai-tools)
+
 ## Overview
 
 This project provides core tools that make it easier to build AI applications for Langium DSLs. These core tools help to solve the following problems around building AI applications by making it easier to:
