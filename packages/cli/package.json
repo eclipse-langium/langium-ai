@@ -13,12 +13,11 @@
     "lai": "dist/lai.js"
   },
   "files": [
-    "dist/lai.js",
-    "dist/templates"
+    "dist/lai.js"
   ],
   "scripts": {
-    "build": "tsc && node esbuild.js && npm run copy-templates",
-    "copy-templates": "mkdir -p dist/templates && cp -r templates/* dist/templates/",
+    "build": "npm run embed-templates && tsc && node esbuild.js",
+    "embed-templates": "node scripts/embed-templates.js",
     "dev": "tsx watch src/index.ts",
     "prepublishOnly": "npm run build",
     "test": "vitest run",

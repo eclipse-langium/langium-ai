@@ -1,18 +1,14 @@
-import { writeFile, readFile, mkdir } from 'node:fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import { loadConfig } from '../core/config.js';
 import { detectLangiumProject, getLanguageName } from '../core/langium-detector.js';
 import { generateDescriptor, saveDescriptor } from '../core/descriptor.js';
 import { loadDescriptor, generateSystemPrompt, saveSystemPrompt } from '../core/sysprompt.js';
+import { getTemplate } from '../templates.js';
 import { error, success, info, spinner } from '../utils/console.js';
 import { pathExists, makeRelative } from '../utils/fs.js';
 import { confirm } from '../utils/prompt.js';
 import { LaiConfig, LangiumProjectStructure } from '../types.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 interface GenerateOptions {
     fresh?: boolean;
@@ -217,14 +213,7 @@ async function generateMcpCommand(config: LaiConfig, _options: GenerateOptions):
     // load and process the template
     const genSpinner = spinner('Generating MCP server...');
     try {
-        const templatePath = path.join(__dirname, '..', 'templates', 'mcp-server.ts');
-        if (!(await pathExists(templatePath))) {
-            genSpinner.fail('MCP server template not found');
-            error('Could not locate the bundled mcp-server.ts template.');
-            return;
-        }
-
-        let templateContent = await readFile(templatePath, 'utf-8');
+        let templateContent = getTemplate('mcp-server.ts');
 
         // resolve the services module path relative to the mcp/ output directory
         const servicesModulePath = makeRelative(mcpDir, structure.services.module).replace(/\.ts$/, '.js');

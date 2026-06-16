@@ -1,17 +1,13 @@
 import { execSync } from 'child_process';
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'path';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { configExists, saveConfig } from '../core/config.js';
 import { detectLangiumProject, getLanguageName, getProjectName } from '../core/langium-detector.js';
+import { getTemplate } from '../templates.js';
 import type { LaiConfig, LangiumProjectStructure } from '../types.js';
 import { error, header, logDetected, section, spinner, success, warning } from '../utils/console.js';
 import { detectPackageManager, makeRelative, pathExists } from '../utils/fs.js';
 import { confirm, text } from '../utils/prompt.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 /**
  * Detects the Langium project structure and displays the results.
@@ -198,12 +194,9 @@ async function initEvals(cwd: string, structure: LangiumProjectStructure): Promi
         const evalsDir = path.join(cwd, 'evals');
         await mkdir(evalsDir, { recursive: true });
 
-        // copy utils.ts template
-        const utilsTemplatePath = path.join(__dirname, '..', 'templates', 'utils.ts');
+        // write utils.ts template
         const utilsTargetPath = path.join(evalsDir, 'utils.ts');
-        if (await pathExists(utilsTemplatePath)) {
-            await copyFile(utilsTemplatePath, utilsTargetPath);
-        }
+        await writeFile(utilsTargetPath, getTemplate('utils.ts'), 'utf-8');
 
         // check if basic.eval.ts already exists
         const evalTargetPath = path.join(evalsDir, 'basic.eval.ts');
@@ -215,27 +208,24 @@ async function initEvals(cwd: string, structure: LangiumProjectStructure): Promi
             evalsSpinner.start('Setting up evaluations...');
         }
 
-        // copy and process basic.eval.ts template with placeholder substitution
+        // write basic.eval.ts template with placeholder substitution
         if (shouldCopyEvalFile) {
-            const evalTemplatePath = path.join(__dirname, '..', 'templates', 'basic.eval.ts');
-            if (await pathExists(evalTemplatePath)) {
-                let templateContent = await readFile(evalTemplatePath, 'utf-8');
+            let templateContent = getTemplate('basic.eval.ts');
 
-                const languageName = getLanguageName(structure);
+            const languageName = getLanguageName(structure);
 
-                // determine services module path
-                const servicesModulePath = structure.services.module
-                    ? makeRelative(evalsDir, structure.services.module).replace(/\.ts$/, '.js')
-                    : '../src/language/main.js';
+            // determine services module path
+            const servicesModulePath = structure.services.module
+                ? makeRelative(evalsDir, structure.services.module).replace(/\.ts$/, '.js')
+                : '../src/language/main.js';
 
-                // replace placeholders
-                templateContent = templateContent
-                    .replace(/\{\{ CREATE_LANGUAGE_SERVICES \}\}/g, `create${languageName}Services`)
-                    .replace(/\{\{ LANGUAGE_SERVICES \}\}/g, languageName)
-                    .replace(/\{\{ SERVICES_MODULE_PATH \}\}/g, servicesModulePath);
+            // replace placeholders
+            templateContent = templateContent
+                .replace(/\{\{ CREATE_LANGUAGE_SERVICES \}\}/g, `create${languageName}Services`)
+                .replace(/\{\{ LANGUAGE_SERVICES \}\}/g, languageName)
+                .replace(/\{\{ SERVICES_MODULE_PATH \}\}/g, servicesModulePath);
 
-                await writeFile(evalTargetPath, templateContent, 'utf-8');
-            }
+            await writeFile(evalTargetPath, templateContent, 'utf-8');
         }
 
         evalsSpinner.succeed('Created evals/ directory with TypeScript evaluation files');
