@@ -25,14 +25,28 @@ describe('CLI Workflow Integration', () => {
 
     it('should complete full workflow: detect -> config -> generate', async () => {
         // step 1: setup a langium project
-        await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({
-            name: 'workflow-test-dsl',
-            version: '1.0.0',
-        }, null, 2));
+        await fs.writeFile(
+            path.join(tempDir, 'package.json'),
+            JSON.stringify(
+                {
+                    name: 'workflow-test-dsl',
+                    version: '1.0.0',
+                },
+                null,
+                2,
+            ),
+        );
 
-        await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify({
-            projectName: 'workflow-test-dsl',
-        }, null, 2));
+        await fs.writeFile(
+            path.join(tempDir, 'langium-config.json'),
+            JSON.stringify(
+                {
+                    projectName: 'workflow-test-dsl',
+                },
+                null,
+                2,
+            ),
+        );
 
         const grammarPath = path.join(tempDir, 'src', 'grammar.langium');
         await fs.mkdir(path.dirname(grammarPath), { recursive: true });

@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { initCommand } from './commands/init.js';
+import { initCommand, initConfigCommand, initEvalsCommand } from './commands/init.js';
 import { generateCommand } from './commands/generate.js';
 import { evaluateCommand } from './commands/evaluate.js';
 import { statusCommand } from './commands/status.js';
@@ -21,7 +21,9 @@ program
     .description('Langium-AI CLI for bootstrapping AI-powered language tooling')
     .version(LAI_CUR_VERSION);
 
-program.command('init').description('Initialize LAI in your Langium project').action(initCommand);
+const initCmd = program.command('init').description('Initialize LAI in your Langium project').action(initCommand);
+initCmd.command('config').description('Reinitialize the lai.config.jsonc file').action(initConfigCommand);
+initCmd.command('evals').description('Reinitialize the evals directory and template files').action(initEvalsCommand);
 
 program
     .command('gen')

@@ -879,9 +879,16 @@ import { RealImport } from './real.js';`;
     describe('getProjectName', () => {
         it('should extract name from package.json', async () => {
             // create actual package.json file for this test
-            await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({
-                name: 'my-awesome-dsl',
-            }, null, 2));
+            await fs.writeFile(
+                path.join(tempDir, 'package.json'),
+                JSON.stringify(
+                    {
+                        name: 'my-awesome-dsl',
+                    },
+                    null,
+                    2,
+                ),
+            );
 
             const structure = {
                 root: tempDir,
@@ -1009,9 +1016,16 @@ import { RealImport } from './real.js';`;
         });
 
         it('should fallback to project name and convert to PascalCase', async () => {
-            await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({
-                name: 'test-dsl-project',
-            }, null, 2));
+            await fs.writeFile(
+                path.join(tempDir, 'package.json'),
+                JSON.stringify(
+                    {
+                        name: 'test-dsl-project',
+                    },
+                    null,
+                    2,
+                ),
+            );
 
             const structure = {
                 root: tempDir,

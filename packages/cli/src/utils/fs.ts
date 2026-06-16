@@ -5,7 +5,10 @@ import { glob as nodeGlob } from 'glob';
 // file system helpers
 
 export async function pathExists(p: string): Promise<boolean> {
-    return access(p).then(() => true, () => false);
+    return access(p).then(
+        () => true,
+        () => false,
+    );
 }
 
 export async function findProjectRoot(cwd: string): Promise<string> {
