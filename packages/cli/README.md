@@ -70,6 +70,9 @@ lai evaluate --verbose
 # use a custom system prompt instead of the configured one
 lai evaluate --sysprompt ./prompts/experimental.txt
 
+# use a custom evaluations directory instead of the configured one
+lai evaluate --dir ./custom-evals
+
 # combine options
 lai evaluate --sysprompt ./test-prompt.md --output results.json --verbose
 ```

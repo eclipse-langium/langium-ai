@@ -14,6 +14,7 @@ import type { EvaluationRunData } from '../utils/runs.js';
 let tsxLoaderRegistered = false;
 
 interface EvaluateOptions {
+    dir?: string;
     output?: string;
     sysprompt?: string;
     verbose?: boolean;
@@ -62,8 +63,10 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
             info(`Running with sysprompt ${syspromptPath}`);
         }
 
-        // find evals directory
-        const evalsDir = path.join(process.cwd(), config.evaluations.directory);
+        // find evals directory (use --dir option if provided, otherwise use config)
+        const evalsDir = options.dir
+            ? path.resolve(process.cwd(), options.dir)
+            : path.join(process.cwd(), config.evaluations.directory);
         if (!(await pathExists(evalsDir))) {
             error(`Evaluation directory not found: ${evalsDir}`);
             info('Run `lai init` to set up evaluations.');

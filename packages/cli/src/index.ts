@@ -37,6 +37,7 @@ program
     .alias('eval')
     .alias('e')
     .description('Run evaluations against your system prompt')
+    .option('--dir <path>', 'Path to evaluations directory (overrides config)')
     .option('--output <path>', 'Output path to use over the default')
     .option('--sysprompt <path>', 'Path to system prompt file (overrides config)')
     .option('--verbose', 'Show detailed evaluation output')

@@ -76,6 +76,9 @@ lai evaluate --verbose
 # use a specific system prompt file
 lai evaluate --sysprompt path/to/custom.sysprompt.md
 
+# use a custom evaluations directory (overrides config)
+lai evaluate --dir ./custom-evals
+
 # save results to a custom path
 lai evaluate --output results.json
 ```
@@ -84,6 +87,7 @@ lai evaluate --output results.json
 
 | Option | Description |
 |--------|-------------|
+| `--dir <path>` | Path to evaluations directory (overrides config) |
 | `--verbose` | Show detailed output as each evaluation completes |
 | `--sysprompt <path>` | Path to system prompt file (overrides config) |
 | `--output <path>` | Custom output path for results JSON |

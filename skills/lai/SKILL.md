@@ -178,6 +178,9 @@ lai evaluate --verbose
 # use a specific system prompt (overrides config)
 lai evaluate --sysprompt ./prompts/experimental.md
 
+# use a custom evaluations directory (overrides config)
+lai evaluate --dir ./custom-evals
+
 # save results to a specific path
 lai evaluate --output results.json
 ```
@@ -406,6 +409,7 @@ lai gen sysprompt --fresh             # regenerate from scratch
 lai evaluate                          # run evaluations
 lai evaluate --verbose                # with detailed output
 lai evaluate --sysprompt PATH         # with custom system prompt
+lai evaluate --dir PATH               # with custom evals directory
 lai status                            # check project status
 lai history                           # view run history
 lai history --oneline                 # condensed history
