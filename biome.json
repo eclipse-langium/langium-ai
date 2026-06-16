@@ -1,7 +1,14 @@
 {
     "$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
     "files": {
-        "ignore": ["**/dist/**", "**/node_modules/**", "**/src/gen/**", "**/templates/**", "package.json"]
+        "ignore": [
+            "**/dist/**",
+            "**/node_modules/**",
+            "**/src/gen/**",
+            "**/templates/**",
+            "package.json",
+            "**/cli/src/templates.ts"
+        ]
     },
     "formatter": {
         "enabled": true,
