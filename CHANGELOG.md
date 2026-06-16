@@ -1,12 +1,17 @@
 # CHANGELOG
 
-## v0.3.0 langium-ai (PENDING), v5.0.4 langium-ai-tools
+## v0.3.0 langium-ai, v5.0.4 langium-ai-tools (2026-06-16)
 
 ### langium-ai (lai)
 - Improved Langium service detection logic, to pick up services that were otherwise missed automatically.
 In most cases the `lai` skill resolved all of these
 - Bundle up the CLI properly
+- Properly sync up CLI version with package.json version
+- Add `lai init config` and `lai init evals` sub-commands with documentation
+- Add `lai eval --dir PATH` as a way to set custom evaluation directories
+- Embed templates within the bundle, rather than sourcing externally
 - Remove various dependencies that were unneeded (or lead to bundling issues)
+- Adds internal release scripts & tools to standardize things going forward
 
 ### langium-ai-tools (lib)
 - Similar removal of extra dependencies
