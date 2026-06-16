@@ -13,7 +13,8 @@ Checklist before you're ready to push up a release
     - just update the `LAI_CUR_VERSION` line
     - this is done automatically with the `scripts/release-langium-ai.sh` script outlined below
         - i.e `const LAI_CUR_VERSION = "X.Y.Z";` will be automatically replaced w/ the current version when the script runs
-4. Update the changelog for both versions, following the prior release format
+4. Regenerated embedded CLI templates via `npm run embed-templates` (within ./packages/cli)
+5. Update the changelog for both versions, following the prior release format
     - Single release entry, describing both langium-ai and langium-ai-tools releases
     - If there's just one release, you only need to describe that one
 
