@@ -11,7 +11,7 @@ Checklist before you're ready to push up a release
 2. Bump version in package.json for CLI and/or tools accordingly
 3. Update version for cli in ./packages/cli/src/index.ts, this should align with the package.json
     - just update the `LAI_CUR_VERSION` line
-    - this is done automatically with the `release-langium-ai.sh` script outlined below
+    - this is done automatically with the `scripts/release-langium-ai.sh` script outlined below
         - i.e `const LAI_CUR_VERSION = "X.Y.Z";` will be automatically replaced w/ the current version when the script runs
 4. Update the changelog for both versions, following the prior release format
     - Single release entry, describing both langium-ai and langium-ai-tools releases
@@ -19,7 +19,7 @@ Checklist before you're ready to push up a release
 
 ### Performing the Release
 
-Both release steps are fairly similar, but the CLI involves syncing the version in the CLI tool with the package version. For clarify, the steps are outlined below, but for brevity, there's 2 scripts you can use to run through this process with pauses in-between. They are **release-langium-ai-tools.sh** and **release-langium-ai.sh**.
+Both release steps are fairly similar, but the CLI involves syncing the version in the CLI tool with the package version. For clarify, the steps are outlined below, but for brevity, there's 2 scripts you can use to run through this process with pauses in-between. They are **scripts/release-langium-ai-tools.sh** and **scripts/release-langium-ai.sh**.
 
 #### Releasing the CLI
 
