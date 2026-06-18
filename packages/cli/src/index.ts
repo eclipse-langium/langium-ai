@@ -37,10 +37,12 @@ program
     .alias('eval')
     .alias('e')
     .description('Run evaluations against your system prompt')
-    .option('--dir <path>', 'Path to evaluations directory (overrides config)')
+    .argument('[paths...]', 'Eval files or directories (defaults to the configured evaluations directory)')
+    .option('--dir <path>', '[DEPRECATED] Path to evaluations directory (pass as a positional argument instead)')
     .option('--output <path>', 'Output path to use over the default')
     .option('--sysprompt <path>', 'Path to system prompt file (overrides config)')
     .option('--verbose', 'Show detailed evaluation output')
+    .option('--list', 'List discovered eval files, suites, and cases without running them')
     .action(evaluateCommand);
 
 program.command('status').alias('s').description('Show LAI project status').action(statusCommand);

@@ -1,11 +1,12 @@
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'path';
 import { register } from 'node:module';
+import { pathToFileURL } from 'node:url';
 import chalk from 'chalk';
 import { loadConfig } from '../core/config.js';
 import { pathExists } from '../utils/fs.js';
 import { error, info, success, spinner } from '../utils/console.js';
-import { runEvalFile } from 'langium-ai-tools/evals';
+import { clearSuites, getCollectedSuites, runEvalFile } from 'langium-ai-tools/evals';
 import type { EvalContext, EvaluationCaseResult } from 'langium-ai-tools/evals';
 import { getNextRunId, saveRunData } from '../utils/runs.js';
 import type { EvaluationRunData } from '../utils/runs.js';
@@ -18,33 +19,210 @@ interface EvaluateOptions {
     output?: string;
     sysprompt?: string;
     verbose?: boolean;
+    list?: boolean;
+}
+
+export interface EvalFileListing {
+    filePath: string;
+    suites?: Array<{ name: string; cases: string[] }>;
+    error?: string;
 }
 
 /**
- * Count the number of test cases in an eval file without running them
+ * Resolve a list of positional file/directory arguments into a deduplicated,
+ * order-preserving list of `.eval.ts` files.
+ *
+ * - Arguments are processed in the order they were provided.
+ * - Files are kept as-is (must end in `.eval.ts`).
+ * - Directories are scanned (non-recursively) for `.eval.ts` files (sorted).
+ * - Duplicates are dropped — the first occurrence wins.
+ * - With no args, falls back to `defaultDir`.
+ */
+export async function resolveEvalFiles(args: string[], defaultDir: string): Promise<string[]> {
+    const inputs = args.length === 0 ? [defaultDir] : args;
+    const result: string[] = [];
+    const seen = new Set<string>();
+
+    for (const arg of inputs) {
+        const resolved = path.resolve(process.cwd(), arg);
+        if (!(await pathExists(resolved))) {
+            throw new Error(`Path not found: ${arg}`);
+        }
+
+        const stats = await stat(resolved);
+        if (stats.isFile()) {
+            if (!resolved.endsWith('.eval.ts')) {
+                throw new Error(`Not an eval file (.eval.ts): ${arg}`);
+            }
+            if (!seen.has(resolved)) {
+                seen.add(resolved);
+                result.push(resolved);
+            }
+        } else if (stats.isDirectory()) {
+            const entries = await readdir(resolved);
+            const evalFiles = entries
+                .filter((f) => f.endsWith('.eval.ts'))
+                .map((f) => path.join(resolved, f))
+                .sort();
+            for (const file of evalFiles) {
+                if (!seen.has(file)) {
+                    seen.add(file);
+                    result.push(file);
+                }
+            }
+        } else {
+            throw new Error(`Not a file or directory: ${arg}`);
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Dynamically import an eval file and return the collected suites. Each call clears
+ * any previously collected state and appends a cache-busting query so re-imports
+ * pick up the latest source. Tag distinguishes the call site in stack traces.
+ */
+async function collectSuitesFromFile(filePath: string, tag: string) {
+    clearSuites();
+    const fileUrl = pathToFileURL(filePath).href + `?${tag}=` + Date.now();
+    await import(fileUrl);
+    return getCollectedSuites();
+}
+
+/**
+ * Load an eval file and collect its suites/cases without executing them.
+ * Errors during import are captured and returned as `error` instead of thrown.
+ */
+export async function listEvalFile(filePath: string): Promise<EvalFileListing> {
+    try {
+        const suites = await collectSuitesFromFile(filePath, 'list');
+        return {
+            filePath,
+            suites: suites.map((s) => ({
+                name: s.name,
+                cases: s.evaluations.map((e) => e.name),
+            })),
+        };
+    } catch (err) {
+        return {
+            filePath,
+            error: err instanceof Error ? err.message : String(err),
+        };
+    }
+}
+
+/**
+ * Format a list of eval file listings into a human-readable tree.
+ * Pure formatting — printing and exit handling live in the command.
+ */
+export function formatEvalListing(entries: EvalFileListing[]): string {
+    const totalCases = entries.reduce(
+        (sum, e) => sum + (e.suites?.reduce((s, suite) => s + suite.cases.length, 0) ?? 0),
+        0,
+    );
+    const lines: string[] = [];
+    lines.push(
+        `Found ${entries.length} eval file${entries.length === 1 ? '' : 's'}, ${totalCases} case${totalCases === 1 ? '' : 's'}:`,
+    );
+    for (const entry of entries) {
+        const name = path.basename(entry.filePath);
+        if (entry.error) {
+            lines.push(`  ${chalk.red('✗')} ${name} — Error loading eval file: ${entry.error}`);
+        } else {
+            lines.push(`  ${name}`);
+            for (const suite of entry.suites ?? []) {
+                for (const c of suite.cases) {
+                    lines.push(`    ${chalk.cyan('✦')} ${c}`);
+                }
+            }
+        }
+    }
+    return lines.join('\n');
+}
+
+/**
+ * Count the number of test cases in an eval file without running them.
  */
 async function countEvalCases(filePath: string): Promise<number> {
-    const { pathToFileURL } = await import('url');
-
-    // dynamically import the testing module
-    const { getCollectedSuites, clearSuites } = await import('langium-ai-tools/evals');
-
-    // clear any previous state
-    clearSuites();
-
-    // dynamically import eval file (triggers describe/test calls)
-    // add cache-busting query parameter to force re-import later
-    const fileUrl = pathToFileURL(filePath).href + '?count=' + Date.now();
-    await import(fileUrl);
-
-    // collect suites and count evaluations
-    const suites = getCollectedSuites();
+    const suites = await collectSuitesFromFile(filePath, 'count');
     return suites.reduce((sum, suite) => sum + suite.evaluations.length, 0);
 }
 
-export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
+/**
+ * Register tsx's ESM loader so dynamic imports of `.eval.ts` files transpile
+ * correctly. Registration is global and idempotent — only runs the first time.
+ */
+function ensureTsxLoaderRegistered(verbose: boolean): void {
+    if (tsxLoaderRegistered) {
+        return;
+    }
+    try {
+        register('tsx/esm', import.meta.url);
+        tsxLoaderRegistered = true;
+        if (verbose) {
+            info(`Registering TSX loader`);
+        }
+    } catch (_error) {
+        // tsx may not be available; eval files may still load via other means
+        if (verbose) {
+            info(`Issue encountered while loading TSX loader, continuing`);
+        }
+    }
+}
+
+export async function evaluateCommand(paths: string[], options: EvaluateOptions): Promise<void> {
     try {
         const config = await loadConfig();
+
+        // resolve positional path arguments. --dir is a deprecated alias — used as a
+        // fallback only when no positional args are provided; otherwise it is ignored.
+        const positionalArgs = [...paths];
+        if (options.dir) {
+            process.stderr.write(
+                chalk.yellow(
+                    '⚠ --dir is deprecated; pass the directory as a positional argument instead (e.g. `lai evaluate ./evals`).\n',
+                ),
+            );
+            if (positionalArgs.length === 0) {
+                positionalArgs.push(options.dir);
+            }
+        }
+
+        const defaultDir = path.join(process.cwd(), config.evaluations.directory);
+
+        // --list short-circuits before sysprompt/provider config: it only enumerates
+        // suites/cases and prints them, without executing any evaluations.
+        if (options.list) {
+            if (positionalArgs.length === 0 && !(await pathExists(defaultDir))) {
+                error(`Evaluation directory not found: ${defaultDir}`);
+                info('Run `lai init` to set up evaluations.');
+                process.exit(1);
+            }
+
+            const evalFiles = await resolveEvalFiles(positionalArgs, defaultDir);
+
+            if (evalFiles.length === 0) {
+                error('No .eval.ts files found.');
+                info('Add evaluation files with .eval.ts extension.');
+                process.exit(1);
+            }
+
+            ensureTsxLoaderRegistered(options.verbose ?? false);
+
+            // sequential — listEvalFile mutates shared suite-collection state
+            const entries: EvalFileListing[] = [];
+            for (const file of evalFiles) {
+                entries.push(await listEvalFile(file));
+            }
+
+            console.log(formatEvalListing(entries));
+
+            if (entries.some((e) => e.error)) {
+                process.exit(1);
+            }
+            return;
+        }
 
         // load system prompt (use --sysprompt option if provided, otherwise use config)
         const syspromptPath = options.sysprompt
@@ -63,56 +241,26 @@ export async function evaluateCommand(options: EvaluateOptions): Promise<void> {
             info(`Running with sysprompt ${syspromptPath}`);
         }
 
-        // find evals directory (use --dir option if provided, otherwise use config)
-        const evalsDir = options.dir
-            ? path.resolve(process.cwd(), options.dir)
-            : path.join(process.cwd(), config.evaluations.directory);
-        if (!(await pathExists(evalsDir))) {
-            error(`Evaluation directory not found: ${evalsDir}`);
+        if (positionalArgs.length === 0 && !(await pathExists(defaultDir))) {
+            error(`Evaluation directory not found: ${defaultDir}`);
             info('Run `lai init` to set up evaluations.');
             return;
         }
 
-        if (options.verbose) {
-            info(`Running in evals directory ${evalsDir}`);
-        }
-
-        // discover .eval.ts files
-        const files = await readdir(evalsDir);
+        const evalFiles = await resolveEvalFiles(positionalArgs, defaultDir);
 
         if (options.verbose) {
-            info(`Found ${files.length} files inside evals folder...`);
-        }
-
-        const evalFiles = files.filter((f) => f.endsWith('.eval.ts')).map((f) => path.join(evalsDir, f));
-
-        if (options.verbose) {
-            info(`Found ${evalFiles.length} .eval.ts files`);
+            const inputCount = positionalArgs.length === 0 ? 1 : positionalArgs.length;
+            info(`Resolved ${evalFiles.length} .eval.ts file(s) from ${inputCount} input(s)`);
         }
 
         if (evalFiles.length === 0) {
-            error('No .eval.ts files found in evals directory.');
+            error('No .eval.ts files found.');
             info('Add evaluation files with .eval.ts extension.');
             return;
         }
 
-        // register tsx loader for TypeScript support (only once)
-        if (!tsxLoaderRegistered) {
-            try {
-                // use tsx's ESM loader (Node 20.6+ compatible)
-                register('tsx/esm', import.meta.url);
-                tsxLoaderRegistered = true;
-
-                if (options.verbose) {
-                    info(`Registering TSX loader`);
-                }
-            } catch (_error) {
-                // tsx may not be available, continue anyway (silence since it may still work)
-                if (options.verbose) {
-                    info(`Issue encountered while loading TSX loader, continuing`);
-                }
-            }
-        }
+        ensureTsxLoaderRegistered(options.verbose ?? false);
 
         // create eval context
         const context: EvalContext = {

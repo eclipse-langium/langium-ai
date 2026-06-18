@@ -41,10 +41,10 @@ Four npm workspaces under `packages/`:
 
 ## Architecture
 
-**CLI command flow**: Each command is a separate module in `packages/cli/src/commands/`, registered in `index.ts`. Core logic lives in `src/core/` (langium detection, descriptor management, config, sysprompt generation, versioning). LLM providers are pluggable via `src/llm/` with a factory in `client.ts` routing to provider modules (Claude, OpenAI, Ollama).
+**CLI command flow**: Each command is a separate module in `packages/cli/src/commands/`, registered in `index.ts`. Core logic lives in `src/core/` (langium detection, descriptor management, config, sysprompt generation, versioning).
 
 **Key abstractions**:
-- `LaiConfig` — project config persisted as YAML, tracks langium paths, LLM provider settings, descriptor/sysprompt paths
+- `LaiConfig` — project config persisted as YAML, tracks langium paths, descriptor/sysprompt paths
 - `Descriptor` — YAML-based language descriptor with grammar, examples, and docs
 - `LangiumEvaluator` — validates LLM output using actual Langium parser/validator services
 - `EvalMatrix` — compares multiple runners (models) against test suites

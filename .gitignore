@@ -16,3 +16,4 @@ data/
 *.local.*
 packages/langium-ai-tools/src/gen
 packages/cli/src/templates.ts
+packages/cli/tests/.tmp/
