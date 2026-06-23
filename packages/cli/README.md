@@ -66,6 +66,9 @@ For further info you can always run `lai help`.
 Evaluation can be setup in a number of ways to output to a file, get more info, or operate against a specific system prompt (in case you're running comparison tests).
 
 ```bash
+# list all your evals that can be detected (without running)
+lai eval --list
+
 # save results to JSON
 lai evaluate --output results.json
 
