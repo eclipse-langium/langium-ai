@@ -39,9 +39,9 @@ jobs:
     # cli
     - name: Stage Publish CLI
       if: startsWith(github.ref_name, 'lai-')
-      run: npm publish -w packages/cli
+      run: npm stage publish -w packages/cli
 
     # or tools
     - name: Stage Publish Tools
       if: startsWith(github.ref_name, 'tools-')
-      run: npm publish -w packages/langium-ai-tools
+      run: npm stage publish -w packages/langium-ai-tools
