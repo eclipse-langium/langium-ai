@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.3.1 langium-ai (2026-06-23)
+
+Publishing changes + small improvements (add provenance)
+
+- Publish through CI with provenance
+- Automate publishing based on `lai-` and `tools-` tags going forward
+- Add `lai eval --list` as an option to list all evaluations _without_ running them
+- Improve `lai eval` to take variadic files & dirs without needing `--dir` (which is deprecated & will be phased out)
+ 
 ## v0.3.0 langium-ai, v5.0.4 langium-ai-tools (2026-06-16)
 
 ### langium-ai (lai)
