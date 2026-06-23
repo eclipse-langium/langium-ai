@@ -2,71 +2,59 @@
 
 The following is release guidance for publishing `langium-ai-tools` and `langium-ai` packages.
 
-### Preflight Checks
+Publishing is handled by the **Publish** workflow (`.github/workflows/publish.yml`), which is triggered by pushing tags to `main`. The workflow runs CI as a prerequisite, then builds and stages the package on npm via OIDC. You then approve or reject the staged version from npm directly.
 
-Checklist before you're ready to push up a release
+## Preflight Checks
+
+Checklist before you're ready to push up a release.
 
 1. Check for patches or updates that we can take in via `npm audit`
     - npmx.dev is a great way to check for this surface
-2. Bump version in package.json for CLI and/or tools accordingly
-3. Update version for cli in ./packages/cli/src/index.ts, this should align with the package.json
-    - just update the `LAI_CUR_VERSION` line
-    - this is done automatically with the `scripts/release-langium-ai.sh` script outlined below
-        - i.e `const LAI_CUR_VERSION = "X.Y.Z";` will be automatically replaced w/ the current version when the script runs
-4. Regenerated embedded CLI templates via `npm run embed-templates` (within ./packages/cli)
-5. Update the changelog for both versions, following the prior release format
+2. Bump version in `package.json` for CLI and/or tools accordingly
+3. Regenerate embedded CLI templates via `npm run embed-templates` (within `./packages/cli`)
+    - `npm run build` runs this as well
+4. Update the changelog for both versions, following the prior release format
     - Single release entry, describing both langium-ai and langium-ai-tools releases
     - If there's just one release, you only need to describe that one
 
-### Performing the Release
+## Performing the Release
 
-Both release steps are fairly similar, but the CLI involves syncing the version in the CLI tool with the package version. For clarify, the steps are outlined below, but for brevity, there's 2 scripts you can use to run through this process with pauses in-between. They are **scripts/release-langium-ai-tools.sh** and **scripts/release-langium-ai.sh**.
+Releases are triggered by pushing a tag to `main`. The tag prefix determines which package gets published:
 
-#### Releasing the CLI
+- `tools-X.Y.Z` — publishes `langium-ai-tools` only
+- `lai-X.Y.Z` — publishes `langium-ai` (CLI) only
 
-Audit & fix any issues at first, in case new security patches just came out
+The publish workflow will run CI first (build, lint, format, knip, tests). If CI passes, it builds the packages and stages the publish on npm. You then approve or reject the staged version from the npm website.
 
-```bash
-npm audit
-npm audit fix
-```
+### Ordering: when both packages need a release
 
-Update the `LAI_CUR_VERSION` stored in **src/index.ts** to match the current version in the package.json.
+If the CLI depends on a new version of `langium-ai-tools`, publish tools first, since the CLI depends on that:
 
-```ts
-const LAI_CUR_VERSION = 'X.Y.Z';
-```
+1. Push the `tools-X.Y.Z` tag and wait for the workflow to stage it
+2. Approve the staged tools version on npm
+3. Then push the `lai-X.Y.Z` tag for the CLI
 
-Clean & rebuild the project to ensure there's nothing leftover from before.
+This ensures the CLI's dependency is available on npm before it gets published.
 
-```bash
-npm run clean
-npm run build
-```
+### Step by step
 
-Check the tests to be sure there's nothing broken.
+1. Complete all [preflight checks](#preflight-checks)
+2. Commit the version bumps and changelog updates to `main`
+3. Tag the commit and push:
+    ```bash
+    # for tools
+    git tag tools-X.Y.Z
+    git push origin tools-X.Y.Z
 
-```bash
-npm run test
-```
+    # for cli
+    git tag lai-X.Y.Z
+    git push origin lai-X.Y.Z
+    ```
+4. The publish workflow should run automatically
+5. Once the workflow succeeds, go to npm to approve (or reject) the staged version
 
-Login to get a short-lived token for publishing one or both packages.
-```bash
-npm login
-```
+### Local release scripts (alternative)
 
-Perform a _dry run_ publish check, and verify the contents look okay. Ensure there's nothing present that shouldn't be, and the overall size seems reasonable.
+For local publishing without the CI workflow, there are interactive scripts with built-in pauses and dry-run checks: **scripts/release-langium-ai-tools.sh** and **scripts/release-langium-ai.sh**. These handle audit, build, test, and publish steps locally. Use these if you need to bypass the CI workflow for any reason.
 
-```bash
-npm publish --dry-run
-```
-
-If it all looks good, proceed to publish a fresh release.
-
-```bash
-npm publish
-```
-
-#### Releasing the Tools (Library)
-
-Exactly the same as releasing the CLI, with the exception that you don't need to update any hardcoded version.
+Note that local releases will _not_ have provenance. This can lead to issues with downstream consumers that won't accept packages that downgrade after being published with provenance.

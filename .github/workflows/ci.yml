@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_call:
 
 jobs:
   build-and-test:
@@ -17,7 +18,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: '24.x'
+        node-version-file: '.nvmrc'
         cache: 'npm'
     
     - name: Install dependencies
@@ -31,6 +32,9 @@ jobs:
 
     - name: Biome Format Check
       run: npm run format
+
+    - name: Knip Check
+      run: npm run knip
     
     - name: Run tests
       run: npm run test:ci

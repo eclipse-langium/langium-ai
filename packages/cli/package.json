@@ -1,6 +1,6 @@
 {
   "name": "langium-ai",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "AI application development tooling for Langium-based DSL projects",
   "repository": {
     "type": "git",

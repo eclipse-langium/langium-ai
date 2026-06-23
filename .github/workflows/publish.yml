@@ -1,0 +1,47 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'lai-*'
+      - 'tools-*'
+
+permissions:
+  id-token: write  # for OIDC
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version-file: '.nvmrc'
+        registry-url: 'https://registry.npmjs.org'
+        package-manager-cache: false  # don't cache in release builds
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build packages
+      run: npm run build
+
+    # stage a published version, needs a follow-up to release from npm
+    # cli
+    - name: Stage Publish CLI
+      if: startsWith(github.ref_name, 'lai-')
+      run: npm publish -w packages/cli
+
+    # or tools
+    - name: Stage Publish Tools
+      if: startsWith(github.ref_name, 'tools-')
+      run: npm publish -w packages/langium-ai-tools
