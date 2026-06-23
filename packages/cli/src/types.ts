@@ -204,14 +204,14 @@ export interface Descriptor {
     documentation?: DescriptorDoc[];
 }
 
-export interface DescriptorExample {
+interface DescriptorExample {
     name: string;
     description: string;
     file: string;
     tags: string[];
 }
 
-export interface DescriptorDoc {
+interface DescriptorDoc {
     src: string;
     description: string;
     priority: 'high' | 'medium' | 'low';

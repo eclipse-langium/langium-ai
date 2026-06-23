@@ -42,7 +42,7 @@
         "watch": "npm run generate && tsc -w",
         "test": "vitest run",
         "clean": "rimraf ./dist ./src/gen",
-        "lint": "eslint ."
+        "lint": "oxlint ."
     },
     "author": {
         "name": "TypeFox",
@@ -64,7 +64,8 @@
         "tsx": "^4.7.0"
     },
     "peerDependencies": {
-        "langium": ">=4.0.0 <5.0.0"
+        "langium": ">=4.0.0 <5.0.0",
+        "vscode-languageserver-types": ">=3.17.0"
     },
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.11.1",

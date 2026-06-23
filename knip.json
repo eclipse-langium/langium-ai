@@ -1,8 +1,17 @@
 {
     "$schema": "https://unpkg.com/knip@5/schema.json",
     "tags": ["-lintignore"],
-    "ignore": ["**/templates/**"],
+    "ignore": [
+        "**/templates/**",
+        "packages/examples/example-dsl-evaluator/src/runners.ts",
+        "packages/examples/example-dsl-evaluator/src/eval-langium.ts",
+        "packages/langium-ai-mcp/src/mcp-client.ts"
+    ],
+    "ignoreBinaries": ["protoc"],
     "workspaces": {
-        ".": {}
+        ".": {},
+        "packages/langium-ai-tools": {
+            "ignoreDependencies": ["@protobuf-ts/runtime", "@protobuf-ts/plugin"]
+        }
     }
 }

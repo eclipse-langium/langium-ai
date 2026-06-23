@@ -7,7 +7,7 @@
     "scripts": {
         "build": "tsc",
         "start": "node ./dist/index.js",
-        "demo": "npm run build && npm run start -- run-langdev && open ./radar-chart.html",
+        "demo": "npm run build && npm run start -- run-langdev",
         "clean": "rimraf ./dist",
         "test": "echo \"No tests yet...\""
     },

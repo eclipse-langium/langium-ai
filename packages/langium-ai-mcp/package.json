@@ -21,7 +21,7 @@
         "start": "node .",
         "cstart": "node ./dist/mcp-client.js",
         "test": "vitest run",
-        "lint": "eslint ."
+        "lint": "oxlint ."
     },
     "author": {
         "name": "TypeFox",
@@ -31,7 +31,7 @@
     "license": "MIT",
     "dependencies": {
         "@modelcontextprotocol/sdk": "^1.25.1",
-        "langium-ai-tools": "~5.0.0",
+        "langium-ai-tools": "~5.0.4",
         "langium": "~4.2.1",
         "zod": "^3.25 || ^4.0"
     },
