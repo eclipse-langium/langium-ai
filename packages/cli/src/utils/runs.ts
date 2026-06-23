@@ -84,7 +84,7 @@ export async function getAllRunFiles(): Promise<RunFile[]> {
 /**
  * load run data from a file, handling both old and new formats
  */
-export async function loadRunData(filePath: string): Promise<EvaluationRunData> {
+async function loadRunData(filePath: string): Promise<EvaluationRunData> {
     const content = JSON.parse(await readFile(filePath, 'utf-8'));
 
     // detect old format (array at root)

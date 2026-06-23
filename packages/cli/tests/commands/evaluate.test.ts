@@ -102,7 +102,9 @@ describe('resolveEvalFiles', () => {
     it('throws a clear error for a non-existent path', async () => {
         const missing = path.join(tempDir, 'does-not-exist.eval.ts');
 
-        await expect(resolveEvalFiles([missing], path.join(tempDir, 'evals'))).rejects.toThrow(/does-not-exist\.eval\.ts/);
+        await expect(resolveEvalFiles([missing], path.join(tempDir, 'evals'))).rejects.toThrow(
+            /does-not-exist\.eval\.ts/,
+        );
     });
 
     it('throws a clear error when an explicit file is not an eval file', async () => {

@@ -12,14 +12,16 @@ import { exportCommand } from './commands/export.js';
 import { tagCommand } from './commands/tag.js';
 import { validateCommand } from './commands/validate.js';
 
-const program = new Command();
+// injected by esbuild `define` at build time from package.json
+// falls back to 'dev' when running via `tsx watch` (dev mode)
+declare const __CLI_VERSION__: string;
 
-const LAI_CUR_VERSION = '0.3.0';
+const program = new Command();
 
 program
     .name('lai')
     .description('Langium-AI CLI for bootstrapping AI-powered language tooling')
-    .version(LAI_CUR_VERSION);
+    .version(__CLI_VERSION__ ?? 'dev');
 
 const initCmd = program.command('init').description('Initialize LAI in your Langium project').action(initCommand);
 initCmd.command('config').description('Reinitialize the lai.config.jsonc file').action(initConfigCommand);
