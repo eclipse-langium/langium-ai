@@ -53,6 +53,17 @@ This ensures the CLI's dependency is available on npm before it gets published.
 4. The publish workflow should run automatically
 5. Once the workflow succeeds, go to npm to approve (or reject) the staged version
 
+### Manual retrigger via workflow dispatch
+
+If a publish workflow run fails or needs to be re-run without recreating a tag, you can trigger it manually from the GitHub Actions UI:
+
+1. Go to **Actions → Publish → Run workflow**
+2. Select the branch or tag to run against (e.g. `lai-0.3.1`)
+3. Choose the package to publish (`lai` or `tools`) from the dropdown
+4. Click **Run workflow**
+
+This runs the same CI + staged publish pipeline as a tag push, just without needing to delete and re-push the tag.
+
 ### Local release scripts (alternative)
 
 For local publishing without the CI workflow, there are interactive scripts with built-in pauses and dry-run checks: **scripts/release-langium-ai-tools.sh** and **scripts/release-langium-ai.sh**. These handle audit, build, test, and publish steps locally. Use these if you need to bypass the CI workflow for any reason.
