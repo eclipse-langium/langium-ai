@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v5.0.5 langium-ai-tools (2026-07-13)
+
+Patch bump for trusted publishing with provenance
+
 ## v0.3.1 langium-ai (2026-06-23)
 
 Publishing changes + small improvements (add provenance)
