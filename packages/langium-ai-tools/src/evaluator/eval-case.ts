@@ -10,7 +10,7 @@
  * See langium-ai-tools/evals for the new API.
  */
 
-import * as yaml from 'js-yaml';
+import { parse } from 'yaml';
 import { type Message } from './message.js';
 
 /**
@@ -134,7 +134,7 @@ function decodeEvalCase(caseData: unknown, context: string = 'case'): EvalCase {
  * @param data Object to check
  * @returns True if the object has the required fields for a single case
  */
-function isSingleCase(data: unknown): boolean {
+function isSingleCase(data: unknown): data is EvalCase {
     return (
         typeof data === 'object' &&
         data !== null &&
@@ -157,7 +157,7 @@ function isSingleCase(data: unknown): boolean {
  */
 export function loadFromYaml(yamlStr: string): EvalCase[] {
     try {
-        const data = yaml.load(yamlStr);
+        const data = parse(yamlStr);
 
         // handle null or empty data
         if (!data) {
@@ -180,16 +180,14 @@ export function loadFromYaml(yamlStr: string): EvalCase[] {
         }
 
         // invalid format - provide helpful debugging info
-        const hasName = typeof (data as any)?.name === 'string';
-        const hasPrompt = typeof (data as any)?.prompt === 'string';
-        const hasExpectedResponse = typeof (data as any)?.expected_response === 'string';
-        const hasEvalCases = 'eval_cases' in (data as any);
+        const hasName = typeof data?.name === 'string';
+        const hasPrompt = typeof data?.prompt === 'string';
+        const hasExpectedResponse = typeof data?.expected_response === 'string';
+        const hasEvalCases = 'eval_cases' in data;
 
         const debugInfo = [
             `Found fields: name=${hasName}, prompt=${hasPrompt}, expected_response=${hasExpectedResponse}, eval_cases=${hasEvalCases}`,
-            hasEvalCases && !Array.isArray((data as any).eval_cases)
-                ? '  Note: eval_cases exists but is not an array'
-                : '',
+            hasEvalCases && !Array.isArray(data.eval_cases) ? '  Note: eval_cases exists but is not an array' : '',
         ]
             .filter(Boolean)
             .join('\n');

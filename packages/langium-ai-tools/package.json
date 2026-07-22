@@ -60,7 +60,7 @@
     },
     "dependencies": {
         "@protobuf-ts/runtime": "^2.11.1",
-        "js-yaml": "^4.1.1",
+        "yaml": "^2.9.0",
         "tsx": "^4.7.0"
     },
     "peerDependencies": {
@@ -69,7 +69,6 @@
     },
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.11.1",
-        "@types/js-yaml": "^4.0.9",
         "@types/node": "^25.9.3"
     }
 }
