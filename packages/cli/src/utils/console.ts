@@ -1,5 +1,5 @@
 import { styleText } from 'node:util';
-import ora, { Ora } from 'ora';
+import yoctoSpinner, { Spinner } from 'yocto-spinner';
 
 // console output helpers with colors and spinners
 
@@ -39,8 +39,10 @@ export function section(title: string): void {
     console.log(st(['cyan', 'bold'], `📁 ${title}`));
 }
 
-export function spinner(message: string): Ora {
-    return ora(message).start();
+export function spinner(message: string): Spinner {
+    return yoctoSpinner({
+        text: message
+    }).start();
 }
 
 export function logDetected(label: string, value: string, detected: boolean = true): void {

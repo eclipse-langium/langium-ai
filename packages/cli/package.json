@@ -36,8 +36,8 @@
     "commander": "^15.0.0",
     "glob": "^13.0.6",
     "langium-ai-tools": "~5.0.5",
-    "ora": "^9.4.0",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.0",
+    "yocto-spinner": "^1.2.2"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",

@@ -31,9 +31,9 @@ export async function validateCommand(): Promise<void> {
     let descriptor;
     try {
         descriptor = await loadDescriptor(descriptorPath);
-        loadSpinner.succeed('Descriptor loaded');
+        loadSpinner.success('Descriptor loaded');
     } catch (err) {
-        loadSpinner.fail('Failed to parse descriptor');
+        loadSpinner.error('Failed to parse descriptor');
         error(err instanceof Error ? err.message : String(err));
         return;
     }

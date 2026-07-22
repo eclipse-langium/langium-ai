@@ -59,9 +59,9 @@ async function generateDescriptorCommand(config: LaiConfig, options: GenerateOpt
     let structure: LangiumProjectStructure;
     try {
         structure = await detectLangiumProject(cwd);
-        detectSpinner.succeed('Project structure detected');
+        detectSpinner.success('Project structure detected');
     } catch (err) {
-        detectSpinner.fail('Failed to detect project structure');
+        detectSpinner.error('Failed to detect project structure');
         error(err instanceof Error ? err.message : String(err));
         return;
     }
@@ -74,15 +74,15 @@ async function generateDescriptorCommand(config: LaiConfig, options: GenerateOpt
     // generate descriptor using LLM
     const genSpinner = spinner('Generating language descriptor...');
     const descriptor = await generateDescriptor(config, structure, options);
-    genSpinner.succeed('Descriptor generated');
+    genSpinner.success('Descriptor generated');
 
     // save descriptor
     const saveSpinner = spinner('Saving descriptor...');
     try {
         await saveDescriptor(config.descriptor.path, descriptor);
-        saveSpinner.succeed(`Descriptor saved to ${config.descriptor.path}`);
+        saveSpinner.success(`Descriptor saved to ${config.descriptor.path}`);
     } catch (err) {
-        saveSpinner.fail('Failed to save descriptor');
+        saveSpinner.error('Failed to save descriptor');
         error(err instanceof Error ? err.message : String(err));
         return;
     }
@@ -133,9 +133,9 @@ async function generateSysPromptCommand(config: LaiConfig, options: GenerateOpti
     let descriptor;
     try {
         descriptor = await loadDescriptor(descriptorPath);
-        loadSpinner.succeed('Descriptor loaded');
+        loadSpinner.success('Descriptor loaded');
     } catch (err) {
-        loadSpinner.fail('Failed to load descriptor');
+        loadSpinner.error('Failed to load descriptor');
         error(err instanceof Error ? err.message : String(err));
         return;
     }
@@ -145,9 +145,9 @@ async function generateSysPromptCommand(config: LaiConfig, options: GenerateOpti
     let sysprompt;
     try {
         sysprompt = await generateSystemPrompt(descriptor);
-        genSpinner.succeed('System prompt generated');
+        genSpinner.success('System prompt generated');
     } catch (err) {
-        genSpinner.fail('Failed to generate system prompt');
+        genSpinner.error('Failed to generate system prompt');
         error(err instanceof Error ? err.message : String(err));
         return;
     }
@@ -156,9 +156,9 @@ async function generateSysPromptCommand(config: LaiConfig, options: GenerateOpti
     const saveSpinner = spinner('Saving system prompt...');
     try {
         await saveSystemPrompt(syspromptPath, sysprompt);
-        saveSpinner.succeed(`System prompt saved to ${syspromptPath}`);
+        saveSpinner.success(`System prompt saved to ${syspromptPath}`);
     } catch (err) {
-        saveSpinner.fail('Failed to save system prompt');
+        saveSpinner.error('Failed to save system prompt');
         error(err instanceof Error ? err.message : String(err));
         return;
     }
@@ -184,9 +184,9 @@ async function generateMcpCommand(config: LaiConfig, _options: GenerateOptions):
     let structure: LangiumProjectStructure;
     try {
         structure = await detectLangiumProject(cwd);
-        detectSpinner.succeed('Project structure detected');
+        detectSpinner.success('Project structure detected');
     } catch (err) {
-        detectSpinner.fail('Failed to detect project structure');
+        detectSpinner.error('Failed to detect project structure');
         error(err instanceof Error ? err.message : String(err));
         return;
     }
@@ -235,9 +235,9 @@ async function generateMcpCommand(config: LaiConfig, _options: GenerateOptions):
         // write the output
         await mkdir(mcpDir, { recursive: true });
         await writeFile(targetPath, templateContent, 'utf-8');
-        genSpinner.succeed('MCP server generated');
+        genSpinner.success('MCP server generated');
     } catch (err) {
-        genSpinner.fail('Failed to generate MCP server');
+        genSpinner.error('Failed to generate MCP server');
         error(err instanceof Error ? err.message : String(err));
         return;
     }

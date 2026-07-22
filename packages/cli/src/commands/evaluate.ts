@@ -434,7 +434,7 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
             }
 
             if (fileSpinner) {
-                fileSpinner.succeed(`${st('cyan', fileName)}: ${st(countColor, countText)}`);
+                fileSpinner.success(`${st('cyan', fileName)}: ${st(countColor, countText)}`);
             } else if (options.verbose) {
                 // stop status spinner to print file completion
                 if (statusSpinner) {
@@ -478,7 +478,7 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
 
         // stop the status spinner before showing summary
         if (statusSpinner) {
-            statusSpinner.succeed(st('green', `All evaluations complete! (${completedGlobal}/${totalCases})`));
+            statusSpinner.success(st('green', `All evaluations complete! (${completedGlobal}/${totalCases})`));
         }
 
         // calculate total time

@@ -20,9 +20,9 @@ async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStr
     let structure;
     try {
         structure = await detectLangiumProject(cwd);
-        detectSpinner.succeed('Project structure detected');
+        detectSpinner.success('Project structure detected');
     } catch (err) {
-        detectSpinner.fail('Failed to detect project structure');
+        detectSpinner.error('Failed to detect project structure');
         error(err instanceof Error ? err.message : String(err));
         return undefined;
     }
@@ -176,10 +176,10 @@ async function initConfig(cwd: string, structure: LangiumProjectStructure, langu
     const saveSpinner = spinner('Creating lai.config.jsonc...');
     try {
         await saveConfig(config, cwd);
-        saveSpinner.succeed('Created lai.config.jsonc');
+        saveSpinner.success('Created lai.config.jsonc');
         return true;
     } catch (err) {
-        saveSpinner.fail('Failed to create config');
+        saveSpinner.error('Failed to create config');
         error(err instanceof Error ? err.message : String(err));
         return false;
     }
@@ -228,9 +228,9 @@ async function initEvals(cwd: string, structure: LangiumProjectStructure): Promi
             await writeFile(evalTargetPath, templateContent, 'utf-8');
         }
 
-        evalsSpinner.succeed('Created evals/ directory with TypeScript evaluation files');
+        evalsSpinner.success('Created evals/ directory with TypeScript evaluation files');
     } catch (err) {
-        evalsSpinner.fail('Failed to create evals directory');
+        evalsSpinner.error('Failed to create evals directory');
         error(err instanceof Error ? err.message : String(err));
     }
 }
@@ -282,9 +282,9 @@ export async function initCommand(): Promise<void> {
         const installSpinner = spinner(`Running ${installCmd}...`);
         try {
             execSync(installCmd, { cwd, stdio: 'pipe' });
-            installSpinner.succeed('Installed langium-ai-tools');
+            installSpinner.success('Installed langium-ai-tools');
         } catch (_err) {
-            installSpinner.fail('Failed to install langium-ai-tools');
+            installSpinner.error('Failed to install langium-ai-tools');
             warning(`You can install it manually: ${installCmd}`);
         }
     }
