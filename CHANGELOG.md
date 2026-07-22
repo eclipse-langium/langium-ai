@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v0.3.1 langium-ai, v5.0.6 langium-ai-tools (TBD)
+
+Some general patch work
+
+- Bump dependencies
+- Removes chalk in favor of native `styleText` instead.
+
 ## v5.0.5 langium-ai-tools (2026-07-13)
 
 Patch bump for trusted publishing with provenance
