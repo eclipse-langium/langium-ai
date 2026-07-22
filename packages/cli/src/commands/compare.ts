@@ -1,5 +1,4 @@
-import chalk from 'chalk';
-import { error } from '../utils/console.js';
+import { error, st } from '../utils/console.js';
 import { getRunById, calculateRunSummary } from '../utils/runs.js';
 
 export async function compareCommand(id1: string, id2: string): Promise<void> {
@@ -24,8 +23,8 @@ export async function compareCommand(id1: string, id2: string): Promise<void> {
 
         // display comparison header
         console.log();
-        console.log(chalk.bold(`Comparing Runs: #${run1.data.runId} vs #${run2.data.runId}`));
-        console.log(chalk.gray('='.repeat(80)));
+        console.log(st('bold', `Comparing Runs: #${run1.data.runId} vs #${run2.data.runId}`));
+        console.log(st('gray', '='.repeat(80)));
         console.log();
 
         // side-by-side stats
@@ -35,10 +34,10 @@ export async function compareCommand(id1: string, id2: string): Promise<void> {
 
         const header =
             ''.padEnd(col1Width) +
-            chalk.cyan(`Run #${run1.data.runId}`.padEnd(col2Width)) +
-            chalk.cyan(`Run #${run2.data.runId}`.padEnd(col3Width));
+            st('cyan', `Run #${run1.data.runId}`.padEnd(col2Width)) +
+            st('cyan', `Run #${run2.data.runId}`.padEnd(col3Width));
         console.log(header);
-        console.log(chalk.gray('-'.repeat(80)));
+        console.log(st('gray', '-'.repeat(80)));
 
         // average score with delta
         const score1 = summary1.avgScore * 100;
@@ -46,11 +45,11 @@ export async function compareCommand(id1: string, id2: string): Promise<void> {
         const scoreDelta = score2 - score1;
         let scoreDeltaStr: string;
         if (scoreDelta > 0) {
-            scoreDeltaStr = chalk.green(`(+${scoreDelta.toFixed(1)}%)`);
+            scoreDeltaStr = st('green', `(+${scoreDelta.toFixed(1)}%)`);
         } else if (scoreDelta < 0) {
-            scoreDeltaStr = chalk.red(`(${scoreDelta.toFixed(1)}%)`);
+            scoreDeltaStr = st('red', `(${scoreDelta.toFixed(1)}%)`);
         } else {
-            scoreDeltaStr = chalk.gray('(+0.0%)');
+            scoreDeltaStr = st('gray', '(+0.0%)');
         }
 
         console.log(
@@ -63,11 +62,11 @@ export async function compareCommand(id1: string, id2: string): Promise<void> {
         const durationDelta = summary2.avgDuration - summary1.avgDuration;
         let durationDeltaStr: string;
         if (durationDelta > 0) {
-            durationDeltaStr = chalk.red(`(+${durationDelta.toFixed(0)}ms)`);
+            durationDeltaStr = st('red', `(+${durationDelta.toFixed(0)}ms)`);
         } else if (durationDelta < 0) {
-            durationDeltaStr = chalk.green(`(${durationDelta.toFixed(0)}ms)`);
+            durationDeltaStr = st('green', `(${durationDelta.toFixed(0)}ms)`);
         } else {
-            durationDeltaStr = chalk.gray('(+0ms)');
+            durationDeltaStr = st('gray', '(+0ms)');
         }
 
         console.log(
@@ -85,13 +84,13 @@ export async function compareCommand(id1: string, id2: string): Promise<void> {
         let totalTimeDeltaStr: string;
         if (totalTimeDelta > 0) {
             const formatted = totalTimeDelta >= 1000 ? (totalTimeDelta / 1000).toFixed(1) + 's' : totalTimeDelta + 'ms';
-            totalTimeDeltaStr = chalk.red(`(+${formatted})`);
+            totalTimeDeltaStr = st('red', `(+${formatted})`);
         } else if (totalTimeDelta < 0) {
             const formatted =
                 Math.abs(totalTimeDelta) >= 1000 ? (totalTimeDelta / 1000).toFixed(1) + 's' : totalTimeDelta + 'ms';
-            totalTimeDeltaStr = chalk.green(`(${formatted})`);
+            totalTimeDeltaStr = st('green', `(${formatted})`);
         } else {
-            totalTimeDeltaStr = chalk.gray('(+0ms)');
+            totalTimeDeltaStr = st('gray', '(+0ms)');
         }
 
         console.log(
@@ -101,8 +100,8 @@ export async function compareCommand(id1: string, id2: string): Promise<void> {
         console.log();
 
         // compare test results
-        console.log(chalk.bold('Test Changes:'));
-        console.log(chalk.gray('-'.repeat(80)));
+        console.log(st('bold', 'Test Changes:'));
+        console.log(st('gray', '-'.repeat(80)));
 
         // build test score maps
         const tests1 = new Map<string, number>();
@@ -146,7 +145,7 @@ export async function compareCommand(id1: string, id2: string): Promise<void> {
         }
 
         if (changes.length === 0) {
-            console.log(chalk.gray('  No changes'));
+            console.log(st('gray', '  No changes'));
         } else {
             for (const change of changes) {
                 let icon: string;
@@ -157,21 +156,21 @@ export async function compareCommand(id1: string, id2: string): Promise<void> {
                         const delta = change.delta!;
                         const deltaStr = `${delta > 0 ? '+' : ''}${(delta * 100).toFixed(1)}%`;
                         if (delta > 0) {
-                            icon = chalk.green('▲');
-                            coloredType = chalk.green(deltaStr);
+                            icon = st('green', '▲');
+                            coloredType = st('green', deltaStr);
                         } else {
-                            icon = chalk.red('▼');
-                            coloredType = chalk.red(deltaStr);
+                            icon = st('red', '▼');
+                            coloredType = st('red', deltaStr);
                         }
                         break;
                     }
                     case 'NEW':
-                        icon = chalk.blue('+');
-                        coloredType = chalk.blue(change.type);
+                        icon = st('blue', '+');
+                        coloredType = st('blue', change.type);
                         break;
                     case 'REMOVED':
-                        icon = chalk.gray('-');
-                        coloredType = chalk.gray(change.type);
+                        icon = st('gray', '-');
+                        coloredType = st('gray', change.type);
                         break;
                     default:
                         icon = '•';

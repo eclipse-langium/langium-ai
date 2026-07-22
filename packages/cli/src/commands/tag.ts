@@ -1,5 +1,4 @@
-import chalk from 'chalk';
-import { error, success } from '../utils/console.js';
+import { error, success, st } from '../utils/console.js';
 import { getRunById, addTagsToRun } from '../utils/runs.js';
 
 export async function tagCommand(idOrLatestOrPath: string, tags: string[]): Promise<void> {
@@ -21,7 +20,7 @@ export async function tagCommand(idOrLatestOrPath: string, tags: string[]): Prom
         await addTagsToRun(idOrLatestOrPath, tags);
 
         // display confirmation with colored tags
-        const tagStr = tags.map((t) => chalk.magenta(`[${t}]`)).join(' ');
+        const tagStr = tags.map((t) => st('magenta', `[${t}]`)).join(' ');
         success(`Added tags to Run #${run.data.runId}: ${tagStr}`);
     } catch (err) {
         error(err instanceof Error ? err.message : String(err));

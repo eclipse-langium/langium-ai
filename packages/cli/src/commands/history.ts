@@ -1,5 +1,4 @@
-import chalk from 'chalk';
-import { error, info } from '../utils/console.js';
+import { error, info, st } from '../utils/console.js';
 import { getAllRunFiles, calculateRunSummary } from '../utils/runs.js';
 
 interface HistoryOptions {
@@ -44,13 +43,13 @@ export async function historyCommand(options: HistoryOptions): Promise<void> {
                 });
 
                 // average score color
-                let rateColor: typeof chalk.green;
+                let rateColor: 'green' | 'yellow' | 'red';
                 if (summary.avgScore >= 0.8) {
-                    rateColor = chalk.green;
+                    rateColor = 'green';
                 } else if (summary.avgScore >= 0.5) {
-                    rateColor = chalk.yellow;
+                    rateColor = 'yellow';
                 } else {
-                    rateColor = chalk.red;
+                    rateColor = 'red';
                 }
 
                 // format total time
@@ -61,14 +60,14 @@ export async function historyCommand(options: HistoryOptions): Promise<void> {
                 const paddedId = summary.runId.toString().padEnd(maxIdWidth, ' ');
 
                 // build oneline output
-                let line = `${chalk.cyan(paddedId)} - ${chalk.gray(dateStr)} - `;
-                line += `avg ${rateColor(`${(summary.avgScore * 100).toFixed(1)}%`)} `;
-                line += `(${chalk.blue(summary.total - summary.skipped)} cases) - `;
-                line += chalk.gray(totalTimeStr);
+                let line = `${st('cyan', paddedId)} - ${st('gray', dateStr)} - `;
+                line += `avg ${st(rateColor, `${(summary.avgScore * 100).toFixed(1)}%`)} `;
+                line += `(${st('blue', String(summary.total - summary.skipped))} cases) - `;
+                line += st('gray', totalTimeStr);
 
                 // add tags if any
                 if (summary.tags.length > 0) {
-                    const tagStr = summary.tags.map((t) => chalk.magenta(`[${t}]`)).join(' ');
+                    const tagStr = summary.tags.map((t) => st('magenta', `[${t}]`)).join(' ');
                     line += ` ${tagStr}`;
                 }
 
@@ -77,8 +76,8 @@ export async function historyCommand(options: HistoryOptions): Promise<void> {
         } else {
             // standard format
             console.log();
-            console.log(chalk.bold('Evaluation History'));
-            console.log(chalk.gray('='.repeat(80)));
+            console.log(st('bold', 'Evaluation History'));
+            console.log(st('gray', '='.repeat(80)));
             console.log();
 
             for (const summary of summaries) {
@@ -94,22 +93,22 @@ export async function historyCommand(options: HistoryOptions): Promise<void> {
                 });
 
                 // run header with ID
-                console.log(chalk.cyan(`Run #${summary.runId}`) + chalk.gray(` - ${dateStr}`));
+                console.log(st('cyan', `Run #${summary.runId}`) + st('gray', ` - ${dateStr}`));
 
                 // display tags if any
                 if (summary.tags.length > 0) {
-                    const tagStr = summary.tags.map((t) => chalk.magenta(`[${t}]`)).join(' ');
+                    const tagStr = summary.tags.map((t) => st('magenta', `[${t}]`)).join(' ');
                     console.log(`  ${tagStr}`);
                 }
 
                 // average score color
-                let rateColor: typeof chalk.green;
+                let rateColor: 'green' | 'yellow' | 'red';
                 if (summary.avgScore >= 0.8) {
-                    rateColor = chalk.green;
+                    rateColor = 'green';
                 } else if (summary.avgScore >= 0.5) {
-                    rateColor = chalk.yellow;
+                    rateColor = 'yellow';
                 } else {
-                    rateColor = chalk.red;
+                    rateColor = 'red';
                 }
 
                 // format total time
@@ -119,14 +118,14 @@ export async function historyCommand(options: HistoryOptions): Promise<void> {
                 // display stats
                 const ran = summary.total - summary.skipped;
                 console.log(
-                    `  Cases: ${chalk.blue(ran)}` +
-                        (summary.skipped > 0 ? ` | Skipped: ${chalk.gray(summary.skipped)}` : ''),
+                    `  Cases: ${st('blue', String(ran))}` +
+                        (summary.skipped > 0 ? ` | Skipped: ${st('gray', String(summary.skipped))}` : ''),
                 );
                 console.log(
-                    `  Avg Score: ${rateColor(`${(summary.avgScore * 100).toFixed(1)}%`)} | ` +
-                        `Range: ${chalk.gray(`${(summary.minScore * 100).toFixed(1)}%-${(summary.maxScore * 100).toFixed(1)}%`)} | ` +
-                        `Avg Duration: ${chalk.gray(`${summary.avgDuration.toFixed(0)}ms`)} | ` +
-                        `Total Time: ${chalk.gray(totalTimeStr)}`,
+                    `  Avg Score: ${st(rateColor, `${(summary.avgScore * 100).toFixed(1)}%`)} | ` +
+                        `Range: ${st('gray', `${(summary.minScore * 100).toFixed(1)}%-${(summary.maxScore * 100).toFixed(1)}%`)} | ` +
+                        `Avg Duration: ${st('gray', `${summary.avgDuration.toFixed(0)}ms`)} | ` +
+                        `Total Time: ${st('gray', totalTimeStr)}`,
                 );
                 console.log();
             }
@@ -135,8 +134,8 @@ export async function historyCommand(options: HistoryOptions): Promise<void> {
         // show footer if there are more runs
         if (runFiles.length > filesToShow.length) {
             const remaining = runFiles.length - filesToShow.length;
-            console.log(chalk.gray(`... and ${remaining} more run(s)`));
-            console.log(chalk.gray(`Use --limit to show more results`));
+            console.log(st('gray', `... and ${remaining} more run(s)`));
+            console.log(st('gray', `Use --limit to show more results`));
             console.log();
         }
     } catch (err) {

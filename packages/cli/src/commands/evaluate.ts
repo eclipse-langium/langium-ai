@@ -2,10 +2,9 @@ import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'path';
 import { register } from 'node:module';
 import { pathToFileURL } from 'node:url';
-import chalk from 'chalk';
 import { loadConfig } from '../core/config.js';
 import { pathExists } from '../utils/fs.js';
-import { error, info, success, spinner } from '../utils/console.js';
+import { error, info, success, spinner, st } from '../utils/console.js';
 import { clearSuites, getCollectedSuites, runEvalFile } from 'langium-ai-tools/evals';
 import type { EvalContext, EvaluationCaseResult } from 'langium-ai-tools/evals';
 import { getNextRunId, saveRunData } from '../utils/runs.js';
@@ -128,12 +127,12 @@ export function formatEvalListing(entries: EvalFileListing[]): string {
     for (const entry of entries) {
         const name = path.basename(entry.filePath);
         if (entry.error) {
-            lines.push(`  ${chalk.red('✗')} ${name} — Error loading eval file: ${entry.error}`);
+            lines.push(`  ${st('red', '✗')} ${name} — Error loading eval file: ${entry.error}`);
         } else {
             lines.push(`  ${name}`);
             for (const suite of entry.suites ?? []) {
                 for (const c of suite.cases) {
-                    lines.push(`    ${chalk.cyan('✦')} ${c}`);
+                    lines.push(`    ${st('cyan', '✦')} ${c}`);
                 }
             }
         }
@@ -180,7 +179,8 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
         const positionalArgs = [...paths];
         if (options.dir) {
             process.stderr.write(
-                chalk.yellow(
+                st(
+                    'yellow',
                     '⚠ --dir is deprecated; pass the directory as a positional argument instead (e.g. `lai evaluate ./evals`).\n',
                 ),
             );
@@ -314,7 +314,7 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
             const fileName = path.basename(file);
 
             // start spinner for this file (non-verbose mode only)
-            const fileSpinner = options.verbose ? null : spinner(`Running ${chalk.cyan(fileName)}...`);
+            const fileSpinner = options.verbose ? null : spinner(`Running ${st('cyan', fileName)}...`);
 
             if (options.verbose) {
                 // stop status spinner temporarily to print file header
@@ -337,8 +337,8 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
                 (current, total) => {
                     // update spinner text with progress
                     if (fileSpinner) {
-                        const progress = chalk.gray(`(${current}/${total})`);
-                        fileSpinner.text = `Running ${chalk.cyan(fileName)}... ${progress}`;
+                        const progress = st('gray', `(${current}/${total})`);
+                        fileSpinner.text = `Running ${st('cyan', fileName)}... ${progress}`;
                     }
                 },
                 (result, _current, _total) => {
@@ -348,7 +348,7 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
                     // update status spinner in verbose mode
                     if (statusSpinner && totalCases > 0) {
                         const remaining = totalCases - completedGlobal;
-                        statusSpinner.text = ` ${chalk.cyan(`${completedGlobal}/${totalCases}`)} evaluations completed, ${chalk.yellow(`${remaining} remaining`)}`;
+                        statusSpinner.text = ` ${st('cyan', `${completedGlobal}/${totalCases}`)} evaluations completed, ${st('yellow', `${remaining} remaining`)}`;
                     }
 
                     // in verbose mode, print result immediately as it completes
@@ -364,37 +364,37 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
 
                         if (data.skipped) {
                             // skipped tests shown in grey
-                            icon = chalk.gray('○');
-                            name = chalk.gray(`${metadata.suiteName} > ${metadata.caseName}`);
+                            icon = st('gray', '○');
+                            name = st('gray', `${metadata.suiteName} > ${metadata.caseName}`);
                         } else if (data.score >= 0.8) {
-                            icon = chalk.green('✓');
-                            name = chalk.white(`${metadata.suiteName} > ${metadata.caseName}`);
+                            icon = st('green', '✓');
+                            name = st('white', `${metadata.suiteName} > ${metadata.caseName}`);
                         } else if (data.score >= 0.5) {
-                            icon = chalk.yellow('~');
-                            name = chalk.yellow(`${metadata.suiteName} > ${metadata.caseName}`);
+                            icon = st('yellow', '~');
+                            name = st('yellow', `${metadata.suiteName} > ${metadata.caseName}`);
                         } else {
-                            icon = chalk.red('✗');
-                            name = chalk.red(`${metadata.suiteName} > ${metadata.caseName}`);
+                            icon = st('red', '✗');
+                            name = st('red', `${metadata.suiteName} > ${metadata.caseName}`);
                         }
 
                         // show score alongside the result
-                        const scoreStr = chalk.gray(`(${(data.score * 100).toFixed(1)}%)`);
+                        const scoreStr = st('gray', `(${(data.score * 100).toFixed(1)}%)`);
 
                         // show x/n count along with the result
-                        const progress = totalCases > 0 ? chalk.gray(` [${completedGlobal}/${totalCases}]`) : '';
+                        const progress = totalCases > 0 ? st('gray', ` [${completedGlobal}/${totalCases}]`) : '';
                         console.log(`\n${icon} ${name} ${scoreStr}${progress}`);
                         if (data.skipped) {
-                            console.log(`  ${chalk.gray('(skipped)')}`);
+                            console.log(`  ${st('gray', '(skipped)')}`);
                         } else if (metadata.duration) {
-                            let durationColor: typeof chalk.gray;
+                            let durationColor: 'gray' | 'yellow' | 'red';
                             if (metadata.duration < 1000) {
-                                durationColor = chalk.gray;
+                                durationColor = 'gray';
                             } else if (metadata.duration < 3000) {
-                                durationColor = chalk.yellow;
+                                durationColor = 'yellow';
                             } else {
-                                durationColor = chalk.red;
+                                durationColor = 'red';
                             }
-                            console.log(`  ${chalk.gray('Duration:')} ${durationColor(`${metadata.duration}ms`)}`);
+                            console.log(`  ${st('gray', 'Duration:')} ${st(durationColor, `${metadata.duration}ms`)}`);
                         }
                         // print all data entries (skip for skipped tests)
                         if (!data.skipped) {
@@ -424,23 +424,23 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
                 skippedCount > 0
                     ? `avg ${(avgScore * 100).toFixed(1)}% (${ranCount} cases, ${skippedCount} skipped)`
                     : `avg ${(avgScore * 100).toFixed(1)}% (${ranCount} cases)`;
-            let countColor: typeof chalk.green;
+            let countColor: 'green' | 'yellow' | 'red';
             if (avgScore >= 0.8) {
-                countColor = chalk.green;
+                countColor = 'green';
             } else if (avgScore >= 0.5) {
-                countColor = chalk.yellow;
+                countColor = 'yellow';
             } else {
-                countColor = chalk.red;
+                countColor = 'red';
             }
 
             if (fileSpinner) {
-                fileSpinner.succeed(`${chalk.cyan(fileName)}: ${countColor(countText)}`);
+                fileSpinner.succeed(`${st('cyan', fileName)}: ${st(countColor, countText)}`);
             } else if (options.verbose) {
                 // stop status spinner to print file completion
                 if (statusSpinner) {
                     statusSpinner.stop();
                 }
-                console.log(chalk.gray(`\nFile complete: ${countColor(countText)}`));
+                console.log(st('gray', `\nFile complete: ${st(countColor, countText)}`));
                 // restart status spinner
                 if (statusSpinner) {
                     statusSpinner.start();
@@ -455,20 +455,20 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
 
                     if (data.skipped) {
                         // skipped tests shown in grey
-                        icon = chalk.gray('○');
-                        name = chalk.gray(`${metadata.suiteName} > ${metadata.caseName}`);
+                        icon = st('gray', '○');
+                        name = st('gray', `${metadata.suiteName} > ${metadata.caseName}`);
                     } else if (data.score >= 0.8) {
-                        icon = chalk.green('✓');
-                        name = chalk.white(`${metadata.suiteName} > ${metadata.caseName}`);
+                        icon = st('green', '✓');
+                        name = st('white', `${metadata.suiteName} > ${metadata.caseName}`);
                     } else if (data.score >= 0.5) {
-                        icon = chalk.yellow('~');
-                        name = chalk.yellow(`${metadata.suiteName} > ${metadata.caseName}`);
+                        icon = st('yellow', '~');
+                        name = st('yellow', `${metadata.suiteName} > ${metadata.caseName}`);
                     } else {
-                        icon = chalk.red('✗');
-                        name = chalk.red(`${metadata.suiteName} > ${metadata.caseName}`);
+                        icon = st('red', '✗');
+                        name = st('red', `${metadata.suiteName} > ${metadata.caseName}`);
                     }
 
-                    const scoreStr = data.skipped ? '' : chalk.gray(` (${(data.score * 100).toFixed(1)}%)`);
+                    const scoreStr = data.skipped ? '' : st('gray', ` (${(data.score * 100).toFixed(1)}%)`);
                     console.log(`  ${icon} ${name}${scoreStr}`);
                 }
             }
@@ -478,7 +478,7 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
 
         // stop the status spinner before showing summary
         if (statusSpinner) {
-            statusSpinner.succeed(chalk.green(`All evaluations complete! (${completedGlobal}/${totalCases})`));
+            statusSpinner.succeed(st('green', `All evaluations complete! (${completedGlobal}/${totalCases})`));
         }
 
         // calculate total time
@@ -495,42 +495,42 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
                 ? ranTests.reduce((sum, r) => sum + (r.metadata.duration || 0), 0) / ranTests.length
                 : 0;
 
-        console.log(chalk.gray('='.repeat(60)));
-        console.log(chalk.bold('Summary'));
-        console.log(chalk.gray('='.repeat(60)));
-        console.log(`Total: ${chalk.blue(allResults.length.toString())}`);
-        console.log(`Ran: ${chalk.blue(ranTests.length.toString())}`);
+        console.log(st('gray', '='.repeat(60)));
+        console.log(st('bold', 'Summary'));
+        console.log(st('gray', '='.repeat(60)));
+        console.log(`Total: ${st('blue', allResults.length.toString())}`);
+        console.log(`Ran: ${st('blue', ranTests.length.toString())}`);
         if (skipped > 0) {
-            console.log(`Skipped: ${chalk.gray(skipped.toString())}`);
+            console.log(`Skipped: ${st('gray', skipped.toString())}`);
         }
-        console.log(`Average duration: ${chalk.cyan(`${avgDuration.toFixed(0)}ms`)}`);
+        console.log(`Average duration: ${st('cyan', `${avgDuration.toFixed(0)}ms`)}`);
 
         // format total time (seconds if >= 1000ms, otherwise ms)
         const totalTimeFormatted = totalTime >= 1000 ? `${(totalTime / 1000).toFixed(2)}s` : `${totalTime}ms`;
-        console.log(`Total time: ${chalk.cyan(totalTimeFormatted)}`);
+        console.log(`Total time: ${st('cyan', totalTimeFormatted)}`);
 
-        let rateColor: typeof chalk.green;
+        let rateColor: 'green' | 'yellow' | 'red';
         if (avgScore >= 0.8) {
-            rateColor = chalk.green;
+            rateColor = 'green';
         } else if (avgScore >= 0.5) {
-            rateColor = chalk.yellow;
+            rateColor = 'yellow';
         } else {
-            rateColor = chalk.red;
+            rateColor = 'red';
         }
-        console.log(`Average score: ${rateColor(`${(avgScore * 100).toFixed(1)}%`)}`);
-        console.log(`Score range: ${chalk.gray(`${(minScore * 100).toFixed(1)}% - ${(maxScore * 100).toFixed(1)}%`)}`);
+        console.log(`Average score: ${st(rateColor, `${(avgScore * 100).toFixed(1)}%`)}`);
+        console.log(`Score range: ${st('gray', `${(minScore * 100).toFixed(1)}% - ${(maxScore * 100).toFixed(1)}%`)}`);
 
         // show low-scoring cases (score < 0.5)
         const lowScoring = ranTests.filter((r) => r.data.score < 0.5);
         if (lowScoring.length > 0) {
             console.log();
-            console.log(chalk.red.bold('Low-scoring cases:'));
+            console.log(st(['red', 'bold'], 'Low-scoring cases:'));
             for (const { metadata, data } of lowScoring) {
                 console.log(
-                    chalk.red(`  ✗ ${metadata.suiteName} > ${metadata.caseName} (${(data.score * 100).toFixed(1)}%)`),
+                    st('red', `  ✗ ${metadata.suiteName} > ${metadata.caseName} (${(data.score * 100).toFixed(1)}%)`),
                 );
                 if (data?.error) {
-                    console.log(chalk.gray(`    Error: ${data.error}`));
+                    console.log(st('gray', `    Error: ${data.error}`));
                 }
             }
         }

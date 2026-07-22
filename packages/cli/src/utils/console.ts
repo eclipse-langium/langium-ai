@@ -1,33 +1,42 @@
-import chalk from 'chalk';
+import { styleText } from 'node:util';
 import ora, { Ora } from 'ora';
 
 // console output helpers with colors and spinners
 
+type Style = Parameters<typeof styleText>[0];
+
+/**
+ * Helper for invoking 'styleText' natively
+ */
+export function st(styles: Style, text: string): string {
+    return styleText(styles, text);
+}
+
 export function info(message: string): void {
-    console.log(chalk.blue('ℹ'), message);
+    console.log(st('blue', 'ℹ'), message);
 }
 
 export function success(message: string): void {
-    console.log(chalk.green('✓'), message);
+    console.log(st('green', '✓'), message);
 }
 
 export function error(message: string): void {
-    console.log(chalk.red('✗'), message);
+    console.log(st('red', '✗'), message);
 }
 
 export function warning(message: string): void {
-    console.log(chalk.yellow('⚠'), message);
+    console.log(st('yellow', '⚠'), message);
 }
 
 export function header(message: string): void {
     console.log();
-    console.log(chalk.bold(message));
+    console.log(st('bold', message));
     console.log();
 }
 
 export function section(title: string): void {
     console.log();
-    console.log(chalk.cyan.bold(`📁 ${title}`));
+    console.log(st(['cyan', 'bold'], `📁 ${title}`));
 }
 
 export function spinner(message: string): Ora {
@@ -35,7 +44,7 @@ export function spinner(message: string): Ora {
 }
 
 export function logDetected(label: string, value: string, detected: boolean = true): void {
-    const icon = detected ? chalk.green('✓') : chalk.gray('•');
-    const labelFormatted = chalk.gray(`${label}:`);
+    const icon = detected ? st('green', '✓') : st('gray', '•');
+    const labelFormatted = st('gray', `${label}:`);
     console.log(`  ${icon} ${labelFormatted.padEnd(20)} ${value}`);
 }

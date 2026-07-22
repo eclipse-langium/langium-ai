@@ -1,5 +1,4 @@
-import chalk from 'chalk';
-import { error, success, info } from '../utils/console.js';
+import { error, success, info, st } from '../utils/console.js';
 import { confirm } from '../utils/prompt.js';
 import { getAllRunFiles, deleteRuns } from '../utils/runs.js';
 
@@ -62,8 +61,8 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
 
         // list runs to be deleted
         console.log();
-        console.log(chalk.bold('Runs to be deleted:'));
-        console.log(chalk.gray('-'.repeat(80)));
+        console.log(st('bold', 'Runs to be deleted:'));
+        console.log(st('gray', '-'.repeat(80)));
 
         for (const runId of runsToDelete) {
             const file = runFiles.find((f) => f.data.runId === runId);
@@ -80,7 +79,7 @@ export async function cleanCommand(options: CleanOptions): Promise<void> {
         }
 
         console.log();
-        console.log(chalk.yellow(`Total: ${runsToDelete.length} run(s) will be deleted`));
+        console.log(st('yellow', `Total: ${runsToDelete.length} run(s) will be deleted`));
         console.log();
 
         // prompt for confirmation unless --yes flag is set

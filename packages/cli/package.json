@@ -33,7 +33,6 @@
   "author": "Langium Team",
   "license": "MIT",
   "dependencies": {
-    "chalk": "^5.6.2",
     "commander": "^15.0.0",
     "glob": "^13.0.6",
     "langium-ai-tools": "~5.0.5",
