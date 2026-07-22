@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v0.3.1 langium-ai, v5.0.6 langium-ai-tools (TBD)
+## v0.3.2 langium-ai, v5.0.6 langium-ai-tools (TBD)
 
 Some general patch work
 
