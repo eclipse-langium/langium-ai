@@ -41,7 +41,7 @@ export function section(title: string): void {
 
 export function spinner(message: string): Spinner {
     return yoctoSpinner({
-        text: message
+        text: message,
     }).start();
 }
 
