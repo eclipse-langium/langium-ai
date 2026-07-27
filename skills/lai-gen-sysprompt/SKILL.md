@@ -74,6 +74,8 @@ When editing the system prompt markdown file directly, follow these principles:
 
 ### Target Structure
 
+The generated prompt always starts with a fixed set of sections (using `###` headings): Introduction, one Grammar section per language, Built-in Library (if any), Validation Rules, Examples, Documentation, and Capabilities. The structure below is guidance for how you may reorganize and expand the prompt during manual refinement — it is not what the generator produces verbatim.
+
 A well-refined system prompt should have this structure:
 
 ```markdown
@@ -114,11 +116,10 @@ If you want to use an LLM to help refine the system prompt rather than editing m
 ```
 You are refining a system prompt for the <LANGUAGE_NAME> language.
 
-Template purpose: <TEMPLATE_DESCRIPTION>
-
-Expected sections:
-<For each section in the template, list:>
-- **<Section Name>** (conditional on: <include_if value, if any>): <number of content lines> content line(s)
+The system prompt is a markdown document with sections such as Introduction,
+Grammar, Validation Rules, Examples, Documentation, and Capabilities. Refine it
+for clarity, accuracy, and coverage while preserving its existing section
+structure and ordering.
 
 Detail level guidance:
 - basic: Keep explanations minimal and focused on essentials only.

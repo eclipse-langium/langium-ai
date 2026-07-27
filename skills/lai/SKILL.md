@@ -33,9 +33,11 @@ lai init
 
 Interactive setup that:
 - Detects your Langium project structure (grammar files, langium-config.json, custom services)
-- Prompts you to choose an LLM provider (claude, openai, ollama)
-- Creates `lai.config.jsonc` with detected paths and provider config
-- Sets up an `evals/` directory with a starter evaluation file
+- Detects your registered languages from `langium-config.json`
+- Creates `lai.config.jsonc` with detected paths
+- Sets up an `evals/` directory with starter template files (`utils.ts` and `basic.eval.ts`)
+
+Your LLM provider (OpenAI, Anthropic, Ollama, etc.) is not configured here — it's wired up in `evals/utils.ts` by implementing `generateResponse()`. Pass `-y`/`--yes` to skip all prompts and use defaults (non-interactive/CI).
 
 ### Reinitializing Parts of the Setup
 
@@ -48,6 +50,9 @@ lai init config
 # reinitialize only the evals/ directory and regenerate template files
 # requires an existing lai.config.jsonc — run `lai init` first if you don't have one
 lai init evals
+
+# all init variants accept -y/--yes for non-interactive/CI use
+lai init --yes
 ```
 
 `lai init config` re-detects your Langium project structure and regenerates `lai.config.jsonc`. This is useful if your project structure has changed (e.g., moved grammar files or added new services) and you want to update the config without touching evals.
@@ -61,20 +66,20 @@ The resulting `lai.config.jsonc` looks like:
   "version": "1.0",
   "langium": {
     "configPath": "./langium-config.json",
-    "grammarPath": "./src/grammar/my-dsl.langium"
+    // one entry per registered language (multi-language projects list several)
+    "languages": [
+      {
+        "id": "my-dsl",
+        "grammarPath": "./src/grammar/my-dsl.langium",
+        "caseInsensitive": false
+      }
+    ]
   },
   "descriptor": {
-    "path": "language.descriptor.yml",
-    "autoVersion": true  // saves previous versions as .1.yml, .2.yml, etc.
+    "path": "language.descriptor.yml"
   },
   "sysprompt": {
-    "path": "language.sysprompt.md",
-    "autoVersion": true
-  },
-  "llm": {
-    "provider": "claude",
-    "model": "claude-sonnet-4-6"
-    // provider-specific config follows
+    "path": "language.sysprompt.md"
   },
   "evaluations": {
     "directory": "evals"
@@ -93,52 +98,66 @@ lai gen descriptor
 
 # regenerate from scratch, ignoring the existing descriptor
 lai gen descriptor --fresh
+
+# skip prompts / auto-accept defaults (non-interactive/CI)
+lai gen descriptor --yes
 ```
 
 Produces `language.descriptor.yml` — a structured YAML file that maps your Langium project. The descriptor is the single source of truth that drives all prompt generation.
 
 ### Descriptor Structure
 
+A compact overview (see the `lai-gen-descriptor` skill for deep detail):
+
 ```yaml
-name: my-dsl
-version: 0.1.0
-description: A domain-specific language for ...
+version: 1.0  # LAI version that generated this descriptor
 
 # langium project references
 langium_config: ./langium-config.json
-case_sensitive: true
-grammar: ./src/grammar/my-dsl.langium
-builtins: ./src/builtins/my-dsl-builtins.langium  # built-in types/functions always in scope
 
-# custom langium services (optional, only include what exists)
+# registered languages (array; multi-language projects list several)
+languages:
+  - name: my-dsl
+    description: A domain-specific language for ...
+    caseInsensitive: false
+    grammar: ./src/grammar/my-dsl.langium
+
+# built-in grammar/type files always in scope (string array)
+builtins:
+  - ./src/builtins/my-dsl-builtins.langium
+
+# details about how services are instantiated (used for eval generation)
+serviceDetails:
+  createServicesFunc: createMyDslServices
+  createServicesAttributes: [MyDsl]
+
+# custom langium services — only include what exists (snake_case keys)
 services:
-  validator: ./src/validation/my-dsl-validator.ts
+  # validators are a list; each may name the language it validates
+  validators:
+    - language: my-dsl
+      path: ./src/validation/my-dsl-validator.ts
   scope_provider: ./src/scoping/my-dsl-scope-provider.ts
   token_builder: ./src/my-dsl-token-builder.ts
-  # also: module, scope_computation, linker, name_provider, type_provider, value_converter
+  # many other optional services: module, scope_computation, linker,
+  # name_provider, type_provider, value_converter, hover_provider, etc.
 
-# testing and examples
-tests: ./test/
+# language test directories (string array)
+tests:
+  - ./test/
+
+# examples
 examples:
   - name: Basic Example
     description: A simple program demonstrating core syntax.
     file: ./examples/basic.mydsl
     tags: [beginner, syntax]
-  - name: Advanced Example
-    description: Demonstrates complex features.
-    file: ./examples/advanced.mydsl
-    tags: [advanced]
 
 # external documentation
 documentation:
   - src: https://my-dsl-docs.example.com/guide/
     description: Comprehensive language guide.
     priority: high
-
-# import additional descriptor fragments
-imports:
-  - ./descriptors/builtins.yml
-  - ./descriptors/advanced-features.yml
 ```
 
 ## Step 3: Refine the Descriptor
@@ -148,7 +167,7 @@ The generated descriptor is a starting point. You should review and correct it:
 - **Verify paths** — ensure all file references (grammar, services, examples) are correct
 - **Add missing examples** — more examples produce better prompts; tag them for organization
 - **Add documentation links** — external docs with `priority: high` are weighted more heavily
-- **Use imports** — split large descriptors into fragments via the `imports` array
+- **Wire up services** — add discovered custom services (validators, scope providers, etc.) so they surface in generated prompts
 
 ## Step 4: Generate a System Prompt
 
@@ -158,6 +177,9 @@ lai gen sysprompt
 
 # regenerate from scratch
 lai gen sysprompt --fresh
+
+# skip prompts / auto-accept (e.g. auto-accept validator summarization)
+lai gen sysprompt --yes
 ```
 
 Produces a markdown file (e.g., `language.sysprompt.md`). The system prompt is what should be fed to the LLM during evaluations (along with anything else that is relevant to understand your DSL).
@@ -168,9 +190,17 @@ For generating a Model Context Protocol (MCP) server that exposes your DSL's par
 
 ## Step 5: Evaluate
 
+`lai evaluate` (aliases: `eval`, `e`) takes eval files or directories as positional arguments. With no arguments it uses the configured evaluations directory.
+
 ```bash
-# run all .eval.ts files in the evals directory
+# run all .eval.ts files in the configured evals directory
 lai evaluate
+
+# run specific files or directories (positional args)
+lai evaluate ./evals/syntax.eval.ts ./evals/semantics/
+
+# list discovered eval files, suites, and cases without running them
+lai evaluate --list
 
 # verbose output showing full responses and errors
 lai evaluate --verbose
@@ -178,11 +208,11 @@ lai evaluate --verbose
 # use a specific system prompt (overrides config)
 lai evaluate --sysprompt ./prompts/experimental.md
 
-# use a custom evaluations directory (overrides config)
-lai evaluate --dir ./custom-evals
-
 # save results to a specific path
 lai evaluate --output results.json
+
+# --dir is DEPRECATED — pass the directory as a positional argument instead
+lai evaluate --dir ./custom-evals
 ```
 
 Results are automatically saved to `.langium-ai/eval-YYYY-MM-DD-HH-MM-SS.json`.
@@ -217,9 +247,10 @@ describe('Code Generation', () => {
 
     const code = extractCodeBlock(response) || response;
     const result = await evaluator.evaluate(code);
-    const passed = !result.data.failures && !result.data.errors && !result.data.diagnostics.length;
+    // score is 0..1 (1 = perfect, 0 = fail)
+    const score = (!result.data.failures && !result.data.errors && !result.data.diagnostics.length) ? 1 : 0;
 
-    return { passed, ...result.data };
+    return { score, ...result.data };
   });
 
   evaluation('matches expected output', async (ctx: EvalContext) => {
@@ -231,9 +262,11 @@ describe('Code Generation', () => {
     const code = extractCodeBlock(response) || response;
     const result = await evaluator.evaluate(code);
     const similarity = calculateSimilarity(response, expected);
-    const passed = similarity >= 0.75 && !result.data.diagnostics.length;
+    const validSyntax = !result.data.failures && !result.data.errors && !result.data.diagnostics.length;
+    // combine syntax validity with similarity into a single 0..1 score
+    const score = validSyntax ? similarity : similarity * 0.5;
 
-    return { passed, similarity, ...result.data };
+    return { score, similarity, ...result.data };
   });
 });
 ```
@@ -241,7 +274,7 @@ describe('Code Generation', () => {
 Key patterns:
 - `ctx.systemPrompt` provides the generated system prompt to your LLM calls
 - `LangiumEvaluator` validates generated code against your actual Langium language services (parsing, validation)
-- Return `{ passed: boolean, error?: string, ...extraData }` from each evaluation
+- Return `{ score, ...extraData }` from each evaluation, where `score` is `0..1` (1 = perfect, 0 = fail)
 - Use `describe` to group related tests, `evaluation` for individual cases
 - `evaluation.each([...])('name $var', (data) => async (ctx) => { ... })` for parametrized tests
 - `describe.skip()` / `evaluation.skip()` to skip, `.only()` to focus
@@ -249,9 +282,18 @@ Key patterns:
 ### Evaluation Result Shape
 
 Each evaluation returns:
-- `passed` (boolean) — did this case succeed
-- `error` (string, optional) — failure description
-- Any additional data fields (similarity scores, diagnostics, etc.) are stored and shown in verbose mode
+- `score` (number) — a `0..1` grade for this case (1 = perfect, 0 = fail); use continuous values for partial credit
+- Any additional data fields you return (similarity scores, diagnostics, etc.) are stored and shown in verbose mode
+
+The `LangiumEvaluator` result exposes these on `result.data`:
+- `result.data.failures` — parse failures (couldn't parse at all)
+- `result.data.errors` — validation errors (severity 1)
+- `result.data.warnings` — warnings (severity 2)
+- `result.data.infos` — informational diagnostics (severity 3)
+- `result.data.hints` — hint-level diagnostics (severity 4)
+- `result.data.diagnostics` — raw `Diagnostic[]` array
+
+A typical validity score: `const score = (!result.data.failures && !result.data.errors && !result.data.diagnostics.length) ? 1 : 0;`
 
 ## Step 6: Analyze Results
 
@@ -372,7 +414,7 @@ lai tag latest after-grammar-fix
 ### Typical Refinement Patterns
 
 - **Low success rate on code generation** → add more examples to the descriptor
-- **Validation failures** → add the `{{validator}}` section with `include_if: validator` so the LLM knows your semantic rules
+- **Validation failures** → add the validator to `services.validators` in the descriptor so its rules surface in the generated system prompt
 - **Inconsistent outputs** → add multi-turn evaluation cases with `history` to test context-aware responses
 
 ## Generating or Refining a Descriptor
@@ -398,27 +440,28 @@ For generating an MCP server for your DSL, use the separate `lai-gen-mcp` skill.
 ## Quick Reference
 
 ```bash
-lai init                              # one-time project setup
-lai init config                       # reinitialize config only
-lai init evals                        # reinitialize evals only
-lai gen descriptor                    # generate descriptor from project
-lai gen descriptor --fresh            # regenerate from scratch
-lai validate                          # validate descriptor schema and file paths
-lai gen sysprompt                     # generate system prompt
-lai gen sysprompt --fresh             # regenerate from scratch
-lai evaluate                          # run evaluations
+lai init [-y]                         # one-time project setup (-y for CI)
+lai init config [-y]                  # reinitialize config only
+lai init evals [-y]                   # reinitialize evals only
+lai gen descriptor [--fresh] [-y]     # generate descriptor from project
+lai gen sysprompt [--fresh] [-y]      # generate system prompt
+lai validate                          # (alias: v) validate the language descriptor
+lai evaluate [paths...]               # (aliases: eval, e) run evaluations
+lai evaluate --list                   # list discovered files/suites/cases, don't run
 lai evaluate --verbose                # with detailed output
 lai evaluate --sysprompt PATH         # with custom system prompt
-lai evaluate --dir PATH               # with custom evals directory
-lai status                            # check project status
-lai history                           # view run history
+lai evaluate --output PATH            # save results to a specific path
+lai evaluate --dir PATH               # [DEPRECATED] pass paths positionally instead
+lai status                            # (alias: s) check project status
+lai history                           # (alias: h) view run history
 lai history --oneline                 # condensed history
-lai show latest                       # inspect latest run
-lai show ID --verbose                 # inspect specific run in detail
-lai compare ID1 ID2                   # compare two runs
+lai history --limit N                 # show N runs
+lai show <id|latest|path>             # inspect a run
+lai show <id|latest|path> --verbose   # inspect a run in detail
+lai compare <id1> <id2>               # compare two runs
 lai stats                             # aggregate statistics
 lai stats --tag TAG                   # stats filtered by tag
-lai tag ID TAGS...                    # tag a run
-lai export ID --format csv|json       # export results
-lai clean --keep N                    # clean old runs
+lai tag <id|latest|path> <tags...>    # tag a run
+lai export <id|latest> --format csv|json [--output PATH]   # export results
+lai clean [--keep N] [--before ID] [--yes]                 # clean old runs
 ```
