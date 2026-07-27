@@ -54,6 +54,18 @@ export function validateDescriptor(descriptor: ProjectDescriptor): ValidationRes
         }
     }
 
+    // validate validators list if present
+    if (descriptor.services?.validators) {
+        for (const [idx, validator] of descriptor.services.validators.entries()) {
+            if (!validator.path || validator.path.trim() === '') {
+                errors.push({
+                    field: `services.validators[${idx}].path`,
+                    message: 'validator path is required',
+                });
+            }
+        }
+    }
+
     // validate examples if present
     if (descriptor.examples) {
         for (const [idx, example] of descriptor.examples.entries()) {

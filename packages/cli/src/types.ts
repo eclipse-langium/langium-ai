@@ -100,6 +100,26 @@ export interface ServiceDetails {
 }
 
 /**
+ * A single validator service discovered in the project, optionally associated
+ * with the language it validates. Multi-language projects wire one validator
+ * per language (each in its own DI module), so validators are tracked as a list
+ * rather than a single path.
+ */
+export interface ValidatorService {
+    /**
+     * Language id this validator is associated with, when it could be resolved
+     * (typically from the wiring module's filename prefix). Undefined when the
+     * validator can't be confidently tied to a specific language.
+     */
+    language?: string;
+
+    /**
+     * Path to the validator source file
+     */
+    path: string;
+}
+
+/**
  * Locations to the paths of custom services for this language.
  * Organized to match Langium's core and LSP service groups.
  */
@@ -136,7 +156,11 @@ export interface Services {
     json_serializer?: string;
 
     // validation services
-    validator?: string;
+    /**
+     * All validator services discovered in the project, one per language for
+     * multi-language projects. Populated by the detection pass.
+     */
+    validators?: ValidatorService[];
     validation_registry?: string;
 
     // LSP services

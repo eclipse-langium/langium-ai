@@ -5,7 +5,7 @@ import { configExists, saveConfig } from '../core/config.js';
 import { detectLangiumProject, getLanguageNames, getProjectName } from '../core/langium-detector.js';
 import { checkLangiumVersion } from '../core/langium-version.js';
 import { getTemplate } from '../templates.js';
-import type { LaiConfig, LangiumProjectStructure } from '../types.js';
+import type { LaiConfig, LangiumProjectStructure, Services } from '../types.js';
 import { error, header, logDetected, section, spinner, success, warning } from '../utils/console.js';
 import { detectPackageManager, makeRelative, pathExists } from '../utils/fs.js';
 import { confirm, text } from '../utils/prompt.js';
@@ -22,6 +22,19 @@ export interface InitOptions {
      * Used to skip interactive prompts and apply defaults for CI & non-interactive use cases
      */
     yes?: boolean;
+}
+
+/**
+ * Build display entries for detected validators. Lists one entry per validator
+ * (labeled by language when known). Returns a single empty 'Validator' entry when
+ * none were detected, so the status display stays consistent.
+ */
+function buildValidatorEntries(services: Services): [string, string | undefined][] {
+    const validators = services.validators;
+    if (validators && validators.length > 0) {
+        return validators.map((v) => [v.language ? `Validator (${v.language})` : 'Validator', v.path]);
+    }
+    return [['Validator', undefined]];
 }
 
 /**
@@ -109,7 +122,7 @@ async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStr
         {
             label: 'Validation Services',
             entries: [
-                ['Validator', structure.services.validator],
+                ...buildValidatorEntries(structure.services),
                 ['Validation Registry', structure.services.validation_registry],
             ],
         },

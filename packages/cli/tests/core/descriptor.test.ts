@@ -93,7 +93,7 @@ describe('Descriptor Generation', () => {
             const structure: LangiumProjectStructure = {
                 ...createMockStructure(),
                 services: {
-                    validator: path.join(tempDir, 'validator.ts'),
+                    validators: [{ language: 'grammar', path: path.join(tempDir, 'validator.ts') }],
                     scope_provider: path.join(tempDir, 'scope-provider.ts'),
                 },
             };
@@ -101,7 +101,8 @@ describe('Descriptor Generation', () => {
             const descriptor = await generateDescriptor(config, structure);
 
             // check paths end with expected files (handles macOS temp dir paths)
-            expect(descriptor.services?.validator).toMatch(/validator\.ts$/);
+            expect(descriptor.services?.validators?.[0].language).toBe('grammar');
+            expect(descriptor.services?.validators?.[0].path).toMatch(/validator\.ts$/);
             expect(descriptor.services?.scope_provider).toMatch(/scope-provider\.ts$/);
         });
 
@@ -110,7 +111,7 @@ describe('Descriptor Generation', () => {
             const structure: LangiumProjectStructure = {
                 ...createMockStructure(),
                 services: {
-                    validator: path.join(tempDir, 'validator.ts'),
+                    validators: [{ path: path.join(tempDir, 'validator.ts') }],
                     type_provider: path.join(tempDir, 'type-provider.ts'),
                 },
             };

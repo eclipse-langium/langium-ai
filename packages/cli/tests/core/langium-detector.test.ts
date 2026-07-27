@@ -183,7 +183,7 @@ export class TestValidator extends DefaultDocumentValidator {}`,
 
             expect(structure.services.scope_provider).toBe(path.join(srcDir, 'scope-provider.ts'));
             expect(structure.services.hover_provider).toBe(path.join(srcDir, 'hover-provider.ts'));
-            expect(structure.services.validator).toBe(path.join(srcDir, 'validator.ts'));
+            expect(structure.services.validators).toEqual([{ path: path.join(srcDir, 'validator.ts') }]);
         });
 
         it('should prefer module-wired class when multiple extend the same base', async () => {
@@ -251,7 +251,7 @@ export const AbcModule: Module<AbcServices, PartialLangiumServices & AbcAddedSer
             const structure = await detectLangiumProject(tempDir);
 
             expect(structure.services.module).toBe(path.join(srcDir, 'abc-module.ts'));
-            expect(structure.services.validator).toBe(path.join(validationDir, 'abc-validator.ts'));
+            expect(structure.services.validators).toEqual([{ path: path.join(validationDir, 'abc-validator.ts') }]);
         });
 
         it('should detect services from both inheritance and module fallback', async () => {
@@ -292,7 +292,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
             const structure = await detectLangiumProject(tempDir);
 
             expect(structure.services.scope_provider).toBe(path.join(srcDir, 'test-scope-provider.ts'));
-            expect(structure.services.validator).toBe(path.join(validationDir, 'test-validator.ts'));
+            expect(structure.services.validators).toEqual([{ path: path.join(validationDir, 'test-validator.ts') }]);
         });
 
         it('should detect LSP service overrides from module file (fallback path)', async () => {
@@ -438,6 +438,80 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
             expect(l2.grammar).toBe(g2Path);
         });
 
+        it('should detect per-language validators across multiple module files', async () => {
+            // reproduces the multi-language 'requirements' integration case:
+            // the aggregator module carries create*Services but NO validation block,
+            // while each per-language module wires its own AddedServices validator.
+            await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'reqs' }, null, 2));
+
+            const multiConfig = {
+                projectName: 'RequirementsAndTests',
+                languages: [
+                    { id: 'requirements-lang', caseInsensitive: false, grammar: './src/requirements.langium' },
+                    { id: 'tests-lang', caseInsensitive: false, grammar: './src/tests.langium' },
+                ],
+            };
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(multiConfig, null, 2));
+
+            const srcDir = path.join(tempDir, 'src');
+            await fs.mkdir(srcDir, { recursive: true });
+            await fs.writeFile(path.join(srcDir, 'requirements.langium'), 'grammar Requirements');
+            await fs.writeFile(path.join(srcDir, 'tests.langium'), 'grammar Tests');
+
+            // plain AddedServices validators (extend nothing)
+            await fs.writeFile(
+                path.join(srcDir, 'requirements-lang-validator.ts'),
+                'export class RequirementsLangValidator {}',
+            );
+            await fs.writeFile(path.join(srcDir, 'tests-lang-validator.ts'), 'export class TestsLangValidator {}');
+
+            // per-language modules wire the validators
+            await fs.writeFile(
+                path.join(srcDir, 'requirements-lang-module.ts'),
+                `import { RequirementsLangValidator } from './requirements-lang-validator.js';
+export const RequirementsLangModule: Module<RequirementsLangServices, PartialLangiumServices & RequirementsLangAddedServices> = {
+    validation: {
+        RequirementsLangValidator: (services) => new RequirementsLangValidator(services)
+    }
+};`,
+            );
+            await fs.writeFile(
+                path.join(srcDir, 'tests-lang-module.ts'),
+                `import { TestsLangValidator } from './tests-lang-validator.js';
+export const TestsLangModule: Module<TestsLangServices, PartialLangiumServices & TestsLangAddedServices> = {
+    validation: {
+        TestsLangValidator: () => new TestsLangValidator()
+    }
+};`,
+            );
+
+            // aggregator module: has create*Services but NO validation block of its own
+            await fs.writeFile(
+                path.join(srcDir, 'requirements-and-tests-lang-module.ts'),
+                `import { RequirementsLangModule } from './requirements-lang-module.js';
+import { TestsLangModule } from './tests-lang-module.js';
+
+export function createRequirementsAndTestsLangServices(context) {
+    const shared = inject();
+    const requirements = inject(RequirementsLangModule);
+    const tests = inject(TestsLangModule);
+    return { shared, requirements, tests };
+}`,
+            );
+
+            const structure = await detectLangiumProject(tempDir);
+
+            // core module is still the aggregator (retains existing behavior)
+            expect(structure.services.module).toBe(path.join(srcDir, 'requirements-and-tests-lang-module.ts'));
+
+            // both validators are discovered, associated with their language,
+            // and ordered to follow the config's language declaration order
+            expect(structure.services.validators).toEqual([
+                { language: 'requirements-lang', path: path.join(srcDir, 'requirements-lang-validator.ts') },
+                { language: 'tests-lang', path: path.join(srcDir, 'tests-lang-validator.ts') },
+            ]);
+        });
+
         it('should throw error for monorepo with multiple configs', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'monorepo' }, null, 2));
             await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
@@ -462,7 +536,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
             // should not detect any services without a module file
             expect(structure.services.module).toBeUndefined();
-            expect(structure.services.validator).toBeUndefined();
+            expect(structure.services.validators).toBeUndefined();
             expect(structure.services.scope_provider).toBeUndefined();
         });
 
@@ -735,7 +809,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices & TestAdded
             // inheritance scan finds scope_provider
             expect(services.scope_provider).toBe(path.join(srcDir, 'scope.ts'));
             // module fallback finds validator
-            expect(services.validator).toBe(path.join(srcDir, 'validator.ts'));
+            expect(services.validators).toEqual([{ path: path.join(srcDir, 'validator.ts') }]);
         });
 
         it('should not overwrite inheritance result with module fallback', async () => {

@@ -1,7 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'path';
-import type { LangiumConfig, LangiumLanguage, LangiumProjectStructure, ServiceDetails, Services } from '../types.js';
+import type {
+    LangiumConfig,
+    LangiumLanguage,
+    LangiumProjectStructure,
+    ServiceDetails,
+    Services,
+    ValidatorService,
+} from '../types.js';
 import { findDirectories, findDirectory, findFile, findFiles, findProjectRoot, makeRelative } from '../utils/fs.js';
 import { info } from '../utils/console.js';
 
@@ -10,7 +17,15 @@ import { info } from '../utils/console.js';
  * These class names are part of Langium's stable API surface — when a user's class
  * extends one of these, we know which service is being overridden.
  */
-const KNOWN_BASE_CLASSES: Record<string, keyof Services> = {
+
+/**
+ * Routing target for a detected service. Either a concrete scalar {@link Services} key,
+ * or the virtual `'validator'` sentinel — validators are collected into the
+ * {@link Services.validators} list (one per language) rather than a single scalar field.
+ */
+type ServiceRoutingKey = keyof Services | 'validator';
+
+const KNOWN_BASE_CLASSES: Record<string, ServiceRoutingKey> = {
     // parser
     DefaultAsyncParser: 'async_parser',
     AbstractThreadedAsyncParser: 'async_parser',
@@ -74,7 +89,7 @@ const KNOWN_INTERFACES: Record<string, keyof Services> = {
  * that every Langium project defines with its own language-specific names.
  * Used by the module-parse fallback path.
  */
-const CATEGORY_FALLBACK_MAP: Partial<Record<string, keyof Services>> = {
+const CATEGORY_FALLBACK_MAP: Partial<Record<string, ServiceRoutingKey>> = {
     validation: 'validator',
 };
 
@@ -82,7 +97,7 @@ const CATEGORY_FALLBACK_MAP: Partial<Record<string, keyof Services>> = {
  * Maps Langium service names (as they appear in modules) to our Services interface keys.
  * Used by the module-parse fallback path.
  */
-const SERVICE_KEY_MAP: Record<string, Record<string, keyof Services>> = {
+const SERVICE_KEY_MAP: Record<string, Record<string, ServiceRoutingKey>> = {
     parser: {
         AsyncParser: 'async_parser',
         GrammarConfig: 'grammar_config',
@@ -265,7 +280,15 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
     }
 
     // 5. detect custom services using inheritance scan + module-parse fallback
-    await detectCustomServices(root, services.module, services);
+    //    the fallback runs over every non-generated module so per-language
+    //    validators (wired in separate modules) are all picked up.
+    await detectCustomServices(
+        root,
+        services.module,
+        services,
+        moduleFiles,
+        languages.map((l) => l.id),
+    );
 
     // 6. find package.json
     const packageJson = await findFile(root, 'package.json');
@@ -291,28 +314,42 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
  */
 interface ServiceOverride {
     className: string;
-    serviceKey: keyof Services;
+    serviceKey: ServiceRoutingKey;
     filePath: string;
 }
 
 /**
  * Detect custom services using two complementary strategies:
  * 1. Primary: scan source files for classes extending known Langium base classes
- * 2. Fallback: parse the DI module file for service wiring (handles AddedServices, factory patterns, etc.)
+ * 2. Fallback: parse the DI module file(s) for service wiring (handles AddedServices, factory patterns, etc.)
  *
  * The inheritance scan takes priority since base class names are part of Langium's stable API.
  * The module-parse fills in gaps for services that might be missed by the 1st check
  * (e.g., GrammarConfig, ValidationRegistry, custom AddedServices validators).
+ *
+ * The fallback runs over *every* non-generated module file (not just the core module),
+ * so multi-language projects — which wire one validator per language in separate modules —
+ * have all of their validators discovered. The core module is parsed first so its wirings
+ * take precedence for scalar services; the remaining modules only fill gaps.
+ *
+ * @param moduleFiles all non-generated `*-module.ts` files in the project
+ * @param languageIds language ids from the langium config, used to associate validators
  */
-async function detectCustomServices(root: string, modulePath: string | undefined, services: Services): Promise<void> {
+async function detectCustomServices(
+    root: string,
+    modulePath: string | undefined,
+    services: Services,
+    moduleFiles: string[] = [],
+    languageIds: string[] = [],
+): Promise<void> {
     // primary: scan all source files for class inheritance / interface implementation
     const inheritanceOverrides = await scanSourceFilesForOverrides(root);
 
     // if multiple classes override the same service, prefer the one wired in the module
     const moduleImportMap = modulePath ? await buildModuleImportMap(modulePath) : new Map<string, string>();
 
-    // group overrides by serviceKey to handle conflicts
-    const overridesByKey = new Map<keyof Services, ServiceOverride[]>();
+    // group overrides by routing key to handle conflicts
+    const overridesByKey = new Map<ServiceRoutingKey, ServiceOverride[]>();
     for (const override of inheritanceOverrides) {
         const existing = overridesByKey.get(override.serviceKey);
         if (existing) {
@@ -322,27 +359,119 @@ async function detectCustomServices(root: string, modulePath: string | undefined
         }
     }
 
+    // validators discovered anywhere are collected into a list (one per language).
+    // seeded by the inheritance scan, then filled in by the per-module fallback.
+    const validators: ValidatorService[] = [];
+
     // resolve each service key to a single file path
     for (const [serviceKey, overrides] of overridesByKey) {
+        let resolved: ServiceOverride;
         if (overrides.length === 1) {
-            services[serviceKey] = overrides[0].filePath; // to avoid conflicting w/ string & string[]
+            resolved = overrides[0];
         } else {
             // prefer the class that appears in the module's imports
-            let resolved: ServiceOverride | undefined;
+            let preferred: ServiceOverride | undefined;
             for (const override of overrides) {
                 if (moduleImportMap.has(override.className)) {
-                    resolved = override;
+                    preferred = override;
                     break;
                 }
             }
-            services[serviceKey] = (resolved ?? overrides[0]).filePath;
+            resolved = preferred ?? overrides[0];
+        }
+        if (serviceKey === 'validator') {
+            // a DefaultDocumentValidator subclass — no per-language association from inheritance
+            validators.push({ path: resolved.filePath });
+        } else {
+            assignServicePath(services, serviceKey, resolved.filePath);
         }
     }
 
-    // fallback: parse the module file for anything the inheritance scan missed
-    if (modulePath) {
-        await parseModuleServices(modulePath, services);
+    // fallback: parse every module file for anything the inheritance scan missed.
+    // order the core module first so its wirings win for scalar services.
+    const orderedModules = orderModulesCoreFirst(moduleFiles, modulePath);
+    for (const moduleFile of orderedModules) {
+        await parseModuleServices(moduleFile, services, {
+            validators,
+            language: resolveLanguageForModule(moduleFile, languageIds),
+        });
     }
+
+    // record discovered validators (deduped by path, ordered by language declaration)
+    if (validators.length > 0) {
+        services.validators = sortValidators(dedupeValidators(validators), languageIds);
+    }
+}
+
+/**
+ * Order module files so the core module (the one defining create*Services) is parsed
+ * first, preserving prior behavior where its wirings take precedence for scalar services.
+ */
+function orderModulesCoreFirst(moduleFiles: string[], coreModule: string | undefined): string[] {
+    if (!coreModule) {
+        return moduleFiles;
+    }
+    const rest = moduleFiles.filter((m) => m !== coreModule);
+    // always include the core module, even if it wasn't in the passed-in list
+    // (e.g. callers that only supply modulePath)
+    return [coreModule, ...rest];
+}
+
+/**
+ * Best-effort association of a wiring module to a language id, using the module's
+ * filename prefix (e.g. `requirements-lang-module.ts` -> `requirements-lang`).
+ * Returns the longest matching language id, or undefined when none matches.
+ */
+function resolveLanguageForModule(moduleFile: string, languageIds: string[]): string | undefined {
+    const base = path.basename(moduleFile).replace(/-module\.ts$/, '');
+    let best: string | undefined;
+    for (const id of languageIds) {
+        if ((base === id || base.startsWith(`${id}-`) || base.startsWith(`${id}`)) && id.length > (best?.length ?? 0)) {
+            best = id;
+        }
+    }
+    return best;
+}
+
+/**
+ * Order validators to follow the language declaration order from the config, so
+ * output is deterministic across filesystems. Validators with an unresolved
+ * language sort last, tie-broken by path.
+ */
+function sortValidators(validators: ValidatorService[], languageIds: string[]): ValidatorService[] {
+    const rank = (v: ValidatorService): number => {
+        const idx = v.language ? languageIds.indexOf(v.language) : -1;
+        return idx === -1 ? languageIds.length : idx;
+    };
+    return [...validators].sort((a, b) => rank(a) - rank(b) || a.path.localeCompare(b.path));
+}
+
+/**
+ * Remove duplicate validator entries by path, preferring an entry that carries a
+ * resolved language over one that doesn't.
+ */
+function dedupeValidators(validators: ValidatorService[]): ValidatorService[] {
+    const byPath = new Map<string, ValidatorService>();
+    for (const v of validators) {
+        const existing = byPath.get(v.path);
+        if (!existing) {
+            byPath.set(v.path, v);
+        } else if (!existing.language && v.language) {
+            byPath.set(v.path, v);
+        }
+    }
+    return [...byPath.values()];
+}
+
+/**
+ * Assign a resolved file path to a scalar service key without overwriting an existing value.
+ * The `validators` key is a list and handled separately, so it is skipped here.
+ */
+function assignServicePath(services: Services, serviceKey: keyof Services, filePath: string): void {
+    if (serviceKey === 'validators') {
+        return;
+    }
+    (services as Record<string, string | undefined>)[serviceKey] = filePath;
 }
 
 /**
@@ -435,8 +564,17 @@ async function buildModuleImportMap(modulePath: string): Promise<Map<string, str
  *     }
  * };
  * ```
+ *
+ * Validators are collected into `collect.validators` (one per language) rather than a
+ * scalar service, so that multi-language projects with one validator per module surface
+ * every validator. `collect.language` is the language id (if any) this module is
+ * associated with.
  */
-async function parseModuleServices(modulePath: string, services: Services): Promise<void> {
+async function parseModuleServices(
+    modulePath: string,
+    services: Services,
+    collect?: { validators: ValidatorService[]; language?: string },
+): Promise<void> {
     let content: string;
     try {
         content = await readFile(modulePath, 'utf-8');
@@ -465,16 +603,25 @@ async function parseModuleServices(modulePath: string, services: Services): Prom
             continue;
         }
 
-        // skip if already detected by the inheritance scan
+        // resolve the file path from the import map using the class name
+        const filePath = importMap.get(className);
+        if (!filePath) {
+            continue;
+        }
+
+        // validators are accumulated into a list (one per language) rather than a single
+        // scalar, so multi-language projects surface every validator.
+        if (serviceKey === 'validator') {
+            collect?.validators.push({ language: collect.language, path: filePath });
+            continue;
+        }
+
+        // skip if already detected by the inheritance scan or an earlier module
         if (services[serviceKey]) {
             continue;
         }
 
-        // resolve the file path from the import map using the class name
-        const filePath = importMap.get(className);
-        if (filePath) {
-            services[serviceKey] = filePath;
-        }
+        assignServicePath(services, serviceKey, filePath);
     }
 }
 

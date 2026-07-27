@@ -100,7 +100,7 @@ export const WorkflowTestModule: Module<WorkflowTestServices, PartialLangiumServ
         expect(structure.root).toBe(tempDir);
         expect(structure.languages).toHaveLength(1);
         expect(structure.languages[0].grammar).toBe(grammarPath);
-        expect(structure.services.validator).toBe(validatorPath);
+        expect(structure.services.validators).toEqual([{ path: validatorPath }]);
 
         // step 3: create and save config
         const config: LaiConfig = {
@@ -142,7 +142,7 @@ export const WorkflowTestModule: Module<WorkflowTestServices, PartialLangiumServ
         expect(lang.name).toBe('abc');
         // check paths end with expected files (handles macOS temp dir paths)
         expect(lang.grammar).toMatch(/src\/grammar\.langium$/);
-        expect(descriptor.services?.validator).toMatch(/src\/workflow-validator\.ts$/);
+        expect(descriptor.services?.validators?.[0].path).toMatch(/src\/workflow-validator\.ts$/);
 
         // step 5: save descriptor
         await saveDescriptor(config.descriptor.path, descriptor);

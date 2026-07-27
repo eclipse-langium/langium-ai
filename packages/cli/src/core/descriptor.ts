@@ -105,7 +105,13 @@ export async function saveDescriptor(descriptorPath: string, descriptor: Project
 function mapServicesToRelative(cwd: string, services: Services): Services {
     const result: Services = {};
     for (const [key, value] of Object.entries(services)) {
-        if (value) {
+        if (!value) {
+            continue;
+        }
+        if (key === 'validators' && Array.isArray(value)) {
+            // validators is a list of { language?, path } objects
+            result.validators = value.map((v) => ({ ...v, path: makeRelative(cwd, v.path) }));
+        } else if (typeof value === 'string') {
             (result as Record<string, string | undefined>)[key] = makeRelative(cwd, value);
         }
     }

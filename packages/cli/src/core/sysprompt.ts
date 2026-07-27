@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import YAML from 'yaml';
-import type { ProjectDescriptor } from '../types.js';
+import type { ProjectDescriptor, ValidatorService } from '../types.js';
 import { pathExists } from '../utils/fs.js';
 import { extractValidatorChecks, formatValidatorSummary } from './validator-summary.js';
 
@@ -32,20 +32,36 @@ export async function loadDescriptor(descriptorPath: string): Promise<ProjectDes
 }
 
 /**
- * Count the lines in the descriptor's validator source, or undefined if there
- * is no validator service or the file is missing. Lets callers decide up-front
- * whether to inline it.
+ * Resolve the descriptor's validators as a normalized list.
+ */
+function resolveValidators(descriptor: ProjectDescriptor): ValidatorService[] {
+    return descriptor.services?.validators ?? [];
+}
+
+/**
+ * Count the total lines across the descriptor's validator sources, or undefined
+ * if there are no validators or none of their files exist. Lets callers decide
+ * up-front whether to inline them.
  */
 export async function countValidatorLines(descriptor: ProjectDescriptor, cwd: string): Promise<number | undefined> {
-    if (!descriptor.services?.validator) {
+    const validators = resolveValidators(descriptor);
+    if (validators.length === 0) {
         return undefined;
     }
-    const validatorPath = path.join(cwd, descriptor.services.validator);
-    if (!(await pathExists(validatorPath))) {
-        return undefined;
+
+    let total = 0;
+    let found = false;
+    for (const validator of validators) {
+        const validatorPath = path.join(cwd, validator.path);
+        if (!(await pathExists(validatorPath))) {
+            continue;
+        }
+        const content = await readFile(validatorPath, 'utf-8');
+        total += content.split('\n').length;
+        found = true;
     }
-    const content = await readFile(validatorPath, 'utf-8');
-    return content.split('\n').length;
+
+    return found ? total : undefined;
 }
 
 /**
@@ -139,14 +155,22 @@ async function loadContent(
         }
     }
 
-    // validation rules (conditional on validator service)
-    if (descriptor.services?.validator) {
-        const validatorRef = descriptor.services.validator;
-        const validatorPath = path.join(cwd, validatorRef);
-        if (await pathExists(validatorPath)) {
-            const validatorContent = await readFile(validatorPath, 'utf-8');
-            content.push(['Validation Rules', buildValidatorSection(validatorRef, validatorContent, options)]);
+    // validation rules — one section per validator. multi-language projects wire
+    // one validator per language, so each is surfaced (labeled by language when known).
+    const validators = resolveValidators(descriptor);
+    const multipleValidators = validators.length > 1;
+    for (const validator of validators) {
+        const validatorPath = path.join(cwd, validator.path);
+        if (!(await pathExists(validatorPath))) {
+            continue;
         }
+        const validatorContent = await readFile(validatorPath, 'utf-8');
+        // qualify the heading by language when there's more than one validator
+        const heading =
+            multipleValidators && validator.language
+                ? `Validation Rules for ${validator.language}`
+                : 'Validation Rules';
+        content.push([heading, buildValidatorSection(validator.path, validatorContent, options)]);
     }
 
     // take first 3 examples
