@@ -3,8 +3,28 @@ import path from 'node:path';
 import YAML from 'yaml';
 import type { ProjectDescriptor } from '../types.js';
 import { pathExists } from '../utils/fs.js';
+import { extractValidatorChecks, formatValidatorSummary } from './validator-summary.js';
 
 // system prompt generation from descriptor templates
+
+/**
+ * Line count above which inlining a validator verbatim is discouraged in favour
+ * of a statically-extracted check summary. Large validators otherwise dominate
+ * the prompt with implementation detail an LLM does not need.
+ */
+export const VALIDATOR_INLINE_LINE_THRESHOLD = 1000;
+
+/**
+ * Options controlling system prompt generation.
+ */
+export interface GenerateSystemPromptOptions {
+    /**
+     * Whether to inline the validator source verbatim. When false (the default
+     * for large validators), a statically-extracted check summary is emitted
+     * instead, pointing at the validator file.
+     */
+    inlineValidator?: boolean;
+}
 
 export async function loadDescriptor(descriptorPath: string): Promise<ProjectDescriptor> {
     const content = await readFile(descriptorPath, 'utf-8');
@@ -12,13 +32,33 @@ export async function loadDescriptor(descriptorPath: string): Promise<ProjectDes
 }
 
 /**
+ * Count the lines in the descriptor's validator source, or undefined if there
+ * is no validator service or the file is missing. Lets callers decide up-front
+ * whether to inline it.
+ */
+export async function countValidatorLines(descriptor: ProjectDescriptor, cwd: string): Promise<number | undefined> {
+    if (!descriptor.services?.validator) {
+        return undefined;
+    }
+    const validatorPath = path.join(cwd, descriptor.services.validator);
+    if (!(await pathExists(validatorPath))) {
+        return undefined;
+    }
+    const content = await readFile(validatorPath, 'utf-8');
+    return content.split('\n').length;
+}
+
+/**
  * Generate a suitable default system prompt from our language descriptor
  */
-export async function generateSystemPrompt(descriptor: ProjectDescriptor): Promise<string> {
+export async function generateSystemPrompt(
+    descriptor: ProjectDescriptor,
+    options: GenerateSystemPromptOptions = {},
+): Promise<string> {
     const cwd = process.cwd();
 
     // load all referenced content from descriptor
-    const content = await loadContent(descriptor, cwd);
+    const content = await loadContent(descriptor, cwd, options);
 
     // process template sections
     const processedPrompt = processContent(content, descriptor);
@@ -45,7 +85,11 @@ function prettyPrintArray(items: string[]): string {
 /**
  * Prepares template content
  */
-async function loadContent(descriptor: ProjectDescriptor, cwd: string): Promise<Array<[string, string]>> {
+async function loadContent(
+    descriptor: ProjectDescriptor,
+    cwd: string,
+    options: GenerateSystemPromptOptions,
+): Promise<Array<[string, string]>> {
     const content: Array<[string, string]> = [];
 
     const languageNames: string[] = descriptor.languages.map((l) => l.name);
@@ -97,13 +141,11 @@ async function loadContent(descriptor: ProjectDescriptor, cwd: string): Promise<
 
     // validation rules (conditional on validator service)
     if (descriptor.services?.validator) {
-        const validatorPath = path.join(cwd, descriptor.services.validator);
+        const validatorRef = descriptor.services.validator;
+        const validatorPath = path.join(cwd, validatorRef);
         if (await pathExists(validatorPath)) {
             const validatorContent = await readFile(validatorPath, 'utf-8');
-            content.push([
-                'Validation Rules',
-                `Semantic validation rules:\n\n\`\`\`typescript\n${validatorContent}\n\`\`\``,
-            ]);
+            content.push(['Validation Rules', buildValidatorSection(validatorRef, validatorContent, options)]);
         }
     }
 
@@ -160,6 +202,27 @@ async function loadContent(descriptor: ProjectDescriptor, cwd: string): Promise<
     ]);
 
     return content;
+}
+
+/**
+ * Build the validation-rules section, either inlining the validator source
+ * verbatim or emitting a statically-extracted summary that points at the file.
+ * Falls back to inlining when no checks could be extracted, so we never emit an
+ * empty summary.
+ */
+function buildValidatorSection(
+    validatorRef: string,
+    validatorContent: string,
+    options: GenerateSystemPromptOptions,
+): string {
+    if (!options.inlineValidator) {
+        const groups = extractValidatorChecks(validatorContent);
+        if (groups.length > 0) {
+            return formatValidatorSummary(validatorRef, groups);
+        }
+        // extraction failed - fall through to inlining rather than emit nothing
+    }
+    return `Semantic validation rules:\n\n\`\`\`typescript\n${validatorContent}\n\`\`\``;
 }
 
 /**

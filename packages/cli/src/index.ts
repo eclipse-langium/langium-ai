@@ -45,6 +45,7 @@ program
     .description('Generate descriptor or a system prompt')
     .argument('<type>', 'descriptor, sysprompt')
     .option('--fresh', 'Generate from scratch, ignoring existing files')
+    .option('-y, --yes', 'Skip all prompts and use defaults (for non-interactive/CI use)')
     .action(generateCommand);
 
 program

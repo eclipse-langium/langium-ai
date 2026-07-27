@@ -2,14 +2,21 @@ import path from 'path';
 import { loadConfig } from '../core/config.js';
 import { generateDescriptor, saveDescriptor } from '../core/descriptor.js';
 import { detectLangiumProject } from '../core/langium-detector.js';
-import { generateSystemPrompt, loadDescriptor, saveSystemPrompt } from '../core/sysprompt.js';
-import { LaiConfig, LangiumProjectStructure } from '../types.js';
-import { error, spinner, success } from '../utils/console.js';
+import {
+    countValidatorLines,
+    generateSystemPrompt,
+    loadDescriptor,
+    saveSystemPrompt,
+    VALIDATOR_INLINE_LINE_THRESHOLD,
+} from '../core/sysprompt.js';
+import { LaiConfig, LangiumProjectStructure, ProjectDescriptor } from '../types.js';
+import { error, info, spinner, success } from '../utils/console.js';
 import { pathExists } from '../utils/fs.js';
 import { confirm } from '../utils/prompt.js';
 
 interface GenerateOptions {
     fresh?: boolean;
+    yes?: boolean;
 }
 
 export async function generateCommand(type: string, options: GenerateOptions): Promise<void> {
@@ -133,11 +140,16 @@ async function generateSysPromptCommand(config: LaiConfig, options: GenerateOpti
         return;
     }
 
+    // decide how to represent the validator: inline verbatim, or as a summarized
+    // map of checks. large validators are summarized so they don't dominate the
+    // prompt; the user gets to choose when interactive.
+    const inlineValidator = await resolveValidatorInlining(descriptor, cwd, options);
+
     // generate system prompt
     const genSpinner = spinner(`Generating system prompt...`);
     let sysprompt;
     try {
-        sysprompt = await generateSystemPrompt(descriptor);
+        sysprompt = await generateSystemPrompt(descriptor, { inlineValidator });
         genSpinner.success('System prompt generated');
     } catch (err) {
         genSpinner.error('Failed to generate system prompt');
@@ -163,4 +175,32 @@ async function generateSysPromptCommand(config: LaiConfig, options: GenerateOpti
     console.log(`  1. Review ${syspromptPath}`);
     console.log('  2. Run `lai evaluate` to test your prompt');
     console.log();
+}
+
+/**
+ * Decide whether the validator should be inlined verbatim into the system
+ * prompt. Small validators are always inlined; large ones prompt the user to
+ * choose between inlining and a summarized check map. In non-interactive mode
+ * (`--yes`) large validators are summarized.
+ */
+async function resolveValidatorInlining(
+    descriptor: ProjectDescriptor,
+    cwd: string,
+    options: GenerateOptions,
+): Promise<boolean> {
+    const lineCount = await countValidatorLines(descriptor, cwd);
+    if (lineCount === undefined || lineCount <= VALIDATOR_INLINE_LINE_THRESHOLD) {
+        return true;
+    }
+
+    // large validator: summarize by default, offer to inline when interactive
+    if (options.yes) {
+        info(`Validator is large (${lineCount} lines); emitting a summarized map of checks instead of inlining it.`);
+        return false;
+    }
+
+    console.log();
+    info(`The validator is large (${lineCount} lines, threshold ${VALIDATOR_INLINE_LINE_THRESHOLD}).`);
+    console.log('Inlining it verbatim can bloat the system prompt with implementation detail.');
+    return confirm('Inline the full validator source? (No emits a summarized map of checks instead)');
 }
