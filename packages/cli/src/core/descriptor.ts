@@ -1,12 +1,20 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'path';
 import YAML from 'yaml';
-import type { Descriptor, LaiConfig, LangiumProjectStructure, Services } from '../types.js';
+import type {
+    LaiConfig,
+    LaiConfigLanguage,
+    LangiumProjectStructure,
+    LanguageDescriptor,
+    ProjectDescriptor,
+    Services,
+} from '../types.js';
 import { makeRelative } from '../utils/fs.js';
 import { formatValidationErrors, validateDescriptor } from './descriptor-schema.js';
 
-// descriptor generation and management
+// injected at compile-time to match the current CLI version
+declare const __CLI_VERSION__: string;
 
 /**
  * Generate a language descriptor for the target language
@@ -15,7 +23,7 @@ export async function generateDescriptor(
     config: LaiConfig,
     structure: LangiumProjectStructure,
     _options: { fresh?: boolean } = {},
-): Promise<Descriptor> {
+): Promise<ProjectDescriptor> {
     const cwd = process.cwd();
 
     // read example files if present
@@ -33,28 +41,25 @@ export async function generateDescriptor(
         );
     }
 
-    // generate deterministic description based on project structure
-    const description = generateDescription(config.project.name, structure);
+    const languages: LaiConfigLanguage[] = config.langium.languages ?? [];
 
-    let version = '0.0.0';
-    const packageJSON = structure.packageJson;
-    if (packageJSON) {
-        try {
-            const content = JSON.parse(readFileSync(packageJSON, { encoding: 'utf8' }));
-            version = content.version;
-        } catch (_e) {
-            console.error('Error while reading version from package.json');
-        }
-    }
-
-    const descriptor: Descriptor = {
-        builtins: undefined,
-        name: config.project.name,
-        version: version ?? '0.0.0',
-        description,
+    // craft a descriptor for the project
+    const projectDescriptor: ProjectDescriptor = {
+        version: __CLI_VERSION__,
+        languages: languages.map((l) => {
+            const ld: LanguageDescriptor = {
+                name: l.id,
+                description: `${l.id}: A domain-specific language built with Langium`,
+                caseInsensitive: l.caseInsensitive,
+                grammar: l.grammarPath,
+            };
+            return ld;
+        }),
         langium_config: structure.langiumConfig ? makeRelative(cwd, structure.langiumConfig) : './langium-config.json',
-        case_sensitive: true,
-        grammar: makeRelative(cwd, structure.grammar!),
+        // grammar: makeRelative(cwd, structure.grammar!),
+
+        // service details for this project
+        serviceDetails: structure.serviceDetails,
 
         // services section — relativize all detected service paths
         services: mapServicesToRelative(cwd, structure.services),
@@ -64,21 +69,23 @@ export async function generateDescriptor(
         // create examples deterministically from files
         examples: createDefaultExamples(structure, examplesContent),
 
+        builtins: undefined,
+
         // create documentation deterministically
         documentation: createDefaultDocumentation(structure),
     };
 
     // validate the descriptor against the schema
-    const validation = validateDescriptor(descriptor);
+    const validation = validateDescriptor(projectDescriptor);
     if (!validation.valid) {
         const errorMessage = formatValidationErrors(validation.errors);
         throw new Error(`Generated descriptor is invalid:\n\n${errorMessage}`);
     }
 
-    return descriptor;
+    return projectDescriptor;
 }
 
-export async function saveDescriptor(descriptorPath: string, descriptor: Descriptor): Promise<string> {
+export async function saveDescriptor(descriptorPath: string, descriptor: ProjectDescriptor): Promise<string> {
     const cwd = process.cwd();
     const fullPath = path.join(cwd, descriptorPath);
 
@@ -103,53 +110,6 @@ function mapServicesToRelative(cwd: string, services: Services): Services {
         }
     }
     return result;
-}
-
-/**
- * generates a deterministic description based on project structure
- */
-function generateDescription(projectName: string, structure: LangiumProjectStructure): string {
-    // build description based on available features
-    const features: string[] = [];
-
-    if (structure.services.validator || structure.services.validation_registry) {
-        features.push('custom validation');
-    }
-    if (structure.services.scope_provider || structure.services.scope_computation) {
-        features.push('scoping');
-    }
-    if (structure.services.linker) {
-        features.push('linking');
-    }
-    if (structure.services.type_provider || structure.services.type_hierarchy_provider) {
-        features.push('type system');
-    }
-    if (structure.services.comment_provider || structure.services.documentation_provider) {
-        features.push('documentation');
-    }
-    if (structure.services.hover_provider || structure.services.completion_provider) {
-        features.push('IDE support');
-    }
-    if (structure.services.formatter) {
-        features.push('formatting');
-    }
-    if (structure.services.code_action_provider) {
-        features.push('code actions');
-    }
-    if (structure.services.rename_provider) {
-        features.push('renaming');
-    }
-    if (structure.services.semantic_token_provider) {
-        features.push('semantic highlighting');
-    }
-
-    const baseDescription = `A domain-specific language built with Langium`;
-
-    if (features.length === 0) {
-        return baseDescription;
-    }
-
-    return `${baseDescription} with ${features.join(', ')}`;
 }
 
 function createDefaultExamples(

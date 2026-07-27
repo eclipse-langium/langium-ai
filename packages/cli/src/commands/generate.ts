@@ -1,36 +1,24 @@
-import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'path';
 import { loadConfig } from '../core/config.js';
-import { detectLangiumProject, getLanguageName } from '../core/langium-detector.js';
 import { generateDescriptor, saveDescriptor } from '../core/descriptor.js';
-import { loadDescriptor, generateSystemPrompt, saveSystemPrompt } from '../core/sysprompt.js';
-import { getTemplate } from '../templates.js';
-import { error, success, info, spinner } from '../utils/console.js';
-import { pathExists, makeRelative } from '../utils/fs.js';
-import { confirm } from '../utils/prompt.js';
+import { detectLangiumProject } from '../core/langium-detector.js';
+import { generateSystemPrompt, loadDescriptor, saveSystemPrompt } from '../core/sysprompt.js';
 import { LaiConfig, LangiumProjectStructure } from '../types.js';
+import { error, spinner, success } from '../utils/console.js';
+import { pathExists } from '../utils/fs.js';
+import { confirm } from '../utils/prompt.js';
 
 interface GenerateOptions {
     fresh?: boolean;
 }
 
 export async function generateCommand(type: string, options: GenerateOptions): Promise<void> {
-    let config;
-    try {
-        config = await loadConfig();
-    } catch (err) {
-        error(err instanceof Error ? err.message : String(err));
-        return;
-    }
+    const config = await loadConfig();
 
     if (type === 'descriptor') {
         await generateDescriptorCommand(config, options);
     } else if (type === 'sysprompt') {
         await generateSysPromptCommand(config, options);
-        // TODO @montymxb Apr 1st, 2026: mcp setup isn't quite ready yet, TBD
-        // } else if (type === 'mcp') {
-        //     await generateMcpCommand(config, options);
-        // }
     } else {
         error(`Unknown generation type: ${type}`);
         console.log('Valid types: descriptor, sysprompt, mcp');
@@ -39,6 +27,8 @@ export async function generateCommand(type: string, options: GenerateOptions): P
 
 /**
  * Generates a new language descriptor
+ *
+ * @throws An error on failed Langium project detection
  */
 async function generateDescriptorCommand(config: LaiConfig, options: GenerateOptions): Promise<void> {
     const cwd = process.cwd();
@@ -63,17 +53,20 @@ async function generateDescriptorCommand(config: LaiConfig, options: GenerateOpt
     } catch (err) {
         detectSpinner.error('Failed to detect project structure');
         error(err instanceof Error ? err.message : String(err));
-        return;
+        throw err;
     }
 
-    if (!structure.grammar) {
-        error('No Langium grammar file found');
+    if (!structure.languages || structure.languages.length === 0) {
+        error('No Langium languages found');
         return;
     }
 
     // generate descriptor using LLM
     const genSpinner = spinner('Generating language descriptor...');
-    const descriptor = await generateDescriptor(config, structure, options);
+    const descriptor = await generateDescriptor(config, structure, options).catch((e) => {
+        genSpinner.stop();
+        throw e;
+    });
     genSpinner.success('Descriptor generated');
 
     // save descriptor
@@ -169,89 +162,5 @@ async function generateSysPromptCommand(config: LaiConfig, options: GenerateOpti
     console.log('Next steps:');
     console.log(`  1. Review ${syspromptPath}`);
     console.log('  2. Run `lai evaluate` to test your prompt');
-    console.log();
-}
-
-/**
- * Generates an MCP server for the project's DSL
- */
-// oxlint-disable-next-line no-unused-vars
-async function generateMcpCommand(config: LaiConfig, _options: GenerateOptions): Promise<void> {
-    const cwd = process.cwd();
-
-    // detect project structure to resolve services module and language name
-    const detectSpinner = spinner('Detecting project structure...');
-    let structure: LangiumProjectStructure;
-    try {
-        structure = await detectLangiumProject(cwd);
-        detectSpinner.success('Project structure detected');
-    } catch (err) {
-        detectSpinner.error('Failed to detect project structure');
-        error(err instanceof Error ? err.message : String(err));
-        return;
-    }
-
-    if (!structure.services.module) {
-        error('No Langium services module found. A module file is required to generate an MCP server.');
-        return;
-    }
-
-    const languageName = getLanguageName(structure);
-    const mcpDir = path.join(cwd, 'mcp');
-    const targetPath = path.join(mcpDir, 'mcp-server.ts');
-
-    // check if mcp-server.ts already exists
-    if (await pathExists(targetPath)) {
-        const overwrite = await confirm('mcp/mcp-server.ts already exists. Overwrite?');
-
-        if (!overwrite) {
-            console.log('MCP server generation cancelled.');
-            return;
-        }
-    }
-
-    // load and process the template
-    const genSpinner = spinner('Generating MCP server...');
-    try {
-        let templateContent = getTemplate('mcp-server.ts');
-
-        // resolve the services module path relative to the mcp/ output directory
-        const servicesModulePath = makeRelative(mcpDir, structure.services.module).replace(/\.ts$/, '.js');
-
-        // derive naming from the project
-        const projectName = config.project.name;
-        const toolPrefix = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-        const serverName = `${projectName}-mcp-server`;
-
-        // replace placeholders
-        templateContent = templateContent
-            .replace(/\{\{ CREATE_LANGUAGE_SERVICES \}\}/g, `create${languageName}Services`)
-            .replace(/\{\{ LANGUAGE_SERVICES \}\}/g, languageName)
-            .replace(/\{\{ SERVICES_MODULE_PATH \}\}/g, servicesModulePath)
-            .replace(/\{\{ SERVER_NAME \}\}/g, serverName)
-            .replace(/\{\{ TOOL_PREFIX \}\}/g, toolPrefix)
-            .replace(/\{\{ DISPLAY_NAME \}\}/g, projectName);
-
-        // write the output
-        await mkdir(mcpDir, { recursive: true });
-        await writeFile(targetPath, templateContent, 'utf-8');
-        genSpinner.success('MCP server generated');
-    } catch (err) {
-        genSpinner.error('Failed to generate MCP server');
-        error(err instanceof Error ? err.message : String(err));
-        return;
-    }
-
-    console.log();
-    success('✨ MCP server generation complete!');
-    console.log();
-    console.log('Generated files:');
-    console.log('  mcp/mcp-server.ts');
-    console.log();
-    info('Required dependencies:');
-    console.log('  npm install @modelcontextprotocol/sdk langium-ai-tools langium zod');
-    console.log();
-    console.log('To run the server:');
-    console.log('  npx tsx mcp/mcp-server.ts');
     console.log();
 }

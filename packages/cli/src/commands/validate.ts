@@ -5,14 +5,11 @@ import { validateDescriptor, formatValidationErrors } from '../core/descriptor-s
 import { error, success, warning, header, spinner } from '../utils/console.js';
 import { pathExists } from '../utils/fs.js';
 
+/**
+ * User invocable command to verify the integrity of the descriptor
+ */
 export async function validateCommand(): Promise<void> {
-    let config;
-    try {
-        config = await loadConfig();
-    } catch (err) {
-        error(err instanceof Error ? err.message : String(err));
-        return;
-    }
+    const config = await loadConfig();
 
     const cwd = process.cwd();
     const descriptorPath = path.join(cwd, config.descriptor.path);
@@ -52,21 +49,24 @@ export async function validateCommand(): Promise<void> {
     console.log();
     let warnings = 0;
 
-    // grammar
-    if (descriptor.grammar) {
-        const grammarPath = path.join(cwd, descriptor.grammar);
+    // grammar checks
+    for (const l of descriptor.languages) {
+        const grammar = l.grammar;
+        const grammarPath = path.join(cwd, grammar);
         if (!(await pathExists(grammarPath))) {
-            warning(`grammar: file not found at ${descriptor.grammar}`);
+            warning(`grammar: file not found at ${grammar}`);
             warnings++;
         }
     }
 
     // builtins
-    if (descriptor.builtins) {
-        const builtinsPath = path.join(cwd, descriptor.builtins);
-        if (!(await pathExists(builtinsPath))) {
-            warning(`builtins: file not found at ${descriptor.builtins}`);
-            warnings++;
+    if (descriptor.builtins && descriptor.builtins.length) {
+        for (const builtin of descriptor.builtins) {
+            const builtinPath = path.join(cwd, builtin);
+            if (!(await pathExists(builtinPath))) {
+                warning(`builtins: file not found at ${builtin}`);
+                warnings++;
+            }
         }
     }
 

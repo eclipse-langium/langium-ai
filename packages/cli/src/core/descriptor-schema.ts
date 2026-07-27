@@ -1,4 +1,4 @@
-import type { Descriptor } from '../types.js';
+import type { ProjectDescriptor } from '../types.js';
 
 // descriptor schema validation
 
@@ -13,34 +13,45 @@ export interface ValidationResult {
 }
 
 /**
- * validates a descriptor against the required schema
+ * Validates a descriptor against the required schema
+ * @returns A validation result containing any errors encountered along the way
  */
-export function validateDescriptor(descriptor: Descriptor): ValidationResult {
+export function validateDescriptor(descriptor: ProjectDescriptor): ValidationResult {
     const errors: ValidationError[] = [];
 
     // required fields
-    if (!descriptor.name || descriptor.name.trim() === '') {
-        errors.push({ field: 'name', message: 'name is required' });
-    }
-
     if (!descriptor.version || descriptor.version.trim() === '') {
         errors.push({ field: 'version', message: 'version is required' });
     }
 
-    if (!descriptor.description || descriptor.description.trim() === '') {
-        errors.push({ field: 'description', message: 'description is required' });
-    }
-
-    if (!descriptor.grammar || descriptor.grammar.trim() === '') {
-        errors.push({ field: 'grammar', message: 'grammar is required' });
-    }
+    // TODO check that this version matches the one we're built with, if not ensure we're at least compatible by doing a table lookup to see which versions are legitimate
+    // laiVersion perhaps instead of 'version' to be more explicit up front about what that is
 
     if (!descriptor.langium_config || descriptor.langium_config.trim() === '') {
         errors.push({ field: 'langium_config', message: 'langium_config is required' });
     }
 
-    if (descriptor.case_sensitive === undefined || descriptor.case_sensitive === null) {
-        errors.push({ field: 'case_sensitive', message: 'case_sensitive is required' });
+    // check languages
+    if (!descriptor.languages || descriptor.languages.length === 0) {
+        errors.push({ field: 'languages', message: 'at least one language is required' });
+    }
+
+    for (const language of descriptor.languages) {
+        if (!language.name || language.name.trim() === '') {
+            errors.push({ field: 'name', message: 'language name is required' });
+        }
+
+        if (!language.description || language.description.trim() === '') {
+            errors.push({ field: 'description', message: 'language description is required' });
+        }
+
+        if (!language.grammar || language.grammar.trim() === '') {
+            errors.push({ field: 'grammar', message: 'language grammar is required' });
+        }
+
+        if (language.caseInsensitive === undefined || language.caseInsensitive === null) {
+            errors.push({ field: 'caseInsensitive', message: 'language caseInsensitive is required' });
+        }
     }
 
     // validate examples if present

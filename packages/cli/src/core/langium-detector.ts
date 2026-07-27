@@ -1,8 +1,9 @@
-import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import path from 'path';
-import type { Services, LangiumProjectStructure } from '../types.js';
-import { findProjectRoot, findFile, findFiles, findDirectory, findDirectories, makeRelative } from '../utils/fs.js';
+import type { LangiumConfig, LangiumLanguage, LangiumProjectStructure, ServiceDetails, Services } from '../types.js';
+import { findDirectories, findDirectory, findFile, findFiles, findProjectRoot, makeRelative } from '../utils/fs.js';
+import { info } from '../utils/console.js';
 
 /**
  * Maps known Langium base classes to our Services interface keys.
@@ -135,7 +136,6 @@ const SERVICE_KEY_MAP: Record<string, Record<string, keyof Services>> = {
         DocumentLinkProvider: 'document_link_provider',
     },
 };
-
 /**
  * Detect langium project structure and custom services
  */
@@ -159,22 +159,45 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
         );
     }
 
-    const langiumConfig = configFiles[0];
-
-    // 3. find grammar file(s) and filter out node_modules
-    const allGrammarFiles = await findFiles(root, '**/*.langium');
-    const grammarFiles = allGrammarFiles.filter(
-        (file) => !file.includes('/node_modules/') && !file.includes('\\node_modules\\'),
-    );
-
-    // check for monorepo scenario - multiple grammar files detected
-    if (grammarFiles.length > 1) {
-        const relativeFiles = grammarFiles.map((f) => makeRelative(root, f));
+    if (configFiles.length === 0) {
+        // no configs found
         throw new Error(
-            `Multiple Langium projects detected (by .langium grammar files):\n${relativeFiles.map((f) => `  - ${f}`).join('\n')}\n\n` +
-                `This might be a monorepo with multiple Langium projects.\n` +
-                `Please run 'lai init' from within a specific langium project directory, not from the monorepo root.`,
+            "No langium-config.json files found. Double check that you're running 'lai init' from within a Langium project directory, and this file is present.",
         );
+    }
+
+    const langiumConfigFile: string = configFiles[0];
+    const langiumConfigContent = await readFile(langiumConfigFile, { encoding: 'utf-8' });
+
+    // parse the config file to check our language defs
+    const conf: LangiumConfig = JSON.parse(langiumConfigContent) as LangiumConfig;
+
+    const languages: LangiumLanguage[] = conf.languages ?? [];
+    const relativeGrammarFilePaths: string[] = [];
+    // modify languages in place by
+    // - making those grammar paths absolute
+    // - putting an explicit casing value
+    for (const l of languages) {
+        const absGrammarPath: string = path.join(root, l.grammar);
+        relativeGrammarFilePaths.push(l.grammar);
+        l.grammar = absGrammarPath;
+        l.caseInsensitive = !!l.caseInsensitive;
+    }
+
+    // check for no languages/grammars, if that pops up
+    if (relativeGrammarFilePaths.length === 0) {
+        // in the unlikely case...
+        throw new Error(
+            `No Langium grammar files listed in the langium-config.json. There must be at least one language definition present to proceed.`,
+        );
+    }
+
+    // ensure these all exist on disk (should be okay)
+    for (const file of relativeGrammarFilePaths) {
+        const found = await findFile(root, `**/${file}`);
+        if (!found) {
+            throw new Error(`Unable to find grammar file '${file}' as defined in the langium-config.json`);
+        }
     }
 
     // 4. detect DI module (pattern: *-module.ts)
@@ -184,12 +207,50 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
             !file.includes('/node_modules/') && !file.includes('\\node_modules\\') && !file.includes('/generated/'),
     );
 
-    // 5. detect custom services using inheritance scan + module-parse fallback
-    const services: Services = {
-        module: moduleFiles[0],
-    };
+    const serviceDetails: ServiceDetails = {};
+    const services: Services = {};
 
-    await detectCustomServices(root, moduleFiles[0], services);
+    // look into each of these modules, and find the 'export function create.+Services' function, capturing the actual function name
+    // in addition we want to capture, from that function, it's returns block at the bottom, ex. `return { shared, arithmetics };`.
+    // All names besides 'shared' are important to us, since we'll use them later on. And can record that in the config actually
+    let longestModuleFileName: string | undefined = undefined;
+    for (const moduleFile of moduleFiles) {
+        if (longestModuleFileName === undefined || moduleFile.length > longestModuleFileName.length) {
+            longestModuleFileName = moduleFile;
+        }
+
+        // read the file to get its content
+        const content = await readFile(moduleFile, { encoding: 'utf-8' });
+        // look for the 'export function create.+Services' signature
+        const matchResults = content.match(/export\sfunction\s(create.+Services)\s*\(/);
+        if (matchResults) {
+            // capture the actual create services function name
+            const funcName = matchResults[1];
+            info('detected service creation function: ' + funcName);
+            serviceDetails.createServicesFunc = funcName;
+            services.module = moduleFile;
+
+            // capture the return attributes as well if possible
+            // riskier, but worth the attempt
+            const funcReturnMatch = content.match(/return\s*{\s*shared(?:\s*,\s*(\w+))+\s*};/);
+            if (funcReturnMatch) {
+                // slice of everything we picked up in capture, we'll assume it's relevant
+                const slice = funcReturnMatch.slice(1);
+                info('detected service attributes: ' + slice);
+                serviceDetails.createServicesAttributes = slice;
+            }
+
+            break;
+        }
+    }
+
+    if (services.module === undefined) {
+        // default to longest then
+        services.module = longestModuleFileName;
+    }
+
+    // 5. detect custom services using inheritance scan + module-parse fallback
+    await detectCustomServices(root, services.module, services);
 
     // 6. find package.json
     const packageJson = await findFile(root, 'package.json');
@@ -201,8 +262,9 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
     return {
         root,
         packageJson,
-        langiumConfig,
-        grammar: grammarFiles[0],
+        langiumConfig: langiumConfigFile,
+        languages,
+        serviceDetails,
         services,
         tests,
         examples,
@@ -248,7 +310,7 @@ async function detectCustomServices(root: string, modulePath: string | undefined
     // resolve each service key to a single file path
     for (const [serviceKey, overrides] of overridesByKey) {
         if (overrides.length === 1) {
-            services[serviceKey] = overrides[0].filePath;
+            services[serviceKey] = overrides[0].filePath; // to avoid conflicting w/ string & string[]
         } else {
             // prefer the class that appears in the module's imports
             let resolved: ServiceOverride | undefined;
@@ -569,6 +631,13 @@ function extractBalancedBraces(content: string, startPos: number): string | null
     return null;
 }
 
+/**
+ * Attempts to return the name of this project, not the name of the DSLs contained.
+ * In a single DSL project, it will default to returning the DSL name as the project, assuming
+ * the project is dedicated to that DSL (may or may not be correct, config can be adjusted afterwards as needed)
+ * @param structure
+ * @returns
+ */
 export function getProjectName(structure: LangiumProjectStructure): string {
     // try to extract from package.json if available
     if (structure.packageJson) {
@@ -582,46 +651,50 @@ export function getProjectName(structure: LangiumProjectStructure): string {
         }
     }
 
-    // fallback to grammar file name
-    if (structure.grammar) {
-        const grammarName = structure.grammar.split('/').pop()?.replace('.langium', '');
-        if (grammarName) {
-            return grammarName;
-        }
+    if (structure.languages && structure.languages.length === 1) {
+        // single language, use it for the name
+        return structure.languages[0].id;
+    } else {
+        // more than one, choose a default for now
+        return 'Default-Language-Project';
     }
-
-    // last resort
-    return 'my-dsl';
 }
 
 /**
- * Extract the language name for services from the project structure
+ * Extract the language names for services from the project structure, one for each language defined in this project
  * This is used to generate service creation functions like createHelloWorldServices
  *
  * @param structure - The detected project structure
- * @returns The language name in PascalCase (e.g., "HelloWorld", "DomainModel")
+ * @returns All language names in PascalCase (e.g., ["HelloWorld", "DomainModel"])
  */
-export function getLanguageName(structure: LangiumProjectStructure): string {
+export function getLanguageNames(structure: LangiumProjectStructure): string[] {
     // try to extract from grammar file name first
-    if (structure.grammar) {
-        const grammarFile = structure.grammar.split('/').pop()?.replace('.langium', '');
-        if (grammarFile) {
-            // convert kebab-case or snake_case to PascalCase
-            return toPascalCase(grammarFile);
+    if (structure.languages && structure.languages.length) {
+        const grammarFiles: string[] = [];
+        for (const l of structure.languages) {
+            // pluck the grammar name out from the primary langium, easier to associate with services later
+            const grammarName = l.grammar.split('/').pop()?.replace('.langium', '');
+            if (grammarName) {
+                // convert kebab-case or snake_case to PascalCase
+                grammarFiles.push(toPascalCase(grammarName));
+            }
         }
+        return grammarFiles;
     }
 
     // try to extract from module file name (e.g., hello-world-module.ts -> HelloWorld)
-    if (structure.services.module) {
+    // just if we have a single language, otherwise this gets messy
+    if (structure.services.module && structure.languages && structure.languages.length === 1) {
         const moduleFile = structure.services.module.split('/').pop()?.replace('-module.ts', '');
         if (moduleFile) {
-            return toPascalCase(moduleFile);
+            return [toPascalCase(moduleFile)];
         }
     }
 
-    // fallback to project name
-    const projectName = getProjectName(structure);
-    return toPascalCase(projectName);
+    // fallback to project name, least likely to work
+    // const projectName = getProjectName(structure);
+    // return [toPascalCase(projectName)];
+    throw new Error('Unable to extract language names for project');
 }
 
 /**

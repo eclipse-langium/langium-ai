@@ -171,167 +171,167 @@ function ensureTsxLoaderRegistered(verbose: boolean): void {
 }
 
 export async function evaluateCommand(paths: string[], options: EvaluateOptions): Promise<void> {
-    try {
-        const config = await loadConfig();
+    const config = await loadConfig();
 
-        // resolve positional path arguments. --dir is a deprecated alias — used as a
-        // fallback only when no positional args are provided; otherwise it is ignored.
-        const positionalArgs = [...paths];
-        if (options.dir) {
-            process.stderr.write(
-                st(
-                    'yellow',
-                    '⚠ --dir is deprecated; pass the directory as a positional argument instead (e.g. `lai evaluate ./evals`).\n',
-                ),
-            );
-            if (positionalArgs.length === 0) {
-                positionalArgs.push(options.dir);
-            }
+    // resolve positional path arguments. --dir is a deprecated alias — used as a
+    // fallback only when no positional args are provided; otherwise it is ignored.
+    const positionalArgs = [...paths];
+    if (options.dir) {
+        process.stderr.write(
+            st(
+                'yellow',
+                '⚠ --dir is deprecated; pass the directory as a positional argument instead (e.g. `lai evaluate ./evals`).\n',
+            ),
+        );
+        if (positionalArgs.length === 0) {
+            positionalArgs.push(options.dir);
         }
+    }
 
-        const defaultDir = path.join(process.cwd(), config.evaluations.directory);
+    const defaultDir = path.join(process.cwd(), config.evaluations.directory);
 
-        // --list short-circuits before sysprompt/provider config: it only enumerates
-        // suites/cases and prints them, without executing any evaluations.
-        if (options.list) {
-            if (positionalArgs.length === 0 && !(await pathExists(defaultDir))) {
-                error(`Evaluation directory not found: ${defaultDir}`);
-                info('Run `lai init` to set up evaluations.');
-                process.exit(1);
-            }
-
-            const evalFiles = await resolveEvalFiles(positionalArgs, defaultDir);
-
-            if (evalFiles.length === 0) {
-                error('No .eval.ts files found.');
-                info('Add evaluation files with .eval.ts extension.');
-                process.exit(1);
-            }
-
-            ensureTsxLoaderRegistered(options.verbose ?? false);
-
-            // sequential — listEvalFile mutates shared suite-collection state
-            const entries: EvalFileListing[] = [];
-            for (const file of evalFiles) {
-                entries.push(await listEvalFile(file));
-            }
-
-            console.log(formatEvalListing(entries));
-
-            if (entries.some((e) => e.error)) {
-                process.exit(1);
-            }
-            return;
-        }
-
-        // load system prompt (use --sysprompt option if provided, otherwise use config)
-        const syspromptPath = options.sysprompt
-            ? path.resolve(process.cwd(), options.sysprompt)
-            : path.join(process.cwd(), config.sysprompt.path);
-
-        if (!(await pathExists(syspromptPath))) {
-            const hint = options.sysprompt
-                ? `File not found: ${syspromptPath}`
-                : 'System prompt not found. Run `lai gen sysprompt` first.';
-            error(hint);
-            return;
-        }
-        const systemPrompt = await readFile(syspromptPath, 'utf-8');
-        if (options.verbose) {
-            info(`Running with sysprompt ${syspromptPath}`);
-        }
-
+    // --list short-circuits before sysprompt/provider config: it only enumerates
+    // suites/cases and prints them, without executing any evaluations.
+    if (options.list) {
         if (positionalArgs.length === 0 && !(await pathExists(defaultDir))) {
             error(`Evaluation directory not found: ${defaultDir}`);
             info('Run `lai init` to set up evaluations.');
-            return;
+            process.exit(1);
         }
 
         const evalFiles = await resolveEvalFiles(positionalArgs, defaultDir);
 
-        if (options.verbose) {
-            const inputCount = positionalArgs.length === 0 ? 1 : positionalArgs.length;
-            info(`Resolved ${evalFiles.length} .eval.ts file(s) from ${inputCount} input(s)`);
-        }
-
         if (evalFiles.length === 0) {
             error('No .eval.ts files found.');
             info('Add evaluation files with .eval.ts extension.');
-            return;
+            process.exit(1);
         }
 
         ensureTsxLoaderRegistered(options.verbose ?? false);
 
-        // create eval context
-        const context: EvalContext = {
-            systemPrompt,
-            project: { name: config.project.name },
-        };
+        // sequential — listEvalFile mutates shared suite-collection state
+        const entries: EvalFileListing[] = [];
+        for (const file of evalFiles) {
+            entries.push(await listEvalFile(file));
+        }
+
+        console.log(formatEvalListing(entries));
+
+        if (entries.some((e) => e.error)) {
+            process.exit(1);
+        }
+        return;
+    }
+
+    // load system prompt (use --sysprompt option if provided, otherwise use config)
+    const syspromptPath = options.sysprompt
+        ? path.resolve(process.cwd(), options.sysprompt)
+        : path.join(process.cwd(), config.sysprompt.path);
+
+    if (!(await pathExists(syspromptPath))) {
+        const hint = options.sysprompt
+            ? `File not found: ${syspromptPath}`
+            : 'System prompt not found. Run `lai gen sysprompt` first.';
+        error(hint);
+        return;
+    }
+    const systemPrompt = await readFile(syspromptPath, 'utf-8');
+    if (options.verbose) {
+        info(`Running with sysprompt ${syspromptPath}`);
+    }
+
+    if (positionalArgs.length === 0 && !(await pathExists(defaultDir))) {
+        error(`Evaluation directory not found: ${defaultDir}`);
+        info('Run `lai init` to set up evaluations.');
+        return;
+    }
+
+    const evalFiles = await resolveEvalFiles(positionalArgs, defaultDir);
+
+    if (options.verbose) {
+        const inputCount = positionalArgs.length === 0 ? 1 : positionalArgs.length;
+        info(`Resolved ${evalFiles.length} .eval.ts file(s) from ${inputCount} input(s)`);
+    }
+
+    if (evalFiles.length === 0) {
+        error('No .eval.ts files found.');
+        info('Add evaluation files with .eval.ts extension.');
+        return;
+    }
+
+    ensureTsxLoaderRegistered(options.verbose ?? false);
+
+    // create eval context
+    const context: EvalContext = {
+        systemPrompt,
+        project: { name: config.project.name },
+    };
+
+    if (options.verbose) {
+        info(`Counting eval cases in files`);
+    }
+
+    // count total test cases across all files
+    let totalCases = 0;
+    for (const file of evalFiles) {
+        try {
+            info(`Checking ${file} for cases`);
+            const count = await countEvalCases(file);
+            info(`Found ${count} cases`);
+            totalCases += count;
+        } catch (err) {
+            // if counting fails, we'll just show files count instead
+            totalCases = 0;
+            if (options.verbose) {
+                info(`Failed while counting eval cases! Defaulting to 0`);
+                error(err as string);
+            }
+            break;
+        }
+    }
+
+    // run evaluations
+    if (totalCases > 0) {
+        info(`Running ${totalCases} evaluation case(s) across ${evalFiles.length} file(s)...\n`);
+    } else {
+        info(`Running ${evalFiles.length} evaluation file(s) with ${totalCases} cases...\n`);
+    }
+
+    const startTime = Date.now();
+    const allResults: EvaluationCaseResult[] = [];
+    let completedGlobal = 0;
+
+    // create a persistent status spinner for verbose mode
+    let statusSpinner: ReturnType<typeof spinner> | null = null;
+    if (options.verbose && totalCases > 0) {
+        statusSpinner = spinner('');
+        statusSpinner.start();
+    }
+
+    for (let i = 0; i < evalFiles.length; i++) {
+        const file = evalFiles[i];
+        const fileName = path.basename(file);
+
+        // start spinner for this file (non-verbose mode only)
+        const fileSpinner = options.verbose ? null : spinner(`Running ${st('cyan', fileName)}...`);
 
         if (options.verbose) {
-            info(`Counting eval cases in files`);
-        }
-
-        // count total test cases across all files
-        let totalCases = 0;
-        for (const file of evalFiles) {
-            try {
-                info(`Checking ${file} for cases`);
-                const count = await countEvalCases(file);
-                info(`Found ${count} cases`);
-                totalCases += count;
-            } catch (err) {
-                // if counting fails, we'll just show files count instead
-                totalCases = 0;
-                if (options.verbose) {
-                    info(`Failed while counting eval cases! Defaulting to 0`);
-                    error(err as string);
-                }
-                break;
+            // stop status spinner temporarily to print file header
+            if (statusSpinner) {
+                statusSpinner.stop();
+            }
+            console.log(`\n${'='.repeat(60)}`);
+            console.log(`File: ${fileName}`);
+            console.log(`${'='.repeat(60)}`);
+            // restart status spinner
+            if (statusSpinner) {
+                statusSpinner.start();
             }
         }
 
-        // run evaluations
-        if (totalCases > 0) {
-            info(`Running ${totalCases} evaluation case(s) across ${evalFiles.length} file(s)...\n`);
-        } else {
-            info(`Running ${evalFiles.length} evaluation file(s) with ${totalCases} cases...\n`);
-        }
-
-        const startTime = Date.now();
-        const allResults: EvaluationCaseResult[] = [];
-        let completedGlobal = 0;
-
-        // create a persistent status spinner for verbose mode
-        let statusSpinner: ReturnType<typeof spinner> | null = null;
-        if (options.verbose && totalCases > 0) {
-            statusSpinner = spinner('');
-            statusSpinner.start();
-        }
-
-        for (let i = 0; i < evalFiles.length; i++) {
-            const file = evalFiles[i];
-            const fileName = path.basename(file);
-
-            // start spinner for this file (non-verbose mode only)
-            const fileSpinner = options.verbose ? null : spinner(`Running ${st('cyan', fileName)}...`);
-
-            if (options.verbose) {
-                // stop status spinner temporarily to print file header
-                if (statusSpinner) {
-                    statusSpinner.stop();
-                }
-                console.log(`\n${'='.repeat(60)}`);
-                console.log(`File: ${fileName}`);
-                console.log(`${'='.repeat(60)}`);
-                // restart status spinner
-                if (statusSpinner) {
-                    statusSpinner.start();
-                }
-            }
-
-            // run evaluations with progress callback
-            const results: EvaluationCaseResult[] = await runEvalFile(
+        // run evaluations with progress callback
+        const results: EvaluationCaseResult[] =
+            (await runEvalFile(
                 file,
                 context,
                 (current, total) => {
@@ -410,161 +410,159 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
                         }
                     }
                 },
-            );
-            allResults.push(...results);
+            ).catch((e) => {
+                // something went wrong, report, but continue
+                statusSpinner?.stop();
+                error(e);
+            })) ?? [];
+        allResults.push(...results);
 
-            // stop spinner and show completion count
-            const skippedCount = results.filter((r) => r.data.skipped).length;
-            const ranCount = results.length - skippedCount;
-            const avgScore =
-                ranCount > 0
-                    ? results.filter((r) => !r.data.skipped).reduce((sum, r) => sum + r.data.score, 0) / ranCount
-                    : 0;
-            const countText =
-                skippedCount > 0
-                    ? `avg ${(avgScore * 100).toFixed(1)}% (${ranCount} cases, ${skippedCount} skipped)`
-                    : `avg ${(avgScore * 100).toFixed(1)}% (${ranCount} cases)`;
-            let countColor: 'green' | 'yellow' | 'red';
-            if (avgScore >= 0.8) {
-                countColor = 'green';
-            } else if (avgScore >= 0.5) {
-                countColor = 'yellow';
-            } else {
-                countColor = 'red';
-            }
-
-            if (fileSpinner) {
-                fileSpinner.success(`${st('cyan', fileName)}: ${st(countColor, countText)}`);
-            } else if (options.verbose) {
-                // stop status spinner to print file completion
-                if (statusSpinner) {
-                    statusSpinner.stop();
-                }
-                console.log(st('gray', `\nFile complete: ${st(countColor, countText)}`));
-                // restart status spinner
-                if (statusSpinner) {
-                    statusSpinner.start();
-                }
-            }
-
-            // print results (only in non-verbose mode, since verbose already printed them)
-            if (!options.verbose) {
-                for (const { data, metadata } of results) {
-                    let icon: string;
-                    let name: string;
-
-                    if (data.skipped) {
-                        // skipped tests shown in grey
-                        icon = st('gray', '○');
-                        name = st('gray', `${metadata.suiteName} > ${metadata.caseName}`);
-                    } else if (data.score >= 0.8) {
-                        icon = st('green', '✓');
-                        name = st('white', `${metadata.suiteName} > ${metadata.caseName}`);
-                    } else if (data.score >= 0.5) {
-                        icon = st('yellow', '~');
-                        name = st('yellow', `${metadata.suiteName} > ${metadata.caseName}`);
-                    } else {
-                        icon = st('red', '✗');
-                        name = st('red', `${metadata.suiteName} > ${metadata.caseName}`);
-                    }
-
-                    const scoreStr = data.skipped ? '' : st('gray', ` (${(data.score * 100).toFixed(1)}%)`);
-                    console.log(`  ${icon} ${name}${scoreStr}`);
-                }
-            }
-
-            console.log();
-        }
-
-        // stop the status spinner before showing summary
-        if (statusSpinner) {
-            statusSpinner.success(st('green', `All evaluations complete! (${completedGlobal}/${totalCases})`));
-        }
-
-        // calculate total time
-        const totalTime = Date.now() - startTime;
-
-        // summary
-        const skipped = allResults.filter((r) => r.data.skipped).length;
-        const ranTests = allResults.filter((r) => !r.data.skipped);
-        const avgScore = ranTests.length > 0 ? ranTests.reduce((sum, r) => sum + r.data.score, 0) / ranTests.length : 0;
-        const minScore = ranTests.length > 0 ? Math.min(...ranTests.map((r) => r.data.score)) : 0;
-        const maxScore = ranTests.length > 0 ? Math.max(...ranTests.map((r) => r.data.score)) : 0;
-        const avgDuration =
-            ranTests.length > 0
-                ? ranTests.reduce((sum, r) => sum + (r.metadata.duration || 0), 0) / ranTests.length
+        // stop spinner and show completion count
+        const skippedCount = results.filter((r) => r.data.skipped).length;
+        const ranCount = results.length - skippedCount;
+        const avgScore =
+            ranCount > 0
+                ? results.filter((r) => !r.data.skipped).reduce((sum, r) => sum + r.data.score, 0) / ranCount
                 : 0;
-
-        console.log(st('gray', '='.repeat(60)));
-        console.log(st('bold', 'Summary'));
-        console.log(st('gray', '='.repeat(60)));
-        console.log(`Total: ${st('blue', allResults.length.toString())}`);
-        console.log(`Ran: ${st('blue', ranTests.length.toString())}`);
-        if (skipped > 0) {
-            console.log(`Skipped: ${st('gray', skipped.toString())}`);
-        }
-        console.log(`Average duration: ${st('cyan', `${avgDuration.toFixed(0)}ms`)}`);
-
-        // format total time (seconds if >= 1000ms, otherwise ms)
-        const totalTimeFormatted = totalTime >= 1000 ? `${(totalTime / 1000).toFixed(2)}s` : `${totalTime}ms`;
-        console.log(`Total time: ${st('cyan', totalTimeFormatted)}`);
-
-        let rateColor: 'green' | 'yellow' | 'red';
+        const countText =
+            skippedCount > 0
+                ? `avg ${(avgScore * 100).toFixed(1)}% (${ranCount} cases, ${skippedCount} skipped)`
+                : `avg ${(avgScore * 100).toFixed(1)}% (${ranCount} cases)`;
+        let countColor: 'green' | 'yellow' | 'red';
         if (avgScore >= 0.8) {
-            rateColor = 'green';
+            countColor = 'green';
         } else if (avgScore >= 0.5) {
-            rateColor = 'yellow';
+            countColor = 'yellow';
         } else {
-            rateColor = 'red';
+            countColor = 'red';
         }
-        console.log(`Average score: ${st(rateColor, `${(avgScore * 100).toFixed(1)}%`)}`);
-        console.log(`Score range: ${st('gray', `${(minScore * 100).toFixed(1)}% - ${(maxScore * 100).toFixed(1)}%`)}`);
 
-        // show low-scoring cases (score < 0.5)
-        const lowScoring = ranTests.filter((r) => r.data.score < 0.5);
-        if (lowScoring.length > 0) {
-            console.log();
-            console.log(st(['red', 'bold'], 'Low-scoring cases:'));
-            for (const { metadata, data } of lowScoring) {
-                console.log(
-                    st('red', `  ✗ ${metadata.suiteName} > ${metadata.caseName} (${(data.score * 100).toFixed(1)}%)`),
-                );
-                if (data?.error) {
-                    console.log(st('gray', `    Error: ${data.error}`));
-                }
+        if (fileSpinner) {
+            fileSpinner.success(`${st('cyan', fileName)}: ${st(countColor, countText)}`);
+        } else if (options.verbose) {
+            // stop status spinner to print file completion
+            if (statusSpinner) {
+                statusSpinner.stop();
+            }
+            console.log(st('gray', `\nFile complete: ${st(countColor, countText)}`));
+            // restart status spinner
+            if (statusSpinner) {
+                statusSpinner.start();
             }
         }
 
-        // save results with run metadata
-        const runId = await getNextRunId();
-        const now = new Date();
-        const runData: EvaluationRunData = {
-            runId,
-            timestamp: now.toISOString(),
-            tags: [],
-            syspromptPath: path.resolve(syspromptPath),
-            totalTime,
-            results: allResults,
-        };
+        // print results (only in non-verbose mode, since verbose already printed them)
+        if (!options.verbose) {
+            for (const { data, metadata } of results) {
+                let icon: string;
+                let name: string;
 
-        // use custom output path if provided, otherwise use run utilities
-        let outputPath: string;
-        if (options.output) {
-            outputPath = path.join(process.cwd(), options.output);
-            await writeFile(outputPath, JSON.stringify(runData, null, 2));
-        } else {
-            outputPath = await saveRunData(runData);
+                if (data.skipped) {
+                    // skipped tests shown in grey
+                    icon = st('gray', '○');
+                    name = st('gray', `${metadata.suiteName} > ${metadata.caseName}`);
+                } else if (data.score >= 0.8) {
+                    icon = st('green', '✓');
+                    name = st('white', `${metadata.suiteName} > ${metadata.caseName}`);
+                } else if (data.score >= 0.5) {
+                    icon = st('yellow', '~');
+                    name = st('yellow', `${metadata.suiteName} > ${metadata.caseName}`);
+                } else {
+                    icon = st('red', '✗');
+                    name = st('red', `${metadata.suiteName} > ${metadata.caseName}`);
+                }
+
+                const scoreStr = data.skipped ? '' : st('gray', ` (${(data.score * 100).toFixed(1)}%)`);
+                console.log(`  ${icon} ${name}${scoreStr}`);
+            }
         }
 
-        const relativePath = path.relative(process.cwd(), outputPath);
-        success(`Results saved to: ${relativePath} (Run #${runId})`);
+        console.log();
+    }
 
-        // exit with error if any cases scored below 0.5
-        if (lowScoring.length > 0) {
-            process.exit(1);
+    // stop the status spinner before showing summary
+    if (statusSpinner) {
+        statusSpinner.success(st('green', `All evaluations complete! (${completedGlobal}/${totalCases})`));
+    }
+
+    // calculate total time
+    const totalTime = Date.now() - startTime;
+
+    // summary
+    const skipped = allResults.filter((r) => r.data.skipped).length;
+    const ranTests = allResults.filter((r) => !r.data.skipped);
+    const avgScore = ranTests.length > 0 ? ranTests.reduce((sum, r) => sum + r.data.score, 0) / ranTests.length : 0;
+    const minScore = ranTests.length > 0 ? Math.min(...ranTests.map((r) => r.data.score)) : 0;
+    const maxScore = ranTests.length > 0 ? Math.max(...ranTests.map((r) => r.data.score)) : 0;
+    const avgDuration =
+        ranTests.length > 0 ? ranTests.reduce((sum, r) => sum + (r.metadata.duration || 0), 0) / ranTests.length : 0;
+
+    console.log(st('gray', '='.repeat(60)));
+    console.log(st('bold', 'Summary'));
+    console.log(st('gray', '='.repeat(60)));
+    console.log(`Total: ${st('blue', allResults.length.toString())}`);
+    console.log(`Ran: ${st('blue', ranTests.length.toString())}`);
+    if (skipped > 0) {
+        console.log(`Skipped: ${st('gray', skipped.toString())}`);
+    }
+    console.log(`Average duration: ${st('cyan', `${avgDuration.toFixed(0)}ms`)}`);
+
+    // format total time (seconds if >= 1000ms, otherwise ms)
+    const totalTimeFormatted = totalTime >= 1000 ? `${(totalTime / 1000).toFixed(2)}s` : `${totalTime}ms`;
+    console.log(`Total time: ${st('cyan', totalTimeFormatted)}`);
+
+    let rateColor: 'green' | 'yellow' | 'red';
+    if (avgScore >= 0.8) {
+        rateColor = 'green';
+    } else if (avgScore >= 0.5) {
+        rateColor = 'yellow';
+    } else {
+        rateColor = 'red';
+    }
+    console.log(`Average score: ${st(rateColor, `${(avgScore * 100).toFixed(1)}%`)}`);
+    console.log(`Score range: ${st('gray', `${(minScore * 100).toFixed(1)}% - ${(maxScore * 100).toFixed(1)}%`)}`);
+
+    // show low-scoring cases (score < 0.5)
+    const lowScoring = ranTests.filter((r) => r.data.score < 0.5);
+    if (lowScoring.length > 0) {
+        console.log();
+        console.log(st(['red', 'bold'], 'Low-scoring cases:'));
+        for (const { metadata, data } of lowScoring) {
+            console.log(
+                st('red', `  ✗ ${metadata.suiteName} > ${metadata.caseName} (${(data.score * 100).toFixed(1)}%)`),
+            );
+            if (data?.error) {
+                console.log(st('gray', `    Error: ${data.error}`));
+            }
         }
-    } catch (err) {
-        error(err instanceof Error ? err.message : String(err));
+    }
+
+    // save results with run metadata
+    const runId = await getNextRunId();
+    const now = new Date();
+    const runData: EvaluationRunData = {
+        runId,
+        timestamp: now.toISOString(),
+        tags: [],
+        syspromptPath: path.resolve(syspromptPath),
+        totalTime,
+        results: allResults,
+    };
+
+    // use custom output path if provided, otherwise use run utilities
+    let outputPath: string;
+    if (options.output) {
+        outputPath = path.join(process.cwd(), options.output);
+        await writeFile(outputPath, JSON.stringify(runData, null, 2));
+    } else {
+        outputPath = await saveRunData(runData);
+    }
+
+    const relativePath = path.relative(process.cwd(), outputPath);
+    success(`Results saved to: ${relativePath} (Run #${runId})`);
+
+    // exit with error if any cases scored below 0.5
+    if (lowScoring.length > 0) {
         process.exit(1);
     }
 }

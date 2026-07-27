@@ -2,16 +2,11 @@ import { readdir } from 'node:fs/promises';
 import path from 'path';
 import { loadConfig } from '../core/config.js';
 import { pathExists } from '../utils/fs.js';
-import { error, header, section, logDetected } from '../utils/console.js';
+import { header, section, logDetected } from '../utils/console.js';
 
 export async function statusCommand(): Promise<void> {
-    let config;
-    try {
-        config = await loadConfig();
-    } catch (err) {
-        error(err instanceof Error ? err.message : String(err));
-        return;
-    }
+    // let config load errors propagate; index.ts renders them and exits non-zero
+    const config = await loadConfig();
 
     const cwd = process.cwd();
 

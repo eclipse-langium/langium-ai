@@ -119,6 +119,10 @@ export async function detectPackageManager(root: string): Promise<'pnpm' | 'npm'
 }
 
 export function makeRelative(from: string, to: string): string {
+    if (typeof to !== 'string') {
+        throw new Error('Cannot make relative with to arg: ' + JSON.stringify(to));
+    }
+
     const rel = path.relative(from, to);
     // ensure forward slashes for cross-platform consistency
     return rel.replace(/\\/g, '/');

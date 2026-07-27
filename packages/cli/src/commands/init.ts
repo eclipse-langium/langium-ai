@@ -2,18 +2,34 @@ import { execSync } from 'child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'path';
 import { configExists, saveConfig } from '../core/config.js';
-import { detectLangiumProject, getLanguageName, getProjectName } from '../core/langium-detector.js';
+import { detectLangiumProject, getLanguageNames, getProjectName } from '../core/langium-detector.js';
 import { getTemplate } from '../templates.js';
 import type { LaiConfig, LangiumProjectStructure } from '../types.js';
 import { error, header, logDetected, section, spinner, success, warning } from '../utils/console.js';
 import { detectPackageManager, makeRelative, pathExists } from '../utils/fs.js';
 import { confirm, text } from '../utils/prompt.js';
 
+// injected by esbuild `define` at build time from package.json
+// falls back to 'dev' when running via `tsx watch` (dev mode)
+declare const __CLI_VERSION__: string;
+
+/**
+ * Options accepted by the init commands.
+ */
+export interface InitOptions {
+    /**
+     * Used to skip interactive prompts and apply defaults for CI & non-interactive use cases
+     */
+    yes?: boolean;
+}
+
 /**
  * Detects the Langium project structure and displays the results.
  * Returns the detected structure, or undefined if detection failed.
+ *
+ * @throws When detection fails
  */
-async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStructure | undefined> {
+async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStructure> {
     header('Detecting Langium project...');
 
     const detectSpinner = spinner('Scanning project structure...');
@@ -24,18 +40,17 @@ async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStr
     } catch (err) {
         detectSpinner.error('Failed to detect project structure');
         error(err instanceof Error ? err.message : String(err));
-        return undefined;
+        throw err;
     }
 
-    if (!structure.grammar) {
-        error('No Langium grammar file (*.langium) found in project');
-        return undefined;
+    if (!structure.languages || structure.languages.length === 0) {
+        throw 'No registered Langium languages found in this project';
     }
 
     // display detected structure
     console.log();
     section('Core Files');
-    logDetected('Grammar', makeRelative(cwd, structure.grammar), true);
+    logDetected('Languages', structure.languages.map((l) => l.id).join(', '), true);
     logDetected(
         'Config',
         structure.langiumConfig ? makeRelative(cwd, structure.langiumConfig) : '(not found)',
@@ -151,13 +166,22 @@ async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStr
 
 /**
  * Creates or overwrites the lai.config.jsonc file based on the detected project structure.
+ *
+ * @throws When config cannot be initialized successfully
  */
-async function initConfig(cwd: string, structure: LangiumProjectStructure, languageName: string): Promise<boolean> {
+async function initConfig(cwd: string, structure: LangiumProjectStructure, languageName: string): Promise<void> {
     const config: LaiConfig = {
-        version: '1.0',
+        // TODO need to adjust this so it's either the language version or LAI version, can't be both
+        version: __CLI_VERSION__,
         langium: {
             configPath: structure.langiumConfig ? makeRelative(cwd, structure.langiumConfig) : './langium-config.json',
-            grammarPath: makeRelative(cwd, structure.grammar!),
+            languages: structure.languages.map((l) => {
+                return {
+                    id: l.id,
+                    grammarPath: l.grammar,
+                    caseInsensitive: l.caseInsensitive,
+                };
+            }),
         },
         descriptor: {
             path: `./${languageName}.descriptor.yml`,
@@ -177,18 +201,18 @@ async function initConfig(cwd: string, structure: LangiumProjectStructure, langu
     try {
         await saveConfig(config, cwd);
         saveSpinner.success('Created lai.config.jsonc');
-        return true;
     } catch (err) {
+        // log & rethrow
         saveSpinner.error('Failed to create config');
         error(err instanceof Error ? err.message : String(err));
-        return false;
+        throw err;
     }
 }
 
 /**
  * Creates the evals directory and copies template files into it.
  */
-async function initEvals(cwd: string, structure: LangiumProjectStructure): Promise<void> {
+async function initEvals(cwd: string, structure: LangiumProjectStructure, yes = false): Promise<void> {
     const evalsSpinner = spinner('Setting up evaluations...');
     try {
         const evalsDir = path.join(cwd, 'evals');
@@ -202,7 +226,7 @@ async function initEvals(cwd: string, structure: LangiumProjectStructure): Promi
         const evalTargetPath = path.join(evalsDir, 'basic.eval.ts');
         let shouldCopyEvalFile = true;
 
-        if (await pathExists(evalTargetPath)) {
+        if ((await pathExists(evalTargetPath)) && !yes) {
             evalsSpinner.stop();
             shouldCopyEvalFile = await confirm('basic.eval.ts already exists. Overwrite?');
             evalsSpinner.start('Setting up evaluations...');
@@ -212,18 +236,47 @@ async function initEvals(cwd: string, structure: LangiumProjectStructure): Promi
         if (shouldCopyEvalFile) {
             let templateContent = getTemplate('basic.eval.ts');
 
-            const languageName = getLanguageName(structure);
+            // TODO for multiple language names we need to generate an entry for each one
+            const languageNames: string[] = getLanguageNames(structure);
 
             // determine services module path
             const servicesModulePath = structure.services.module
                 ? makeRelative(evalsDir, structure.services.module).replace(/\.ts$/, '.js')
                 : '../src/language/main.js';
 
-            // replace placeholders
-            templateContent = templateContent
-                .replace(/\{\{ CREATE_LANGUAGE_SERVICES \}\}/g, `create${languageName}Services`)
-                .replace(/\{\{ LANGUAGE_SERVICES \}\}/g, languageName)
-                .replace(/\{\{ SERVICES_MODULE_PATH \}\}/g, servicesModulePath);
+            // create a singular invocation to get the collective service instance
+            const joinedLanguageNames = languageNames.join('And');
+            const createLanguageServicesNames = `create${joinedLanguageNames}Services`;
+            templateContent = templateContent.replace(
+                /\{\{ CREATE_LANGUAGE_SERVICES \}\}/g,
+                createLanguageServicesNames,
+            );
+            templateContent = templateContent.replace(
+                /\{\{ PRIMARY_LANGUAGE_SERVICE_HANDLE \}\}/g,
+                `${languageNames[0]}Services`,
+            );
+
+            // get each language's services
+            const languageServiceInstantiations: string[] = [];
+            for (const l of languageNames) {
+                languageServiceInstantiations.push(
+                    `const ${l}Services = ${createLanguageServicesNames}(EmptyFileSystem).${l};`,
+                );
+            }
+
+            // default to using the 1st language's services
+            languageServiceInstantiations.push(
+                `// default evaluator configured for ${languageNames[0]}`,
+                `const evaluator = new LangiumEvaluator(${languageNames[0]}Services);`,
+            );
+
+            // place in our instantiations as well for however many languages we have
+            templateContent = templateContent.replace(
+                /\{\{ LANGUAGE_SERVICE_INSTANTIATIONS \}\}/g,
+                languageServiceInstantiations.join('\n'),
+            );
+            // update service module path in template
+            templateContent = templateContent.replace(/\{\{ SERVICES_MODULE_PATH \}\}/g, servicesModulePath);
 
             await writeFile(evalTargetPath, templateContent, 'utf-8');
         }
@@ -238,13 +291,14 @@ async function initEvals(cwd: string, structure: LangiumProjectStructure): Promi
 /**
  * Full init flow: detect project, create config, install tools, and set up evals.
  */
-export async function initCommand(): Promise<void> {
+export async function initCommand(options: InitOptions = {}): Promise<void> {
     const cwd = process.cwd();
+    const yes = options.yes ?? false;
 
     // check if already initialized
     if (await configExists(cwd)) {
         warning('LAI is already initialized in this project (lai.config.jsonc exists)');
-        const overwrite = await confirm('Reinitialize and overwrite existing configuration?');
+        const overwrite = yes || (await confirm('Reinitialize and overwrite existing configuration?'));
 
         if (!overwrite) {
             console.log('Initialization cancelled.');
@@ -257,9 +311,9 @@ export async function initCommand(): Promise<void> {
         return;
     }
 
-    // interactive configuration
+    // interactive configuration (defaults are used automatically in non-interactive mode)
     const projectName = getProjectName(structure);
-    const projectNameInput = await text('Project name', projectName);
+    const projectNameInput = yes ? projectName : await text('Project name', projectName);
 
     if (!projectNameInput) {
         console.log('Initialization cancelled.');
@@ -269,13 +323,11 @@ export async function initCommand(): Promise<void> {
     const languageName = projectNameInput;
 
     // create config
-    if (!(await initConfig(cwd, structure, languageName))) {
-        return;
-    }
+    await initConfig(cwd, structure, languageName);
 
     // offer to install langium-ai-tools
     const pm = await detectPackageManager(cwd);
-    const installTools = await confirm(`Install the latest langium-ai-tools? (using ${pm})`, true);
+    const installTools = yes || (await confirm(`Install the latest langium-ai-tools? (using ${pm})`, true));
 
     if (installTools) {
         const installCmd = pm === 'pnpm' ? 'pnpm add langium-ai-tools@latest' : 'npm install langium-ai-tools@latest';
@@ -290,7 +342,7 @@ export async function initCommand(): Promise<void> {
     }
 
     // set up evals
-    await initEvals(cwd, structure);
+    await initEvals(cwd, structure, yes);
 
     // summary
     console.log();
@@ -306,12 +358,13 @@ export async function initCommand(): Promise<void> {
 /**
  * Reinitialize just the config file (lai.config.jsonc).
  */
-export async function initConfigCommand(): Promise<void> {
+export async function initConfigCommand(options: InitOptions = {}): Promise<void> {
     const cwd = process.cwd();
+    const yes = options.yes ?? false;
 
     if (await configExists(cwd)) {
         warning('lai.config.jsonc already exists');
-        const overwrite = await confirm('Overwrite existing configuration?');
+        const overwrite = yes || (await confirm('Overwrite existing configuration?'));
         if (!overwrite) {
             console.log('Config initialization cancelled.');
             return;
@@ -324,24 +377,24 @@ export async function initConfigCommand(): Promise<void> {
     }
 
     const projectName = getProjectName(structure);
-    const projectNameInput = await text('Project name', projectName);
+    const projectNameInput = yes ? projectName : await text('Project name', projectName);
 
     if (!projectNameInput) {
         console.log('Config initialization cancelled.');
         return;
     }
 
-    if (await initConfig(cwd, structure, projectNameInput)) {
-        console.log();
-        success('Config reinitialized successfully!');
-    }
+    await initConfig(cwd, structure, projectNameInput);
+    console.log();
+    success('Config reinitialized successfully!');
 }
 
 /**
  * Reinitialize just the evals directory and template files.
  */
-export async function initEvalsCommand(): Promise<void> {
+export async function initEvalsCommand(options: InitOptions = {}): Promise<void> {
     const cwd = process.cwd();
+    const yes = options.yes ?? false;
 
     // require existing config so we can detect the project structure
     if (!(await configExists(cwd))) {
@@ -354,7 +407,7 @@ export async function initEvalsCommand(): Promise<void> {
         return;
     }
 
-    await initEvals(cwd, structure);
+    await initEvals(cwd, structure, yes);
 
     console.log();
     success('Evals reinitialized successfully!');

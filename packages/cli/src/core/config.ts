@@ -2,6 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'path';
 import type { LaiConfig } from '../types.js';
 import { pathExists } from '../utils/fs.js';
+import { warning } from '../utils/console.js';
 
 // config file management
 
@@ -12,7 +13,16 @@ export async function loadConfig(cwd: string = process.cwd()): Promise<LaiConfig
         throw new Error('lai.config.jsonc not found. Run `lai init` first.');
     }
 
-    return JSON.parse(await readFile(configPath, 'utf-8'));
+    const laiConfig: LaiConfig = JSON.parse(await readFile(configPath, 'utf-8'));
+
+    if (laiConfig.version === '1.0') {
+        // old version that needs to be migrated (was hardcoded 1.0)
+        warning(
+            'Your lai.config.jsonc is outdated! Please run `lai init config` to regenerate your existing config using the current format.',
+        );
+    }
+
+    return laiConfig;
 }
 
 export async function saveConfig(config: LaiConfig, cwd: string = process.cwd()): Promise<void> {

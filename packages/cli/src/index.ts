@@ -11,6 +11,7 @@ import { statsCommand } from './commands/stats.js';
 import { exportCommand } from './commands/export.js';
 import { tagCommand } from './commands/tag.js';
 import { validateCommand } from './commands/validate.js';
+import { error } from './utils/console.js';
 
 // injected by esbuild `define` at build time from package.json
 // falls back to 'dev' when running via `tsx watch` (dev mode)
@@ -23,9 +24,21 @@ program
     .description('Langium-AI CLI for bootstrapping AI-powered language tooling')
     .version(__CLI_VERSION__ ?? 'dev');
 
-const initCmd = program.command('init').description('Initialize LAI in your Langium project').action(initCommand);
-initCmd.command('config').description('Reinitialize the lai.config.jsonc file').action(initConfigCommand);
-initCmd.command('evals').description('Reinitialize the evals directory and template files').action(initEvalsCommand);
+const initCmd = program
+    .command('init')
+    .description('Initialize LAI in your Langium project')
+    .option('-y, --yes', 'Skip all prompts and use defaults (for non-interactive/CI use)')
+    .action(initCommand);
+initCmd
+    .command('config')
+    .description('Reinitialize the lai.config.jsonc file')
+    .option('-y, --yes', 'Skip all prompts and use defaults (for non-interactive/CI use)')
+    .action(initConfigCommand);
+initCmd
+    .command('evals')
+    .description('Reinitialize the evals directory and template files')
+    .option('-y, --yes', 'Skip all prompts and use defaults (for non-interactive/CI use)')
+    .action(initEvalsCommand);
 
 program
     .command('gen')
@@ -55,19 +68,14 @@ program
     .description('View evaluation run history')
     .option('--limit <number>', 'Number of runs to show', '10')
     .option('--oneline', 'Show history in condensed single-line format')
-    .action(
-        async (options: {
-            limit?: string;
-            oneline?: boolean;
-        }) => {
-            // parse limit as number
-            const limit = options.limit ? parseInt(options.limit, 10) : NaN;
-            await historyCommand({
-                limit: isNaN(limit) ? 10 : limit,
-                oneline: options.oneline,
-            });
-        },
-    );
+    .action(async (options: { limit?: string; oneline?: boolean }) => {
+        // parse limit as number
+        const limit = options.limit ? parseInt(options.limit, 10) : NaN;
+        await historyCommand({
+            limit: isNaN(limit) ? 10 : limit,
+            oneline: options.oneline,
+        });
+    });
 
 program
     .command('show')
@@ -114,4 +122,9 @@ program
 
 program.command('validate').alias('v').description('Validate the language descriptor').action(validateCommand);
 
-program.parse();
+program.parseAsync().catch((err) => {
+    // commander already prints its own errors (bad args, unknown commands) and exits;
+    // this catches errors thrown from action handlers so the process exits non-zero
+    error(err instanceof Error ? err.message : String(err));
+    process.exitCode = 1;
+});
