@@ -3,10 +3,15 @@ import path from 'path';
 import type { LaiConfig } from '../types.js';
 import { pathExists } from '../utils/fs.js';
 import { warning } from '../utils/console.js';
+import { checkLangiumVersion } from './langium-version.js';
 
 // config file management
 
 export async function loadConfig(cwd: string = process.cwd()): Promise<LaiConfig> {
+    // check the project's langium version first — warns and sets a non-zero
+    // exit code (without crashing) if it's too old to support
+    await checkLangiumVersion(cwd);
+
     const configPath = path.join(cwd, 'lai.config.jsonc');
 
     if (!(await pathExists(configPath))) {

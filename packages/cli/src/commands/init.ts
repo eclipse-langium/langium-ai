@@ -2,6 +2,7 @@ import { execSync } from 'child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'path';
 import { configExists, saveConfig } from '../core/config.js';
+import { checkLangiumVersion } from '../core/langium-version.js';
 import { detectLangiumProject, getLanguageNames, getProjectName } from '../core/langium-detector.js';
 import { getTemplate } from '../templates.js';
 import type { LaiConfig, LangiumProjectStructure } from '../types.js';
@@ -31,6 +32,9 @@ export interface InitOptions {
  */
 async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStructure> {
     header('Detecting Langium project...');
+
+    // warn (and set a non-zero exit code) up front if the project's langium is too old
+    await checkLangiumVersion(cwd);
 
     const detectSpinner = spinner('Scanning project structure...');
     let structure;
