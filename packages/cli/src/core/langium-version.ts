@@ -58,9 +58,7 @@ export async function resolveLangiumVersion(cwd: string = process.cwd()): Promis
         try {
             const pkgJson = JSON.parse(await readFile(pkgJsonPath, 'utf-8'));
             const declared: string | undefined =
-                pkgJson.dependencies?.langium ??
-                pkgJson.devDependencies?.langium ??
-                pkgJson.peerDependencies?.langium;
+                pkgJson.dependencies?.langium ?? pkgJson.devDependencies?.langium ?? pkgJson.peerDependencies?.langium;
             if (typeof declared === 'string') {
                 return declared;
             }
@@ -96,7 +94,7 @@ export async function checkLangiumVersion(cwd: string = process.cwd()): Promise<
 
     const major = parseMajorVersion(version);
     if (major === undefined) {
-        // unparseable version string — stay quiet rather than false-alarm
+        // un-parseable version string, stay quiet rather than false-alarm
         return true;
     }
 

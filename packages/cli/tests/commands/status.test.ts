@@ -61,7 +61,7 @@ describe('Status Command', () => {
         await statusCommand();
 
         // verify output contains key information
-        const output = consoleLogSpy.mock.calls.map((call: any) => call.join(' ')).join('\n');
+        const output = consoleLogSpy.mock.calls.map((call: string[]) => call.join(' ')).join('\n');
         expect(output).toContain('test-dsl');
         expect(output).toContain('Descriptor');
         expect(output).toContain('System Prompt');
@@ -75,7 +75,7 @@ describe('Status Command', () => {
 
         await statusCommand();
 
-        const output = consoleLogSpy.mock.calls.map((call: any) => call.join(' ')).join('\n');
+        const output = consoleLogSpy.mock.calls.map((call: string[]) => call.join(' ')).join('\n');
         // status command shows all files but may use different icons for missing ones
         expect(output).toContain('Descriptor');
         expect(output).toContain('System Prompt');
@@ -93,7 +93,7 @@ describe('Status Command', () => {
 
         await statusCommand();
 
-        const output = consoleLogSpy.mock.calls.map((call: any) => call.join(' ')).join('\n');
+        const output = consoleLogSpy.mock.calls.map((call: string[]) => call.join(' ')).join('\n');
         expect(output).toContain('2');
     });
 
