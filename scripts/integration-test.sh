@@ -127,16 +127,9 @@ for example in "${LANGIUM_EXAMPLES[@]}"; do
     npx --yes degit "eclipse-langium/langium/examples/${example}" "$example_dir" --force
 done
 
-echo "* degit eclipse-langium/langium/packages/langium"
-langium_pkg_dir="${LANGIUM_DIR}/packages-langium"
-mkdir -p "$langium_pkg_dir"
-npx degit "eclipse-langium/langium/packages/langium" "$langium_pkg_dir" --force
-
 for example in "${LANGIUM_EXAMPLES[@]}"; do
     run_lai_workflow "langium/examples/${example}" "${LANGIUM_DIR}/${example}"
 done
-
-run_lai_workflow "langium/packages/langium" "$langium_pkg_dir"
 
 echo "
 
