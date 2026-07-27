@@ -5,11 +5,14 @@
         "**/templates/**",
         "packages/examples/example-dsl-evaluator/src/runners.ts",
         "packages/examples/example-dsl-evaluator/src/eval-langium.ts",
-        "packages/langium-ai-mcp/src/mcp-client.ts"
+        "packages/langium-ai-mcp/src/mcp-client.ts",
+        "scripts/setup-langium-project.ts"
     ],
     "ignoreBinaries": ["protoc"],
     "workspaces": {
-        ".": {},
+        ".": {
+            "ignoreDependencies": ["yeoman-test", "yeoman-environment", "@yeoman/adapter"]
+        },
         "packages/langium-ai-tools": {
             "ignoreDependencies": ["@protobuf-ts/runtime", "@protobuf-ts/plugin"]
         }
