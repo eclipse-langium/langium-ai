@@ -246,7 +246,16 @@ async function initEvals(cwd: string, structure: LangiumProjectStructure, yes = 
 
             // create a singular invocation to get the collective service instance
             const joinedLanguageNames = languageNames.join('And');
-            const createLanguageServicesNames = `create${joinedLanguageNames}Services`;
+            // TODO replace with the detected service one
+
+            let createLanguageServicesNames: string;
+            if (structure.serviceDetails.createServicesFunc) {
+                createLanguageServicesNames = structure.serviceDetails.createServicesFunc;
+            } else {
+                createLanguageServicesNames = `create${joinedLanguageNames}Services`;
+            }
+
+            // const createLanguageServicesNames = `create${joinedLanguageNames}Services`;
             templateContent = templateContent.replace(
                 /\{\{ CREATE_LANGUAGE_SERVICES \}\}/g,
                 createLanguageServicesNames,
@@ -258,9 +267,23 @@ async function initEvals(cwd: string, structure: LangiumProjectStructure, yes = 
 
             // get each language's services
             const languageServiceInstantiations: string[] = [];
-            for (const l of languageNames) {
+            const serviceAttrs: string[] = structure.serviceDetails.createServicesAttributes ?? [];
+            // for (const l of languageNames) {
+            for (let x = 0; x < languageNames.length; x++) {
+                const l = languageNames[x];
+                // attempt to resolve the property for this language's service set (if we picked it up)
+
+                let languageServiceSetProp: string | undefined;
+                if (languageNames.length === 1) {
+                    // it has to be the lone entry
+                    languageServiceSetProp = serviceAttrs.at(0);
+                } else {
+                    // make a best attempt to pick one up a good match
+                    languageServiceSetProp = getMatchingServiceProp(l, serviceAttrs);
+                }
+                // const languageServiceSetProp: string | undefined = getMatchingServiceProp(l, serviceAttrs);
                 languageServiceInstantiations.push(
-                    `const ${l}Services = ${createLanguageServicesNames}(EmptyFileSystem).${l};`,
+                    `const ${l}Services = ${createLanguageServicesNames}(EmptyFileSystem).${languageServiceSetProp ? languageServiceSetProp : l};`,
                 );
             }
 
@@ -412,3 +435,16 @@ export async function initEvalsCommand(options: InitOptions = {}): Promise<void>
     console.log();
     success('Evals reinitialized successfully!');
 }
+
+/**
+ * Returns the most likely matching service set props as a fuzzy, case-insensitive match
+ * to the given language name.
+ * This allows us to try and pair up a language name with it's likely attribute from the create*Services
+ * function.
+ */
+export function getMatchingServiceProp(l: string, props: string[]): string | undefined {
+    const patt = new RegExp(`.*${l}.*`, "i");
+    const result = props.find(p => p.match(patt));
+    return result;
+}
+

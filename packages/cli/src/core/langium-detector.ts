@@ -136,6 +136,27 @@ const SERVICE_KEY_MAP: Record<string, Record<string, keyof Services>> = {
         DocumentLinkProvider: 'document_link_provider',
     },
 };
+
+/**
+ * Best effort attempt to extract valid language names from a given object of returned service props.
+ * Will Try to grab the return 
+ */
+export function extractServiceSetProps(content: string): string[] | undefined {
+    const funcReturnMatch = content.match(/return\s+{\s*([^}]+)\s*}/);
+    if (funcReturnMatch) {
+        const props: string[] = [];
+        for (const splitProp of funcReturnMatch[1].split(',')) {
+            const lp = splitProp.trim();
+            if (lp.toLowerCase() !== 'shared') {
+                props.push(lp);
+            }
+        }
+        return props;
+    } else {
+        return undefined;
+    }
+}
+
 /**
  * Detect langium project structure and custom services
  */
@@ -229,17 +250,11 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
             info('detected service creation function: ' + funcName);
             serviceDetails.createServicesFunc = funcName;
             services.module = moduleFile;
-
             // capture the return attributes as well if possible
-            // riskier, but worth the attempt
-            const funcReturnMatch = content.match(/return\s*{\s*shared(?:\s*,\s*(\w+))+\s*};/);
-            if (funcReturnMatch) {
-                // slice of everything we picked up in capture, we'll assume it's relevant
-                const slice = funcReturnMatch.slice(1);
-                info('detected service attributes: ' + slice);
-                serviceDetails.createServicesAttributes = slice;
+            serviceDetails.createServicesAttributes = extractServiceSetProps(content);
+            if (serviceDetails.createServicesAttributes) {
+                info('detected service attributes: ' + serviceDetails.createServicesAttributes);
             }
-
             break;
         }
     }
