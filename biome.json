@@ -9,7 +9,8 @@
             "!**/templates/**",
             "!**/package.json",
             "!**/cli/src/templates.ts",
-            "!**/out/**"
+            "!**/out/**",
+            "!**/integration-test/**"
         ]
     },
     "formatter": {
