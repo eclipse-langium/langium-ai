@@ -42,13 +42,24 @@ describe('CLI Workflow Integration', () => {
             JSON.stringify(
                 {
                     projectName: 'workflow-test-dsl',
+                    languages: [
+                        {
+                            id: 'wtd',
+                            grammar: 'src/wtd.langium',
+                            fileExtensions: ['wtd'],
+                            textMate: {
+                                out: 'syntaxes/wtd.tmLanguage.json',
+                            },
+                        },
+                    ],
+                    out: 'src/generated',
                 },
                 null,
                 2,
             ),
         );
 
-        const grammarPath = path.join(tempDir, 'src', 'grammar.langium');
+        const grammarPath = path.join(tempDir, 'src', 'wtd.langium');
         await fs.mkdir(path.dirname(grammarPath), { recursive: true });
         await fs.writeFile(
             grammarPath,
@@ -87,15 +98,22 @@ export const WorkflowTestModule: Module<WorkflowTestServices, PartialLangiumServ
         const structure = await detectLangiumProject(tempDir);
 
         expect(structure.root).toBe(tempDir);
-        expect(structure.grammar).toBe(grammarPath);
+        expect(structure.languages).toHaveLength(1);
+        expect(structure.languages[0].grammar).toBe(grammarPath);
         expect(structure.services.validator).toBe(validatorPath);
 
         // step 3: create and save config
         const config: LaiConfig = {
-            version: '1.0',
+            version: 'dev',
             langium: {
                 configPath: './langium-config.json',
-                grammarPath: './src/grammar.langium',
+                languages: [
+                    {
+                        id: 'abc',
+                        grammarPath: './src/grammar.langium',
+                        caseInsensitive: false,
+                    },
+                ],
             },
             descriptor: {
                 path: './language.descriptor.yml',
@@ -119,16 +137,18 @@ export const WorkflowTestModule: Module<WorkflowTestServices, PartialLangiumServ
         // step 4: generate descriptor
         const descriptor = await generateDescriptor(config, structure);
 
-        expect(descriptor.name).toBe('workflow-test-dsl');
+        expect(descriptor.languages).toHaveLength(1);
+        const lang = descriptor.languages[0];
+        expect(lang.name).toBe('abc');
         // check paths end with expected files (handles macOS temp dir paths)
-        expect(descriptor.grammar).toMatch(/src\/grammar\.langium$/);
+        expect(lang.grammar).toMatch(/src\/grammar\.langium$/);
         expect(descriptor.services?.validator).toMatch(/src\/workflow-validator\.ts$/);
 
         // step 5: save descriptor
         await saveDescriptor(config.descriptor.path, descriptor);
 
         const savedDescriptor = await fs.readFile(path.join(tempDir, config.descriptor.path), 'utf-8');
-        expect(savedDescriptor).toContain('workflow-test-dsl');
+        expect(savedDescriptor).toContain('abc');
         // check that the grammar path is in the file (may have ../ prefix on macOS)
         expect(savedDescriptor).toMatch(/grammar\.langium/);
 

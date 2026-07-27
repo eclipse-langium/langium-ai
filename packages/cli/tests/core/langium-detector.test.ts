@@ -2,7 +2,8 @@ import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import path from 'path';
 import os from 'os';
-import { detectLangiumProject, getProjectName, getLanguageName, _testing } from '../../src/core/langium-detector.js';
+import { detectLangiumProject, getProjectName, getLanguageNames, _testing } from '../../src/core/langium-detector.js';
+import { LangiumProjectStructure, Services } from '../../src/types.js';
 
 const {
     buildImportMap,
@@ -12,6 +13,17 @@ const {
     scanSourceFilesForOverrides,
     detectCustomServices,
 } = _testing;
+
+const langiumConfigJSON = {
+    projectName: 'abc',
+    languages: [
+        {
+            id: 'language-id',
+            caseInsensitive: false,
+            grammar: './test.langium',
+        },
+    ],
+};
 
 describe('Langium Project Detection', () => {
     let tempDir: string;
@@ -24,23 +36,42 @@ describe('Langium Project Detection', () => {
         await fs.rm(tempDir, { recursive: true, force: true });
     });
 
+    /**
+     * Writes a test file out to disk
+     * @param path
+     * @param content
+     */
+    async function write(filePath: string, content: object | string): Promise<void> {
+        let output: string;
+        if (typeof content === 'object') {
+            output = JSON.stringify(content, null, 2);
+        } else {
+            // raw string
+            output = content;
+        }
+
+        return fs.writeFile(path.join(tempDir, filePath), output);
+    }
+
     describe('detectLangiumProject', () => {
         it('should detect basic langium project', async () => {
             // setup minimal project
-            await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
-            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify({}, null, 2));
-            await fs.writeFile(path.join(tempDir, 'grammar.langium'), 'grammar Test');
+            await write('package.json', { name: 'test-dsl ' });
+            await write('langium-config.json', langiumConfigJSON);
+            await write('test.langium', 'grammar Test');
 
             const structure = await detectLangiumProject(tempDir);
 
             expect(structure.root).toBe(tempDir);
             expect(structure.packageJson).toBe(path.join(tempDir, 'package.json'));
             expect(structure.langiumConfig).toBe(path.join(tempDir, 'langium-config.json'));
-            expect(structure.grammar).toBe(path.join(tempDir, 'grammar.langium'));
+            expect(structure.languages[0].grammar).toBe(path.join(tempDir, 'test.langium'));
         });
 
         it('should detect services via class inheritance (extends DefaultScopeProvider)', async () => {
+            // TODO push this pattern farther down (using 'write' instead of the manual stuff)
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const srcDir = path.join(tempDir, 'src');
@@ -62,6 +93,7 @@ export class TestScopeProvider extends DefaultScopeProvider {
 
         it('should detect services via class inheritance (extends AbstractFormatter)', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const srcDir = path.join(tempDir, 'src');
@@ -83,6 +115,7 @@ export class TestFormatter extends AbstractFormatter {
 
         it('should detect services via interface implementation (implements CodeActionProvider)', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const srcDir = path.join(tempDir, 'src');
@@ -104,6 +137,7 @@ export class TestCodeActionProvider implements CodeActionProvider {
 
         it('should not detect interface implementation without langium import', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const srcDir = path.join(tempDir, 'src');
@@ -123,6 +157,7 @@ export class MyProvider implements CodeActionProvider {}`,
 
         it('should detect multiple services from inheritance scan', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const srcDir = path.join(tempDir, 'src');
@@ -153,6 +188,7 @@ export class TestValidator extends DefaultDocumentValidator {}`,
 
         it('should prefer module-wired class when multiple extend the same base', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const srcDir = path.join(tempDir, 'src');
@@ -189,6 +225,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
         it('should fall back to module-parse for services without inheritance (AddedServices)', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Abc');
 
             const srcDir = path.join(tempDir, 'src');
@@ -219,6 +256,7 @@ export const AbcModule: Module<AbcServices, PartialLangiumServices & AbcAddedSer
 
         it('should detect services from both inheritance and module fallback', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const srcDir = path.join(tempDir, 'src');
@@ -259,6 +297,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
         it('should detect LSP service overrides from module file (fallback path)', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const srcDir = path.join(tempDir, 'src');
@@ -295,6 +334,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
         it('should detect test and example directories', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const testsDir = path.join(tempDir, 'tests');
@@ -310,6 +350,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
         it('should detect nested test directories', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             // create test dirs at different nesting levels
@@ -326,6 +367,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
         it('should detect only nested test directories when none at root', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const nestedTest = path.join(tempDir, 'packages', 'language', 'test');
@@ -338,7 +380,8 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
         it('should filter out node_modules from grammar detection', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
-            await fs.writeFile(path.join(tempDir, 'real.langium'), 'grammar Real');
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
+            await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             // create fake grammar in node_modules
             const nodeModulesDir = path.join(tempDir, 'node_modules', 'some-package');
@@ -347,25 +390,57 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
             const structure = await detectLangiumProject(tempDir);
 
-            expect(structure.grammar).toBe(path.join(tempDir, 'real.langium'));
+            expect(structure.languages[0].grammar).toBe(path.join(tempDir, 'test.langium'));
         });
 
-        it('should throw error for monorepo with multiple grammars', async () => {
+        it('should handle monorepo with multiple languages', async () => {
+            // previously was an issue, now a feature
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'monorepo' }, null, 2));
+
+            const langiumConfigJSON = {
+                projectName: 'abc',
+                languages: [
+                    {
+                        id: 'l1',
+                        caseInsensitive: false,
+                        grammar: './project1/grammar1.langium',
+                    },
+                    {
+                        id: 'l2',
+                        caseInsensitive: false,
+                        grammar: './project2/grammar2.langium',
+                    },
+                ],
+            };
+
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
 
             // create multiple grammar files
             const project1 = path.join(tempDir, 'project1');
             const project2 = path.join(tempDir, 'project2');
             await fs.mkdir(project1, { recursive: true });
             await fs.mkdir(project2, { recursive: true });
-            await fs.writeFile(path.join(project1, 'grammar1.langium'), 'grammar One');
-            await fs.writeFile(path.join(project2, 'grammar2.langium'), 'grammar Two');
+            const g1Path = path.join(project1, 'grammar1.langium');
+            await fs.writeFile(g1Path, 'grammar One');
+            const g2Path = path.join(project2, 'grammar2.langium');
+            await fs.writeFile(g2Path, 'grammar Two');
 
-            await expect(detectLangiumProject(tempDir)).rejects.toThrow('Multiple Langium projects detected');
+            const project: LangiumProjectStructure = await detectLangiumProject(tempDir);
+            // ensure both are setup
+            expect(project.languages).toHaveLength(2);
+
+            const l1 = project.languages[0];
+            expect(l1.id).toBe('l1');
+            expect(l1.grammar).toBe(g1Path);
+
+            const l2 = project.languages[1];
+            expect(l2.id).toBe('l2');
+            expect(l2.grammar).toBe(g2Path);
         });
 
         it('should throw error for monorepo with multiple configs', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'monorepo' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
 
             // create multiple config files
             const project1 = path.join(tempDir, 'project1');
@@ -380,6 +455,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
         it('should handle missing module file gracefully', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             const structure = await detectLangiumProject(tempDir);
@@ -390,8 +466,9 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
             expect(structure.services.scope_provider).toBeUndefined();
         });
 
-        it('should filter out generated/ module files', async () => {
+        it('should filter out generated/module files', async () => {
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test-dsl' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
             await fs.writeFile(path.join(tempDir, 'test.langium'), 'grammar Test');
 
             // create a generated module file (should be ignored)
@@ -410,6 +487,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
             const srcDir = path.join(tempDir, 'src');
             await fs.mkdir(srcDir, { recursive: true });
             await fs.writeFile(path.join(tempDir, 'package.json'), JSON.stringify({ name: 'test' }, null, 2));
+            await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(langiumConfigJSON, null, 2));
 
             await fs.writeFile(
                 path.join(srcDir, 'my-scope.ts'),
@@ -593,7 +671,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 };`,
             );
 
-            const services = { module: modulePath } as any;
+            const services: Services = { module: modulePath };
             await detectCustomServices(tempDir, modulePath, services);
 
             expect(services.scope_provider).toBe(path.join(srcDir, 'real-scope.ts'));
@@ -614,7 +692,7 @@ export class ScopeA extends DefaultScopeProvider {}`,
 export class ScopeB extends DefaultScopeProvider {}`,
             );
 
-            const services = {} as any;
+            const services: Services = {};
             await detectCustomServices(tempDir, undefined, services);
 
             // should pick one (first found)
@@ -651,7 +729,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices & TestAdded
 };`,
             );
 
-            const services = { module: modulePath } as any;
+            const services: Services = { module: modulePath };
             await detectCustomServices(tempDir, modulePath, services);
 
             // inheritance scan finds scope_provider
@@ -686,7 +764,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 };`,
             );
 
-            const services = { module: modulePath } as any;
+            const services: Services = { module: modulePath };
             await detectCustomServices(tempDir, modulePath, services);
 
             // inheritance scan takes priority
@@ -890,11 +968,18 @@ import { RealImport } from './real.js';`;
                 ),
             );
 
-            const structure = {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
                 packageJson: path.join(tempDir, 'package.json'),
-                grammar: path.join(tempDir, 'my-dsl.langium'),
+                languages: [
+                    {
+                        id: 'my-dsl',
+                        grammar: 'my-dsl.langium',
+                        caseInsensitive: false,
+                    },
+                ],
                 services: {},
+                serviceDetails: {},
                 tests: [],
             };
 
@@ -903,10 +988,17 @@ import { RealImport } from './real.js';`;
         });
 
         it('should fallback to grammar filename', () => {
-            const structure = {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
-                grammar: path.join(tempDir, 'my-dsl.langium'),
+                languages: [
+                    {
+                        id: 'my-dsl',
+                        grammar: path.join(tempDir, 'my-dsl.langium'),
+                        caseInsensitive: false,
+                    },
+                ],
                 services: {},
+                serviceDetails: {},
                 tests: [],
             };
 
@@ -915,9 +1007,17 @@ import { RealImport } from './real.js';`;
         });
 
         it('should return default name as last resort', () => {
-            const structure = {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
+                languages: [
+                    {
+                        id: 'my-dsl',
+                        grammar: path.join(tempDir, 'my-dsl.langium'),
+                        caseInsensitive: false,
+                    },
+                ],
                 services: {},
+                serviceDetails: {},
                 tests: [],
             };
 
@@ -925,94 +1025,136 @@ import { RealImport } from './real.js';`;
             expect(name).toBe('my-dsl');
         });
 
-        it('should handle package.json errors gracefully', () => {
-            const structure = {
+        it('should handle package.json errors gracefully, favoring language id', () => {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
                 packageJson: path.join(tempDir, 'nonexistent.json'),
-                grammar: path.join(tempDir, 'fallback.langium'),
+                languages: [
+                    {
+                        id: 'my-dsl-id',
+                        grammar: path.join(tempDir, 'grammar-name.langium'),
+                        caseInsensitive: false,
+                    },
+                ],
                 services: {},
+                serviceDetails: {},
                 tests: [],
             };
 
-            const name = getProjectName(structure);
-            expect(name).toBe('fallback');
+            const name: string = getProjectName(structure);
+            expect(name).toBe('my-dsl-id');
         });
     });
 
     describe('getLanguageName', () => {
         it('should extract PascalCase name from kebab-case grammar file', () => {
-            const structure = {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
-                grammar: path.join(tempDir, 'domain-model.langium'),
+                languages: [
+                    {
+                        id: 'domain-model',
+                        grammar: path.join(tempDir, 'domain-model.langium'),
+                        caseInsensitive: false,
+                    },
+                ],
                 services: {},
+                serviceDetails: {},
                 tests: [],
             };
 
-            const name = getLanguageName(structure);
-            expect(name).toBe('DomainModel');
+            const names = getLanguageNames(structure);
+            expect(names).toEqual(['DomainModel']);
         });
 
         it('should extract PascalCase name from snake_case grammar file', () => {
-            const structure = {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
-                grammar: path.join(tempDir, 'hello_world.langium'),
+                languages: [
+                    {
+                        id: 'hello_world',
+                        grammar: path.join(tempDir, 'hello_world.langium'),
+                        caseInsensitive: false,
+                    },
+                ],
                 services: {},
+                serviceDetails: {},
                 tests: [],
             };
 
-            const name = getLanguageName(structure);
-            expect(name).toBe('HelloWorld');
+            const names = getLanguageNames(structure);
+            expect(names).toEqual(['HelloWorld']);
         });
 
         it('should handle single word grammar file', () => {
-            const structure = {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
-                grammar: path.join(tempDir, 'statemachine.langium'),
+                languages: [
+                    {
+                        id: 'statemachine',
+                        grammar: path.join(tempDir, 'statemachine.langium'),
+                        caseInsensitive: false,
+                    },
+                ],
                 services: {},
+                serviceDetails: {},
                 tests: [],
             };
 
-            const name = getLanguageName(structure);
-            expect(name).toBe('Statemachine');
+            const names = getLanguageNames(structure);
+            expect(names).toEqual(['Statemachine']);
         });
 
-        it('should extract name from module file when no grammar', () => {
-            const structure = {
+        it('cannot extract name from module file when no grammar found', () => {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
                 services: {
                     module: path.join(tempDir, 'src', 'hello-world-module.ts'),
                 },
                 tests: [],
-            };
+            } as unknown as LangiumProjectStructure;
 
-            const name = getLanguageName(structure);
-            expect(name).toBe('HelloWorld');
+            // no fallback behavior
+            expect(() => getLanguageNames(structure)).throws('Unable to extract language names for project');
         });
 
         it('should prefer grammar file over module file', () => {
-            const structure = {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
-                grammar: path.join(tempDir, 'domain-model.langium'),
+                languages: [
+                    {
+                        id: 'domain-model',
+                        grammar: path.join(tempDir, 'domain-model.langium'),
+                        caseInsensitive: false,
+                    },
+                ],
                 services: {
                     module: path.join(tempDir, 'src', 'hello-world-module.ts'),
                 },
+                serviceDetails: {},
                 tests: [],
             };
 
-            const name = getLanguageName(structure);
-            expect(name).toBe('DomainModel');
+            const names = getLanguageNames(structure);
+            expect(names).toEqual(['DomainModel']);
         });
 
         it('should handle multi-word with hyphens', () => {
-            const structure = {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
-                grammar: path.join(tempDir, 'my-awesome-language.langium'),
+                languages: [
+                    {
+                        id: 'my-awesome-language',
+                        grammar: path.join(tempDir, 'my-awesome-language.langium'),
+                        caseInsensitive: false,
+                    },
+                ],
                 services: {},
+                serviceDetails: {},
                 tests: [],
             };
 
-            const name = getLanguageName(structure);
-            expect(name).toBe('MyAwesomeLanguage');
+            const names = getLanguageNames(structure);
+            expect(names).toEqual(['MyAwesomeLanguage']);
         });
 
         it('should fallback to project name and convert to PascalCase', async () => {
@@ -1027,15 +1169,23 @@ import { RealImport } from './real.js';`;
                 ),
             );
 
-            const structure = {
+            const structure: LangiumProjectStructure = {
                 root: tempDir,
                 packageJson: path.join(tempDir, 'package.json'),
                 services: {},
+                serviceDetails: {},
                 tests: [],
+                languages: [
+                    {
+                        id: 'test-dsl',
+                        grammar: './test-dsl-project.langium',
+                        caseInsensitive: false,
+                    },
+                ],
             };
 
-            const name = getLanguageName(structure);
-            expect(name).toBe('TestDslProject');
+            const names = getLanguageNames(structure);
+            expect(names).toEqual(['TestDslProject']);
         });
     });
 });

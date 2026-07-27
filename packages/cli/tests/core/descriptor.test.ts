@@ -4,7 +4,9 @@ import path from 'path';
 import os from 'os';
 import YAML from 'yaml';
 import { generateDescriptor, saveDescriptor } from '../../src/core/descriptor.js';
-import type { LaiConfig, LangiumProjectStructure } from '../../src/types.js';
+import type { LaiConfig, LangiumProjectStructure, LanguageDescriptor, ProjectDescriptor } from '../../src/types.js';
+
+declare const __CLI_VERSION__: string;
 
 describe('Descriptor Generation', () => {
     let tempDir: string;
@@ -21,10 +23,16 @@ describe('Descriptor Generation', () => {
     });
 
     const createMockConfig = (): LaiConfig => ({
-        version: '1.0',
+        version: 'dev',
         langium: {
             configPath: './langium-config.json',
-            grammarPath: './src/grammar.langium',
+            languages: [
+                {
+                    id: 'grammar',
+                    caseInsensitive: false,
+                    grammarPath: './src/grammar.langium',
+                },
+            ],
         },
         descriptor: {
             path: './language.descriptor.yml',
@@ -44,9 +52,16 @@ describe('Descriptor Generation', () => {
         root: tempDir,
         packageJson: path.join(tempDir, 'package.json'),
         langiumConfig: path.join(tempDir, 'langium-config.json'),
-        grammar: path.join(tempDir, 'grammar.langium'),
+        languages: [
+            {
+                id: 'grammar',
+                caseInsensitive: false,
+                grammar: path.join(tempDir, 'grammar.langium'),
+            },
+        ],
         services: {},
         tests: [],
+        serviceDetails: {},
     });
 
     describe('generateDescriptor', () => {
@@ -61,11 +76,16 @@ describe('Descriptor Generation', () => {
 
             const descriptor = await generateDescriptor(config, structure);
 
-            expect(descriptor.name).toBe('test-dsl');
-            expect(descriptor.version).toBe('0.0.0');
-            expect(descriptor.case_sensitive).toBe(true);
+            expect(descriptor.languages).toHaveLength(1);
+            const lang: LanguageDescriptor = descriptor.languages[0];
+
+            expect(lang.name).toBe('grammar');
+            expect(lang.caseInsensitive).toBe(false);
+            expect(lang.grammar).toMatch(/grammar\.langium$/);
+
+            // should match the current CLI version spot on
+            expect(descriptor.version).toBe(__CLI_VERSION__);
             // check path ends with expected file (handles macOS temp dir paths)
-            expect(descriptor.grammar).toMatch(/grammar\.langium$/);
         });
 
         it('should include custom services when present', async () => {
@@ -97,9 +117,9 @@ describe('Descriptor Generation', () => {
 
             const descriptor = await generateDescriptor(config, structure);
 
-            expect(descriptor.description).toContain('Langium');
-            expect(descriptor.description).toContain('custom validation');
-            expect(descriptor.description).toContain('type system');
+            const langDescrip = descriptor.languages[0].description;
+
+            expect(langDescrip).toContain('Langium');
         });
 
         it('should include examples when directory exists', async () => {
@@ -161,44 +181,46 @@ describe('Descriptor Generation', () => {
         });
 
         it('should save descriptor as YAML', async () => {
-            const descriptor = {
-                name: 'test-dsl',
+            const descriptor: ProjectDescriptor = {
                 version: '0.0.0',
-                description: 'A test DSL',
                 langium_config: './langium-config.json',
-                case_sensitive: true,
-                grammar: './grammar.langium',
-                prompts: [
+                languages: [
                     {
-                        name: 'default',
-                        description: 'Default prompt',
-                        sections: [],
+                        name: 'test-dsl',
+                        description: 'A test DSL',
+                        caseInsensitive: false,
+                        grammar: './grammar.langium',
                     },
                 ],
                 services: {},
+                serviceDetails: {},
             };
 
             const descriptorPath = './test.descriptor.yml';
             await saveDescriptor(descriptorPath, descriptor);
 
             const saved = await fs.readFile(path.join(tempDir, descriptorPath), 'utf-8');
-            const parsed = YAML.parse(saved);
+            const parsed: ProjectDescriptor = YAML.parse(saved);
 
-            expect(parsed.name).toBe('test-dsl');
+            expect(parsed.languages[0].name).toBe('test-dsl');
             expect(parsed.version).toBe('0.0.0');
         });
 
         it('should not wrap lines in YAML output', async () => {
-            const descriptor = {
-                name: 'test-dsl',
+            const descriptor: ProjectDescriptor = {
                 version: '0.0.0',
-                description:
-                    'A very long description that would normally wrap in YAML but should not wrap because we disabled line wrapping in the YAML stringifier',
+                languages: [
+                    {
+                        name: 'test-dsl',
+                        description:
+                            'A very long description that would normally wrap in YAML but should not wrap because we disabled line wrapping in the YAML stringifier',
+                        caseInsensitive: false,
+                        grammar: './grammar.langium',
+                    },
+                ],
                 langium_config: './langium-config.json',
-                case_sensitive: true,
-                grammar: './grammar.langium',
-                prompts: [],
                 services: {},
+                serviceDetails: {},
             };
 
             const descriptorPath = './test.descriptor.yml';
@@ -208,7 +230,7 @@ describe('Descriptor Generation', () => {
             const lines = content.split('\n');
 
             // find the description line
-            const descLine = lines.find((l) => l.startsWith('description:'));
+            const descLine = lines.find((l) => l.trim().startsWith('description:'));
             expect(descLine).toBeDefined();
             // should be on a single line
             expect(descLine).toContain('very long description');

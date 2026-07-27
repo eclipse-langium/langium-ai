@@ -26,10 +26,16 @@ describe('Status Command', () => {
     });
 
     const createConfig = (): LaiConfig => ({
-        version: '1.0',
+        version: 'dev',
         langium: {
             configPath: './langium-config.json',
-            grammarPath: './src/grammar.langium',
+            languages: [
+                {
+                    id: 'grammar',
+                    caseInsensitive: false,
+                    grammarPath: './src/grammar.langium',
+                },
+            ],
         },
         descriptor: {
             path: './language.descriptor.yml',
@@ -91,11 +97,9 @@ describe('Status Command', () => {
         expect(output).toContain('2');
     });
 
-    it('should handle missing config gracefully', async () => {
-        // no config file created
-        await statusCommand();
-
-        const output = consoleLogSpy.mock.calls.map((call: any) => call.join(' ')).join('\n');
-        expect(output).toContain('lai.config.jsonc not found');
+    it('should throw when config is missing so the CLI exits non-zero', async () => {
+        // no config file created; the top-level handler in index.ts renders the
+        // error and sets a non-zero exit code
+        await expect(statusCommand()).rejects.toThrow('lai.config.jsonc not found');
     });
 });

@@ -18,10 +18,16 @@ describe('Config Management', () => {
     });
 
     const createMockConfig = (): LaiConfig => ({
-        version: '1.0',
+        version: 'dev',
         langium: {
             configPath: './langium-config.json',
-            grammarPath: './src/grammar.langium',
+            languages: [
+                {
+                    id: 'grammar',
+                    caseInsensitive: false,
+                    grammarPath: './src/grammar.langium',
+                },
+            ],
         },
         descriptor: {
             path: './language.descriptor.yml',
