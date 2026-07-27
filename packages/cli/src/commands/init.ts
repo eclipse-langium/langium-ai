@@ -443,8 +443,7 @@ export async function initEvalsCommand(options: InitOptions = {}): Promise<void>
  * function.
  */
 export function getMatchingServiceProp(l: string, props: string[]): string | undefined {
-    const patt = new RegExp(`.*${l}.*`, "i");
-    const result = props.find(p => p.match(patt));
+    const patt = new RegExp(`.*${l}.*`, 'i');
+    const result = props.find((p) => p.match(patt));
     return result;
 }
-

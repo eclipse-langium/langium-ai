@@ -139,7 +139,7 @@ const SERVICE_KEY_MAP: Record<string, Record<string, keyof Services>> = {
 
 /**
  * Best effort attempt to extract valid language names from a given object of returned service props.
- * Will Try to grab the return 
+ * Will Try to grab the return
  */
 export function extractServiceSetProps(content: string): string[] | undefined {
     const funcReturnMatch = content.match(/return\s+{\s*([^}]+)\s*}/);

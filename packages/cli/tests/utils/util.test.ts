@@ -19,7 +19,6 @@ describe('File System Utils', () => {
     });
 
     describe('utility tests', () => {
-
         test('getMatchingServiceProp same', () => {
             const value = getMatchingServiceProp('lang', ['lang']);
             expect(value).toBe('lang');
@@ -40,31 +39,22 @@ describe('File System Utils', () => {
         // extractServiceSetProps
         test('extractServiceSetProps standard', () => {
             const props = extractServiceSetProps('return { shared, t1 };');
-            expect(props).toEqual([
-                't1'
-            ]);
+            expect(props).toEqual(['t1']);
         });
 
         test('extractServiceSetProps reversed', () => {
             const props = extractServiceSetProps('return { t1, shared };');
-            expect(props).toEqual([
-                't1'
-            ]);
+            expect(props).toEqual(['t1']);
         });
 
         test('extractServiceSetProps multiple', () => {
             const props = extractServiceSetProps('return { shared, t1, t2 };');
-            expect(props).toEqual([
-                't1', 't2'
-            ]);
+            expect(props).toEqual(['t1', 't2']);
         });
 
         test('extractServiceSetProps multiple mixed', () => {
             const props = extractServiceSetProps('return { t3, shared, t1,t2 };');
-            expect(props).toEqual([
-                't3', 't1', 't2'
-            ]);
+            expect(props).toEqual(['t3', 't1', 't2']);
         });
-
     });
 });
