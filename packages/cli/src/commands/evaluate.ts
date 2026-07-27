@@ -308,6 +308,8 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
         statusSpinner.start();
     }
 
+    let evaluationFailed: boolean = false;
+
     for (let i = 0; i < evalFiles.length; i++) {
         const file = evalFiles[i];
         const fileName = path.basename(file);
@@ -414,6 +416,8 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
                 // something went wrong, report, but continue
                 statusSpinner?.stop();
                 error(e);
+                // note we failed this evaluation
+                evaluationFailed = true;
             })) ?? [];
         allResults.push(...results);
 
@@ -562,7 +566,7 @@ export async function evaluateCommand(paths: string[], options: EvaluateOptions)
     success(`Results saved to: ${relativePath} (Run #${runId})`);
 
     // exit with error if any cases scored below 0.5
-    if (lowScoring.length > 0) {
+    if (lowScoring.length > 0 || evaluationFailed) {
         process.exit(1);
     }
 }
