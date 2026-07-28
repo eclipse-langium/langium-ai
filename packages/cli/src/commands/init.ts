@@ -186,9 +186,9 @@ async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStr
  *
  * @throws When config cannot be initialized successfully
  */
-async function initConfig(cwd: string, structure: LangiumProjectStructure, languageName: string): Promise<void> {
-    // normalize the language name in case we pickup a problematic name
-    const normalizedLanguageName = languageName.replaceAll(/@|\/|\\/g, '');
+async function initConfig(cwd: string, structure: LangiumProjectStructure, projectName: string): Promise<void> {
+    // normalize the project name in case we pickup a problematic name
+    const normalizedProjectName = projectName.replaceAll(/@|\/|\\/g, '');
 
     const config: LaiConfig = {
         // TODO need to adjust this so it's either the language version or LAI version, can't be both
@@ -204,16 +204,16 @@ async function initConfig(cwd: string, structure: LangiumProjectStructure, langu
             }),
         },
         descriptor: {
-            path: `${normalizedLanguageName}.descriptor.yml`,
+            path: `${normalizedProjectName}.descriptor.yml`,
         },
         sysprompt: {
-            path: `${normalizedLanguageName}.sysprompt.md`,
+            path: `${normalizedProjectName}.sysprompt.md`,
         },
         evaluations: {
             directory: 'evals',
         },
         project: {
-            name: languageName,
+            name: projectName,
         },
     };
 
@@ -355,18 +355,17 @@ export async function initCommand(options: InitOptions = {}): Promise<void> {
     }
 
     // interactive configuration (defaults are used automatically in non-interactive mode)
-    const projectName = getProjectName(structure);
-    const projectNameInput = yes ? projectName : await text('Project name', projectName);
+    const defaultProjectName: string = getProjectName(structure);
+    const projectName: string =
+        (yes ? defaultProjectName : await text('Project name', defaultProjectName)) ?? defaultProjectName;
 
-    if (!projectNameInput) {
+    if (!projectName) {
         console.log('Initialization cancelled.');
         return;
     }
 
-    const languageName = projectNameInput;
-
     // create config
-    await initConfig(cwd, structure, languageName);
+    await initConfig(cwd, structure, projectName);
 
     // offer to install langium-ai-tools
     const pm = await detectPackageManager(cwd);
