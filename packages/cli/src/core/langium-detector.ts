@@ -210,14 +210,9 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
 
     const languages: LangiumLanguage[] = conf.languages ?? [];
     const relativeGrammarFilePaths: string[] = [];
-    // modify languages in place by
-    // - making those grammar paths absolute
-    // - putting an explicit casing value
     for (const l of languages) {
-        const absGrammarPath: string = path.join(root, l.grammar);
         relativeGrammarFilePaths.push(l.grammar);
-        l.grammar = absGrammarPath;
-        l.caseInsensitive = !!l.caseInsensitive;
+        // l.caseInsensitive = !!l.caseInsensitive;
     }
 
     // check for no languages/grammars, if that pops up
@@ -236,8 +231,8 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
         }
     }
 
-    // 4. detect DI module (pattern: *-module.ts)
-    const allModuleFiles = await findFiles(root, '**/*-module.ts');
+    // 4. detect DI module (pattern: *module.ts)
+    const allModuleFiles = await findFiles(root, '**/*module.ts');
     const moduleFiles = allModuleFiles.filter(
         (file) =>
             !file.includes('/node_modules/') && !file.includes('\\node_modules\\') && !file.includes('/generated/'),
@@ -295,7 +290,8 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
 
     // 7. find test and example directories (recursive search for tests)
     const tests = await findDirectories(root, ['test', 'tests', '__tests__']);
-    const examples = await findDirectory(root, ['examples', 'samples']);
+    // make a best attempt to locate such a directory
+    const exampleDir = await findDirectory(root, ['examples', 'samples']);
 
     return {
         root,
@@ -305,7 +301,7 @@ export async function detectLangiumProject(cwd: string): Promise<LangiumProjectS
         serviceDetails,
         services,
         tests,
-        examples,
+        exampleDir,
     };
 }
 
@@ -332,7 +328,7 @@ interface ServiceOverride {
  * have all of their validators discovered. The core module is parsed first so its wirings
  * take precedence for scalar services; the remaining modules only fill gaps.
  *
- * @param moduleFiles all non-generated `*-module.ts` files in the project
+ * @param moduleFiles all non-generated `*module.ts` files in the project
  * @param languageIds language ids from the langium config, used to associate validators
  */
 async function detectCustomServices(

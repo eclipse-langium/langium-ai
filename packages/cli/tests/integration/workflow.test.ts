@@ -59,10 +59,11 @@ describe('CLI Workflow Integration', () => {
             ),
         );
 
-        const grammarPath = path.join(tempDir, 'src', 'wtd.langium');
-        await fs.mkdir(path.dirname(grammarPath), { recursive: true });
+        const grammarPath = path.join('src', 'wtd.langium');
+        const absGrammarPath = path.join(tempDir, 'src', 'wtd.langium');
+        await fs.mkdir(path.dirname(absGrammarPath), { recursive: true });
         await fs.writeFile(
-            grammarPath,
+            absGrammarPath,
             `
 grammar WorkflowTest
 
@@ -110,19 +111,19 @@ export const WorkflowTestModule: Module<WorkflowTestServices, PartialLangiumServ
                 languages: [
                     {
                         id: 'abc',
-                        grammarPath: './src/grammar.langium',
+                        grammarPath: 'src/grammar.langium',
                         caseInsensitive: false,
                     },
                 ],
             },
             descriptor: {
-                path: './language.descriptor.yml',
+                path: 'language.descriptor.yml',
             },
             sysprompt: {
-                path: './language.sysprompt.md',
+                path: 'language.sysprompt.md',
             },
             evaluations: {
-                directory: './evals',
+                directory: 'evals',
             },
             project: {
                 name: 'workflow-test-dsl',

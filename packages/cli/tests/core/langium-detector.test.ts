@@ -20,7 +20,7 @@ const langiumConfigJSON = {
         {
             id: 'language-id',
             caseInsensitive: false,
-            grammar: './test.langium',
+            grammar: 'test.langium',
         },
     ],
 };
@@ -65,7 +65,7 @@ describe('Langium Project Detection', () => {
             expect(structure.root).toBe(tempDir);
             expect(structure.packageJson).toBe(path.join(tempDir, 'package.json'));
             expect(structure.langiumConfig).toBe(path.join(tempDir, 'langium-config.json'));
-            expect(structure.languages[0].grammar).toBe(path.join(tempDir, 'test.langium'));
+            expect(structure.languages[0].grammar).toBe('test.langium');
         });
 
         it('should detect services via class inheritance (extends DefaultScopeProvider)', async () => {
@@ -345,7 +345,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
             const structure = await detectLangiumProject(tempDir);
 
             expect(structure.tests).toEqual([testsDir]);
-            expect(structure.examples).toBe(examplesDir);
+            expect(structure.exampleDir).toBe(examplesDir);
         });
 
         it('should detect nested test directories', async () => {
@@ -390,7 +390,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
             const structure = await detectLangiumProject(tempDir);
 
-            expect(structure.languages[0].grammar).toBe(path.join(tempDir, 'test.langium'));
+            expect(structure.languages[0].grammar).toBe('test.langium');
         });
 
         it('should handle monorepo with multiple languages', async () => {
@@ -403,12 +403,12 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
                     {
                         id: 'l1',
                         caseInsensitive: false,
-                        grammar: './project1/grammar1.langium',
+                        grammar: 'project1/grammar1.langium',
                     },
                     {
                         id: 'l2',
                         caseInsensitive: false,
-                        grammar: './project2/grammar2.langium',
+                        grammar: 'project2/grammar2.langium',
                     },
                 ],
             };
@@ -431,11 +431,11 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
             const l1 = project.languages[0];
             expect(l1.id).toBe('l1');
-            expect(l1.grammar).toBe(g1Path);
+            expect(l1.grammar).toBe(path.join('project1', 'grammar1.langium'));
 
             const l2 = project.languages[1];
             expect(l2.id).toBe('l2');
-            expect(l2.grammar).toBe(g2Path);
+            expect(l2.grammar).toBe(path.join('project2', 'grammar2.langium'));
         });
 
         it('should detect per-language validators across multiple module files', async () => {
@@ -447,8 +447,8 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
             const multiConfig = {
                 projectName: 'RequirementsAndTests',
                 languages: [
-                    { id: 'requirements-lang', caseInsensitive: false, grammar: './src/requirements.langium' },
-                    { id: 'tests-lang', caseInsensitive: false, grammar: './src/tests.langium' },
+                    { id: 'requirements-lang', caseInsensitive: false, grammar: 'src/requirements.langium' },
+                    { id: 'tests-lang', caseInsensitive: false, grammar: 'src/tests.langium' },
                 ],
             };
             await fs.writeFile(path.join(tempDir, 'langium-config.json'), JSON.stringify(multiConfig, null, 2));
@@ -1050,6 +1050,7 @@ import { RealImport } from './real.js';`;
                         id: 'my-dsl',
                         grammar: 'my-dsl.langium',
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
                 services: {},
@@ -1069,6 +1070,7 @@ import { RealImport } from './real.js';`;
                         id: 'my-dsl',
                         grammar: path.join(tempDir, 'my-dsl.langium'),
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
                 services: {},
@@ -1088,6 +1090,7 @@ import { RealImport } from './real.js';`;
                         id: 'my-dsl',
                         grammar: path.join(tempDir, 'my-dsl.langium'),
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
                 services: {},
@@ -1108,6 +1111,7 @@ import { RealImport } from './real.js';`;
                         id: 'my-dsl-id',
                         grammar: path.join(tempDir, 'grammar-name.langium'),
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
                 services: {},
@@ -1129,6 +1133,7 @@ import { RealImport } from './real.js';`;
                         id: 'domain-model',
                         grammar: path.join(tempDir, 'domain-model.langium'),
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
                 services: {},
@@ -1148,6 +1153,7 @@ import { RealImport } from './real.js';`;
                         id: 'hello_world',
                         grammar: path.join(tempDir, 'hello_world.langium'),
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
                 services: {},
@@ -1167,6 +1173,7 @@ import { RealImport } from './real.js';`;
                         id: 'statemachine',
                         grammar: path.join(tempDir, 'statemachine.langium'),
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
                 services: {},
@@ -1199,6 +1206,7 @@ import { RealImport } from './real.js';`;
                         id: 'domain-model',
                         grammar: path.join(tempDir, 'domain-model.langium'),
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
                 services: {
@@ -1220,6 +1228,7 @@ import { RealImport } from './real.js';`;
                         id: 'my-awesome-language',
                         grammar: path.join(tempDir, 'my-awesome-language.langium'),
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
                 services: {},
@@ -1252,8 +1261,9 @@ import { RealImport } from './real.js';`;
                 languages: [
                     {
                         id: 'test-dsl',
-                        grammar: './test-dsl-project.langium',
+                        grammar: 'test-dsl-project.langium',
                         caseInsensitive: false,
+                        fileExtensions: ['.dsl'],
                     },
                 ],
             };

@@ -1,5 +1,5 @@
-import { existsSync } from 'node:fs';
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { existsSync, statSync } from 'node:fs';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'path';
 import YAML from 'yaml';
 import type {
@@ -26,19 +26,38 @@ export async function generateDescriptor(
 ): Promise<ProjectDescriptor> {
     const cwd = process.cwd();
 
-    // read example files if present
-    let examplesContent: Array<{ name: string; content: string }> = [];
-    if (structure.examples) {
-        const exampleFiles = await readdir(structure.examples);
-        // read up to 3 example files (sorted for deterministic ordering)
-        const exampleFilesToRead = exampleFiles.sort().slice(0, 3);
+    // read up to 3 reasonably sized examples
+    const pickedExamples: Array<{ name: string; content: string }> = [];
+    const exampleDir: string | undefined = structure.exampleDir;
+    if (exampleDir !== undefined) {
+        // collect all valid extensions
+        const fileExtensions: string[] = structure.languages.flatMap((l) => l.fileExtensions);
 
-        examplesContent = await Promise.all(
-            exampleFilesToRead.map(async (file) => ({
-                name: file,
-                content: await readFile(path.join(structure.examples!, file), 'utf-8'),
-            })),
-        );
+        // pick a few reasonably sized examples to show in the descriptor
+        const exampleFiles = await readdir(exampleDir, { recursive: true });
+        for (const file of exampleFiles) {
+            const p = path.join(exampleDir, file);
+            const s = statSync(p);
+            if (s.isFile() && s.size <= 250 * 75) {
+                // verify it's an extension for a file we want
+                if (!fileExtensions.some((e) => file.endsWith(e))) {
+                    // skip hop
+                    continue;
+                }
+
+                // reasonably compact, take it
+                const pp = path.join(exampleDir, file);
+                const content = await readFile(pp, 'utf-8');
+                pickedExamples.push({
+                    name: file,
+                    content: content,
+                });
+            }
+
+            if (pickedExamples.length === 3) {
+                break;
+            }
+        }
     }
 
     const languages: LaiConfigLanguage[] = config.langium.languages ?? [];
@@ -67,7 +86,7 @@ export async function generateDescriptor(
         tests: structure.tests.length > 0 ? structure.tests.map((t) => makeRelative(cwd, t)) : undefined,
 
         // create examples deterministically from files
-        examples: createDefaultExamples(structure, examplesContent),
+        examples: createDefaultExamples(structure, pickedExamples),
 
         builtins: undefined,
 
@@ -122,7 +141,7 @@ function createDefaultExamples(
     structure: LangiumProjectStructure,
     exampleFiles: Array<{ name: string; content: string }>,
 ) {
-    if (!structure.examples || exampleFiles.length === 0) {
+    if (!structure.exampleDir || exampleFiles.length === 0) {
         return [];
     }
 
@@ -130,7 +149,7 @@ function createDefaultExamples(
     return exampleFiles.map((ex, idx) => ({
         name: `Example ${idx + 1}`,
         description: `An example of one or more language features.`,
-        file: makeRelative(cwd, path.join(structure.examples!, ex.name)),
+        file: makeRelative(cwd, path.join(structure.exampleDir!, ex.name)),
         tags: ['example'],
     }));
 }

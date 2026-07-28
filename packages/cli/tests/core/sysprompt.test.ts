@@ -30,13 +30,13 @@ describe('System Prompt Generation', () => {
                 name: 'requirements-lang',
                 description: 'requirements-lang: A DSL',
                 caseInsensitive: false,
-                grammar: './src/requirements.langium',
+                grammar: 'src/requirements.langium',
             },
             {
                 name: 'tests-lang',
                 description: 'tests-lang: A DSL',
                 caseInsensitive: false,
-                grammar: './src/tests.langium',
+                grammar: 'src/tests.langium',
             },
         ],
     });

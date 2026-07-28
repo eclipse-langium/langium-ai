@@ -203,7 +203,12 @@ export interface LangiumLanguage {
     /**
      * Whether this language is case-insensitive or not, defaults to false
      */
-    caseInsensitive: boolean;
+    caseInsensitive?: boolean;
+
+    /**
+     * Recognized extensions that we should pick up for this language
+     */
+    fileExtensions: string[];
 }
 
 /**
@@ -236,7 +241,11 @@ export interface LangiumProjectStructure {
 
     // common directories (recursive search, may find multiple)
     tests: string[];
-    examples?: string;
+
+    /**
+     * Candidate directory with examples.
+     */
+    exampleDir?: string;
 }
 
 /**

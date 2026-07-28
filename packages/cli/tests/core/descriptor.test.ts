@@ -57,6 +57,7 @@ describe('Descriptor Generation', () => {
                 id: 'grammar',
                 caseInsensitive: false,
                 grammar: path.join(tempDir, 'grammar.langium'),
+                fileExtensions: ['.dsl'],
             },
         ],
         services: {},
@@ -132,7 +133,7 @@ describe('Descriptor Generation', () => {
 
             const structure: LangiumProjectStructure = {
                 ...createMockStructure(),
-                examples: examplesDir,
+                exampleDir: examplesDir,
             };
 
             const descriptor = await generateDescriptor(config, structure);
@@ -190,7 +191,7 @@ describe('Descriptor Generation', () => {
                         name: 'test-dsl',
                         description: 'A test DSL',
                         caseInsensitive: false,
-                        grammar: './grammar.langium',
+                        grammar: 'grammar.langium',
                     },
                 ],
                 services: {},
@@ -216,10 +217,10 @@ describe('Descriptor Generation', () => {
                         description:
                             'A very long description that would normally wrap in YAML but should not wrap because we disabled line wrapping in the YAML stringifier',
                         caseInsensitive: false,
-                        grammar: './grammar.langium',
+                        grammar: 'grammar.langium',
                     },
                 ],
-                langiumConfig: './langium-config.json',
+                langiumConfig: 'langium-config.json',
                 services: {},
                 serviceDetails: {},
             };

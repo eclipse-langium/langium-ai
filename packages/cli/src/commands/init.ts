@@ -173,8 +173,8 @@ async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStr
     }
     logDetected(
         'Examples',
-        structure.examples ? makeRelative(cwd, structure.examples) : '(not found)',
-        !!structure.examples,
+        structure.exampleDir ? makeRelative(cwd, structure.exampleDir) : '(not found)',
+        !!structure.exampleDir,
     );
 
     console.log();
@@ -196,18 +196,18 @@ async function initConfig(cwd: string, structure: LangiumProjectStructure, langu
                 return {
                     id: l.id,
                     grammarPath: l.grammar,
-                    caseInsensitive: l.caseInsensitive,
+                    caseInsensitive: !!l.caseInsensitive,
                 };
             }),
         },
         descriptor: {
-            path: `./${languageName}.descriptor.yml`,
+            path: `${languageName}.descriptor.yml`,
         },
         sysprompt: {
-            path: `./${languageName}.sysprompt.md`,
+            path: `${languageName}.sysprompt.md`,
         },
         evaluations: {
-            directory: './evals',
+            directory: 'evals',
         },
         project: {
             name: languageName,
