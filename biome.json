@@ -10,7 +10,8 @@
             "!**/package.json",
             "!**/cli/src/templates.ts",
             "!**/out/**",
-            "!**/integration-test/**"
+            "!**/integration-test/**",
+            "!**/targetted-integration-test/**"
         ]
     },
     "formatter": {
