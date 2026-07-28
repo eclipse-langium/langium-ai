@@ -55,7 +55,7 @@ export async function generateDescriptor(
             };
             return ld;
         }),
-        langium_config: structure.langiumConfig ? makeRelative(cwd, structure.langiumConfig) : './langium-config.json',
+        langiumConfig: structure.langiumConfig ? makeRelative(cwd, structure.langiumConfig) : './langium-config.json',
         // grammar: makeRelative(cwd, structure.grammar!),
 
         // service details for this project

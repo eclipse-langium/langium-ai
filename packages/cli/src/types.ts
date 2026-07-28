@@ -130,30 +130,30 @@ export interface Services {
     module?: string;
 
     // parser services
-    async_parser?: string;
-    grammar_config?: string;
-    langium_parser?: string;
-    parser_error_message_provider?: string;
-    lexer_error_message_provider?: string;
-    completion_parser?: string;
-    token_builder?: string;
+    asyncParser?: string;
+    grammarConfig?: string;
+    langiumParser?: string;
+    parserErrorMessageProvider?: string;
+    lexerErrorMessageProvider?: string;
+    completionParser?: string;
+    tokenBuilder?: string;
     lexer?: string;
-    value_converter?: string;
+    valueConverter?: string;
 
     // documentation services
-    comment_provider?: string;
-    documentation_provider?: string;
+    commentProvider?: string;
+    documentationProvider?: string;
 
     // references services
     linker?: string;
-    name_provider?: string;
+    nameProvider?: string;
     references?: string;
-    scope_provider?: string;
-    scope_computation?: string;
+    scopeProvider?: string;
+    scopeComputation?: string;
 
     // serializer services
     hydrator?: string;
-    json_serializer?: string;
+    jsonSerializer?: string;
 
     // validation services
     /**
@@ -161,29 +161,29 @@ export interface Services {
      * multi-language projects. Populated by the detection pass.
      */
     validators?: ValidatorService[];
-    validation_registry?: string;
+    validationRegistry?: string;
 
     // LSP services
-    completion_provider?: string;
-    document_highlight_provider?: string;
-    document_symbol_provider?: string;
-    hover_provider?: string;
-    folding_range_provider?: string;
-    definition_provider?: string;
-    type_provider?: string;
-    implementation_provider?: string;
-    references_provider?: string;
-    code_action_provider?: string;
-    semantic_token_provider?: string;
-    rename_provider?: string;
+    completionProvider?: string;
+    documentHighlightProvider?: string;
+    documentSymbolProvider?: string;
+    hoverProvider?: string;
+    foldingRangeProvider?: string;
+    definitionProvider?: string;
+    typeProvider?: string;
+    implementationProvider?: string;
+    referencesProvider?: string;
+    codeActionProvider?: string;
+    semanticTokenProvider?: string;
+    renameProvider?: string;
     formatter?: string;
-    signature_help_provider?: string;
-    call_hierarchy_provider?: string;
-    type_hierarchy_provider?: string;
-    declaration_provider?: string;
-    inlay_hint_provider?: string;
-    code_lens_provider?: string;
-    document_link_provider?: string;
+    signatureHelpProvider?: string;
+    callHierarchyProvider?: string;
+    typeHierarchyProvider?: string;
+    declarationProvider?: string;
+    inlayHintProvider?: string;
+    codeLensProvider?: string;
+    documentLinkProvider?: string;
 }
 
 /**
@@ -284,7 +284,7 @@ export interface ProjectDescriptor {
     /**
      * Path to the project's Langium config file
      */
-    langium_config: string;
+    langiumConfig: string;
 
     /**
      * Details about this project's service set instantiation.

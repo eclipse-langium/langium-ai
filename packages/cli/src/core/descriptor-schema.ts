@@ -27,8 +27,8 @@ export function validateDescriptor(descriptor: ProjectDescriptor): ValidationRes
     // TODO check that this version matches the one we're built with, if not ensure we're at least compatible by doing a table lookup to see which versions are legitimate
     // laiVersion perhaps instead of 'version' to be more explicit up front about what that is
 
-    if (!descriptor.langium_config || descriptor.langium_config.trim() === '') {
-        errors.push({ field: 'langium_config', message: 'langium_config is required' });
+    if (!descriptor.langiumConfig || descriptor.langiumConfig.trim() === '') {
+        errors.push({ field: 'langiumConfig', message: 'langiumConfig is required' });
     }
 
     // check languages

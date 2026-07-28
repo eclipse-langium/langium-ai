@@ -94,7 +94,7 @@ describe('Descriptor Generation', () => {
                 ...createMockStructure(),
                 services: {
                     validators: [{ language: 'grammar', path: path.join(tempDir, 'validator.ts') }],
-                    scope_provider: path.join(tempDir, 'scope-provider.ts'),
+                    scopeProvider: path.join(tempDir, 'scope-provider.ts'),
                 },
             };
 
@@ -103,7 +103,7 @@ describe('Descriptor Generation', () => {
             // check paths end with expected files (handles macOS temp dir paths)
             expect(descriptor.services?.validators?.[0].language).toBe('grammar');
             expect(descriptor.services?.validators?.[0].path).toMatch(/validator\.ts$/);
-            expect(descriptor.services?.scope_provider).toMatch(/scope-provider\.ts$/);
+            expect(descriptor.services?.scopeProvider).toMatch(/scope-provider\.ts$/);
         });
 
         it('should generate description based on features', async () => {
@@ -112,7 +112,7 @@ describe('Descriptor Generation', () => {
                 ...createMockStructure(),
                 services: {
                     validators: [{ path: path.join(tempDir, 'validator.ts') }],
-                    type_provider: path.join(tempDir, 'type-provider.ts'),
+                    typeProvider: path.join(tempDir, 'type-provider.ts'),
                 },
             };
 
@@ -184,7 +184,7 @@ describe('Descriptor Generation', () => {
         it('should save descriptor as YAML', async () => {
             const descriptor: ProjectDescriptor = {
                 version: '0.0.0',
-                langium_config: './langium-config.json',
+                langiumConfig: './langium-config.json',
                 languages: [
                     {
                         name: 'test-dsl',
@@ -219,7 +219,7 @@ describe('Descriptor Generation', () => {
                         grammar: './grammar.langium',
                     },
                 ],
-                langium_config: './langium-config.json',
+                langiumConfig: './langium-config.json',
                 services: {},
                 serviceDetails: {},
             };

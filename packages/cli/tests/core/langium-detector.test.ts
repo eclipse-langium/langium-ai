@@ -88,7 +88,7 @@ export class TestScopeProvider extends DefaultScopeProvider {
 
             const structure = await detectLangiumProject(tempDir);
 
-            expect(structure.services.scope_provider).toBe(path.join(srcDir, 'test-scope-provider.ts'));
+            expect(structure.services.scopeProvider).toBe(path.join(srcDir, 'test-scope-provider.ts'));
         });
 
         it('should detect services via class inheritance (extends AbstractFormatter)', async () => {
@@ -132,7 +132,7 @@ export class TestCodeActionProvider implements CodeActionProvider {
 
             const structure = await detectLangiumProject(tempDir);
 
-            expect(structure.services.code_action_provider).toBe(path.join(srcDir, 'test-code-actions.ts'));
+            expect(structure.services.codeActionProvider).toBe(path.join(srcDir, 'test-code-actions.ts'));
         });
 
         it('should not detect interface implementation without langium import', async () => {
@@ -152,7 +152,7 @@ export class MyProvider implements CodeActionProvider {}`,
 
             const structure = await detectLangiumProject(tempDir);
 
-            expect(structure.services.code_action_provider).toBeUndefined();
+            expect(structure.services.codeActionProvider).toBeUndefined();
         });
 
         it('should detect multiple services from inheritance scan', async () => {
@@ -181,8 +181,8 @@ export class TestValidator extends DefaultDocumentValidator {}`,
 
             const structure = await detectLangiumProject(tempDir);
 
-            expect(structure.services.scope_provider).toBe(path.join(srcDir, 'scope-provider.ts'));
-            expect(structure.services.hover_provider).toBe(path.join(srcDir, 'hover-provider.ts'));
+            expect(structure.services.scopeProvider).toBe(path.join(srcDir, 'scope-provider.ts'));
+            expect(structure.services.hoverProvider).toBe(path.join(srcDir, 'hover-provider.ts'));
             expect(structure.services.validators).toEqual([{ path: path.join(srcDir, 'validator.ts') }]);
         });
 
@@ -220,7 +220,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
             const structure = await detectLangiumProject(tempDir);
 
-            expect(structure.services.scope_provider).toBe(path.join(srcDir, 'real-scope.ts'));
+            expect(structure.services.scopeProvider).toBe(path.join(srcDir, 'real-scope.ts'));
         });
 
         it('should fall back to module-parse for services without inheritance (AddedServices)', async () => {
@@ -291,7 +291,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
             const structure = await detectLangiumProject(tempDir);
 
-            expect(structure.services.scope_provider).toBe(path.join(srcDir, 'test-scope-provider.ts'));
+            expect(structure.services.scopeProvider).toBe(path.join(srcDir, 'test-scope-provider.ts'));
             expect(structure.services.validators).toEqual([{ path: path.join(validationDir, 'test-validator.ts') }]);
         });
 
@@ -327,9 +327,9 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
 
             const structure = await detectLangiumProject(tempDir);
 
-            expect(structure.services.code_action_provider).toBe(path.join(srcDir, 'lsp', 'test-code-actions.ts'));
+            expect(structure.services.codeActionProvider).toBe(path.join(srcDir, 'lsp', 'test-code-actions.ts'));
             expect(structure.services.formatter).toBe(path.join(srcDir, 'lsp', 'test-formatter.ts'));
-            expect(structure.services.hover_provider).toBe(path.join(srcDir, 'hover.ts'));
+            expect(structure.services.hoverProvider).toBe(path.join(srcDir, 'hover.ts'));
         });
 
         it('should detect test and example directories', async () => {
@@ -537,7 +537,7 @@ export function createRequirementsAndTestsLangServices(context) {
             // should not detect any services without a module file
             expect(structure.services.module).toBeUndefined();
             expect(structure.services.validators).toBeUndefined();
-            expect(structure.services.scope_provider).toBeUndefined();
+            expect(structure.services.scopeProvider).toBeUndefined();
         });
 
         it('should filter out generated/module files', async () => {
@@ -574,7 +574,7 @@ export class MyScopeProvider extends DefaultScopeProvider {}`,
             expect(overrides).toHaveLength(1);
             expect(overrides[0]).toEqual({
                 className: 'MyScopeProvider',
-                serviceKey: 'scope_provider',
+                serviceKey: 'scopeProvider',
                 filePath: path.join(srcDir, 'my-scope.ts'),
             });
         });
@@ -609,7 +609,7 @@ export class MyHoverProvider extends AstNodeHoverProvider {}`,
             const overrides = await scanSourceFilesForOverrides(tempDir);
 
             expect(overrides).toHaveLength(1);
-            expect(overrides[0].serviceKey).toBe('hover_provider');
+            expect(overrides[0].serviceKey).toBe('hoverProvider');
         });
 
         it('should detect class implementing CodeActionProvider with langium import', async () => {
@@ -625,7 +625,7 @@ export class MyCodeActions implements CodeActionProvider {}`,
             const overrides = await scanSourceFilesForOverrides(tempDir);
 
             expect(overrides).toHaveLength(1);
-            expect(overrides[0].serviceKey).toBe('code_action_provider');
+            expect(overrides[0].serviceKey).toBe('codeActionProvider');
         });
 
         it('should not detect implements without langium import', async () => {
@@ -667,7 +667,7 @@ export class MyCompletion extends DefaultCompletionProvider {}`,
 
             expect(overrides).toHaveLength(3);
             const keys = overrides.map((o) => o.serviceKey).sort();
-            expect(keys).toEqual(['completion_provider', 'scope_provider', 'validator']);
+            expect(keys).toEqual(['completionProvider', 'scopeProvider', 'validator']);
         });
 
         it('should skip node_modules, generated, test, and spec files', async () => {
@@ -748,7 +748,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
             const services: Services = { module: modulePath };
             await detectCustomServices(tempDir, modulePath, services);
 
-            expect(services.scope_provider).toBe(path.join(srcDir, 'real-scope.ts'));
+            expect(services.scopeProvider).toBe(path.join(srcDir, 'real-scope.ts'));
         });
 
         it('should use first found when no module exists for conflict resolution', async () => {
@@ -770,7 +770,7 @@ export class ScopeB extends DefaultScopeProvider {}`,
             await detectCustomServices(tempDir, undefined, services);
 
             // should pick one (first found)
-            expect(services.scope_provider).toBeDefined();
+            expect(services.scopeProvider).toBeDefined();
         });
 
         it('should fill in module-only services after inheritance scan', async () => {
@@ -806,8 +806,8 @@ export const TestModule: Module<TestServices, PartialLangiumServices & TestAdded
             const services: Services = { module: modulePath };
             await detectCustomServices(tempDir, modulePath, services);
 
-            // inheritance scan finds scope_provider
-            expect(services.scope_provider).toBe(path.join(srcDir, 'scope.ts'));
+            // inheritance scan finds scopeProvider
+            expect(services.scopeProvider).toBe(path.join(srcDir, 'scope.ts'));
             // module fallback finds validator
             expect(services.validators).toEqual([{ path: path.join(srcDir, 'validator.ts') }]);
         });
@@ -842,7 +842,7 @@ export const TestModule: Module<TestServices, PartialLangiumServices> = {
             await detectCustomServices(tempDir, modulePath, services);
 
             // inheritance scan takes priority
-            expect(services.scope_provider).toBe(path.join(srcDir, 'real-scope.ts'));
+            expect(services.scopeProvider).toBe(path.join(srcDir, 'real-scope.ts'));
         });
     });
 

@@ -71,10 +71,10 @@ export async function validateCommand(): Promise<void> {
     }
 
     // langium config
-    if (descriptor.langium_config) {
-        const configPath = path.join(cwd, descriptor.langium_config);
+    if (descriptor.langiumConfig) {
+        const configPath = path.join(cwd, descriptor.langiumConfig);
         if (!(await pathExists(configPath))) {
-            warning(`langium_config: file not found at ${descriptor.langium_config}`);
+            warning(`langiumConfig: file not found at ${descriptor.langiumConfig}`);
             warnings++;
         }
     }

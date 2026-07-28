@@ -22,7 +22,7 @@ describe('System Prompt Generation', () => {
 
     const baseDescriptor = (): ProjectDescriptor => ({
         version: 'dev',
-        langium_config: './langium-config.json',
+        langiumConfig: './langium-config.json',
         serviceDetails: {},
         services: {},
         languages: [
