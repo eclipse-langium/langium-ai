@@ -1,5 +1,5 @@
 {
-    "name": "langium-ai",
+    "name": "langium-ai-monorepo",
     "private": true,
     "version": "0.0.1",
     "description": "Monorepo for Langium AI and its associated projects",
