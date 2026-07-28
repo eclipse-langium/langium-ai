@@ -61,8 +61,13 @@ The LAI cli exposes a number of commands to line up quite nicely with the loop p
 | `lai gen sysprompt` | Synthesize a system prompt from the descriptor |
 | `lai evaluate` | Run evaluation suites against your system prompt via your configured LLM |
 | `lai show` / `lai compare` / `lai stats` / `lai history` | Inspect, compare, and analyze evaluation runs |
+| `lai export` / `lai tag` / `lai clean` | Export run results, tag runs, and prune old evaluation logs |
 | `lai validate` | Check descriptor schema and verify all referenced files exist |
 | `lai status` | Check project configuration status |
+
+Setup and generation commands (`init`, `init config`, `init evals`, `gen`) accept a `-y` / `--yes` flag to skip interactive prompts and use defaults — handy for CI and other non-interactive runs. `lai clean` also accepts `--yes` to skip its deletion confirmation.
+
+Langium AI supports Langium projects that host **multiple languages**. The config tracks each language under `langium.languages[]`, and the generated descriptor carries a `languages[]` list alongside a per-language `services.validators[]` mapping, so system prompts can render distinct validation rules for each language.
 
 ```bash
 npm install -g langium-ai
@@ -97,7 +102,7 @@ These skills are invoked directly to perform specific generation or refinement t
 
 | Skill | Description |
 |---|---|
-| **lai-gen-descriptor** | Generate or refine a `language.descriptor.yml` — bootstraps a new descriptor if none exists, then guides refinement of paths, services, examples, and documentation |
+| **lai-gen-descriptor** | Generate or refine your `<language-name>.descriptor.yml` — bootstraps a new descriptor if none exists, then guides refinement of paths, services, examples, and documentation |
 | **lai-gen-sysprompt** | Generate or refine a system prompt — bootstraps from the descriptor if none exists, then guides targeted improvements based on evaluation results |
 | **lai-gen-evals** | Expand the evaluation suite with comprehensive coverage — syntactic correctness, semantic validity, user intent matching, edge cases, and language understanding |
 | **lai-gen-mcp** | Generate an MCP server that exposes your DSL's parser and validator as a tool for any MCP-compatible client (Claude Code, Cursor, VS Code, etc.). Handles monorepo detection and output location |

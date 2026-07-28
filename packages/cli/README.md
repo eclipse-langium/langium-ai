@@ -59,6 +59,13 @@ From there you can periodically inspect your results by checking history of prio
 lai history
 ```
 
+The setup and generation commands (`lai init`, `lai init config`, `lai init evals`, and `lai gen`) accept a `-y` / `--yes` flag to skip interactive prompts and accept defaults — useful for CI or scripted, non-interactive runs.
+
+```bash
+lai init --yes
+lai gen descriptor -y
+```
+
 For further info you can always run `lai help`.
 
 ## Evaluation
@@ -78,7 +85,12 @@ lai evaluate --verbose
 # use a custom system prompt instead of the configured one
 lai evaluate --sysprompt ./prompts/experimental.txt
 
-# use a custom evaluations directory instead of the configured one
+# run against specific eval files or directories (positional paths)
+lai evaluate ./custom-evals
+lai evaluate ./evals/basic.eval.ts ./evals/edge-cases.eval.ts
+
+# (--dir is still accepted for backwards compatibility, but deprecated in
+#  favor of positional paths above)
 lai evaluate --dir ./custom-evals
 
 # combine options
@@ -159,6 +171,14 @@ lai export latest --output results.csv
 # JSON format
 lai export latest --format json
 lai export 5 --format json --output run-5.json
+```
+
+### Validating the Descriptor
+
+Check that your language descriptor is well-formed and that every file it references (grammars, services, validators, examples, docs) actually exists. This is a quick sanity check to run after editing the descriptor by hand or after moving project files around.
+
+```bash
+lai validate
 ```
 
 ### Cleaning Up
@@ -283,7 +303,7 @@ These invocable skills describe common workflows that are capable of being parti
 
 | Skill | Description |
 |---|---|
-| **lai-gen-descriptor** | Generate or refine a `language.descriptor.yml` — bootstraps a new descriptor if none exists, then guides refinement of paths, services, examples, and documentation |
+| **lai-gen-descriptor** | Generate or refine your `<language-name>.descriptor.yml` — bootstraps a new descriptor if none exists, then guides refinement of paths, services, examples, and documentation |
 | **lai-gen-sysprompt** | Generate or refine a system prompt — bootstraps from the descriptor if none exists, then guides targeted improvements based on evaluation results |
 | **lai-gen-evals** | Expand the evaluation suite with comprehensive coverage — syntactic correctness, semantic validity, user intent matching, edge cases, and language understanding |
 | **lai-gen-mcp** | Generate an MCP server that exposes your DSL's parser and validator as a tool for any MCP-compatible client (Claude Code, Cursor, VS Code, etc.) |
