@@ -187,6 +187,9 @@ async function detectAndDisplayStructure(cwd: string): Promise<LangiumProjectStr
  * @throws When config cannot be initialized successfully
  */
 async function initConfig(cwd: string, structure: LangiumProjectStructure, languageName: string): Promise<void> {
+    // normalize the language name in case we pickup a problematic name
+    const normalizedLanguageName = languageName.replaceAll(/@|\/|\\/g, '');
+
     const config: LaiConfig = {
         // TODO need to adjust this so it's either the language version or LAI version, can't be both
         version: __CLI_VERSION__,
@@ -201,10 +204,10 @@ async function initConfig(cwd: string, structure: LangiumProjectStructure, langu
             }),
         },
         descriptor: {
-            path: `${languageName}.descriptor.yml`,
+            path: `${normalizedLanguageName}.descriptor.yml`,
         },
         sysprompt: {
-            path: `${languageName}.sysprompt.md`,
+            path: `${normalizedLanguageName}.sysprompt.md`,
         },
         evaluations: {
             directory: 'evals',
