@@ -32,10 +32,18 @@ export async function generateDescriptor(
     if (exampleDir !== undefined) {
         // collect all valid extensions
         const fileExtensions: string[] = structure.languages.flatMap((l) => l.fileExtensions);
+        let checkedCount = 0;
 
         // pick a few reasonably sized examples to show in the descriptor
         const exampleFiles = await readdir(exampleDir, { recursive: true });
         for (const file of exampleFiles) {
+            checkedCount++;
+
+            if (checkedCount > 100) {
+                // don't need to check everything, bail out at this point
+                break;
+            }
+
             const p = path.join(exampleDir, file);
             const s = statSync(p);
             if (s.isFile() && s.size <= 250 * 75) {
