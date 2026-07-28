@@ -221,18 +221,30 @@ async function loadContent(
 
     // take first 3 examples
     if (descriptor.examples && descriptor.examples.length > 0) {
-        const examplesToLoad = descriptor.examples.slice(0, 3);
-        const exampleContents = await Promise.all(
-            examplesToLoad.map(async (ex) => {
-                const examplePath = path.join(cwd, ex.file);
-                let code = '';
-                if (await pathExists(examplePath)) {
-                    code = await readFile(examplePath, 'utf-8');
-                }
-                return `#### ${ex.name}\n${ex.description}\n${ex.tags ? `Tags: ${ex.tags.join(', ')}` : ''}\n\n\`\`\`\n${code}\n\`\`\``;
-            }),
-        );
-        content.push(['Examples', `Example programs:\n\n${exampleContents.join('\n\n')}`]);
+        // only pick 2 examples that have <= 200 * 70 bytes
+        // (arbitrary cutoff, assuming lines aren't longer than 70 characters and we have no more than 200 of them)
+        const pickedExamples: string[] = [];
+        for (const ex of descriptor.examples ?? []) {
+            const examplePath = path.join(cwd, ex.file);
+            let exampleContent: string | undefined;
+            if (await pathExists(examplePath)) {
+                exampleContent = await readFile(examplePath, 'utf-8');
+            }
+
+            if (exampleContent && exampleContent.length <= 200 * 70) {
+                // within bounds, let's take it!
+                pickedExamples.push(
+                    `#### ${ex.name}\n${ex.description}\n${ex.tags ? `Tags: ${ex.tags.join(', ')}` : ''}\n\n\`\`\`\n${exampleContent}\n\`\`\``,
+                );
+            }
+
+            if (pickedExamples.length === 2) {
+                // all set
+                break;
+            }
+        }
+
+        content.push(['Examples', `Example programs:\n\n${pickedExamples.join('\n\n')}`]);
     }
 
     // inline documentation (first 2)

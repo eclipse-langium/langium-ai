@@ -9,8 +9,8 @@ import type {
     Services,
     ValidatorService,
 } from '../types.js';
-import { findDirectories, findDirectory, findFile, findFiles, findProjectRoot, makeRelative } from '../utils/fs.js';
 import { info } from '../utils/console.js';
+import { findDirectories, findDirectory, findFile, findFiles, findProjectRoot, makeRelative } from '../utils/fs.js';
 
 /**
  * Maps known Langium base classes to our Services interface keys.
