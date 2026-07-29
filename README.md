@@ -22,6 +22,8 @@ In particular, Langium AI helps to solve the following problems:
 - Processing DSL programs as data, while respecting the structure of your DSL
 - Developing good natural language interfaces for DSLs
 
+For updates on the latest changes, check out the [CHANGELOG](CHANGELOG.md) to see what's new.
+
 ## Contributions
 
 Langium AI is made up of three main contributions:
