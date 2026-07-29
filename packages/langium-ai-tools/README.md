@@ -155,26 +155,26 @@ In general we stick to focusing on what Langium can do to help with evaluation, 
 
 ### Testing API
 
-Langium AI Tools provides a vitest-style testing API for writing programmatic evaluation test suites. This allows you to define test cases in TypeScript with familiar features like:
+Langium AI Tools provides a vitest-style evaluation API for writing programmatic evaluation suites. This allows you to define evaluation cases in TypeScript with familiar features like:
 
-- **Test suites** with `describe()`, `describe.skip()`, and `describe.only()`
+- **Evaluation suites** with `describe()`, `describe.skip()`, and `describe.only()`
 - **Lifecycle hooks**: `beforeAll()`, `afterAll()`, `beforeEach()`, `afterEach()`
-- **Parametrized tests** with `evaluation.each()` for testing multiple data sets
-- **Test filtering** with `.skip()` and `.only()` modifiers
+- **Parametrized tests** with `evaluation.each()` for evaluating multiple data sets
+- **Evaluation filtering** with `.skip()` and `.only()` modifiers
 
 ```typescript
-import { describe, evaluation, beforeAll, afterAll, beforeEach } from 'langium-ai-tools/testing';
+import { describe, evaluation, beforeAll, afterAll, beforeEach } from 'langium-ai-tools/evals';
 
 describe('DSL Generation Tests', () => {
   let model;
 
   beforeAll(async () => {
-    // runs once before all tests
+    // runs once before all evals
     model = await setupModel();
   });
 
   beforeEach(() => {
-    // runs before each test
+    // runs before each eval
     clearCache();
   });
 
@@ -186,7 +186,7 @@ describe('DSL Generation Tests', () => {
     };
   });
 
-  // parametrized tests
+  // parametrized evals
   evaluation.each([
     { input: 'person Alice', expected: 'Alice' },
     { input: 'person Bob', expected: 'Bob' }
@@ -198,17 +198,17 @@ describe('DSL Generation Tests', () => {
   });
 
   afterAll(() => {
-    // cleanup after all tests
+    // cleanup after all evals
     cleanupModel();
   });
 });
 ```
 
-**For detailed documentation on the Testing API**, see the [Testing API Reference](../cli/docs/testing-api.md).
+**For detailed documentation on the Evaluation API**, see the [Evaluation API Reference](../cli/docs/evaluation-api.md).
 
 ### Evaluation Matrix
 
-The Evaluation Matrix provides a framework for testing multiple model configurations against a set of test cases using Langium AI evaluators. This is particularly helpful when comparing across models, prompt strategies, RAG setups, or other variations in your AI stack.
+The Evaluation Matrix provides a framework for checking multiple model configurations against a set of evaluation cases using Langium AI evaluators. This is particularly helpful when comparing across models, prompt strategies, RAG setups, or other variations in your AI stack.
 
 In practice an evaluation matrix can be helpful when deciding between which models or services to use up front, but this can also be done externally by levering the evaluator directly yourself.
 

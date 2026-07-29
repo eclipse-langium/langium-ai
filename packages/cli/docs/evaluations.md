@@ -10,7 +10,7 @@ Evaluation cases are written as `.eval.ts` files using the vitest-style testing 
 
 ```typescript
 import { describe, evaluation, beforeEach } from 'langium-ai-tools/evals';
-import type { EvalContext } from 'langium-ai-tools/testing';
+import type { EvalContext } from 'langium-ai-tools/evaluator';
 
 describe('Basic Code Generation', () => {
 
