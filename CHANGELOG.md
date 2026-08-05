@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## v5.0.7 langium-ai-tools, v0.4.1 langium-ai
+*August 5th, 2026*
+
+Various small improvements and adjustments
+
+- Removed most mentions of `--dir` from the cli usage and skills, in preparation to drop it entirely
+- Correct some usage in docs/README files
+- Removes unused `only_check_codeblocks` from `EvalCase` and associated validity checks
+- also export `MappingRule` and `ProgramMapOptions for the program mapper, previously these were internal, but the types are expected to be externally referenceable
+- also export `SplitterOptions` for the same reason above, was not available externally as expected
+
 ## v0.4.0 langium-ai
 *July 29th, 2026*
 

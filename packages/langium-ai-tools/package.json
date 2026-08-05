@@ -1,6 +1,6 @@
 {
     "name": "langium-ai-tools",
-    "version": "5.0.6",
+    "version": "5.0.7",
     "description": "Tooling for building AI Applications that leverage Langium DSLs",
     "repository": {
         "type": "git",
