@@ -10,7 +10,7 @@ import { runExampleProgramMap } from './example-program-map.js';
 import { runSplitterExample } from './example-splitter.js';
 
 function printHelp() {
-    console.log('Usage: node dist/index.js [run-langium|run-langdev|report|server|help]');
+    console.log('Usage: node dist/index.js [run-langium|run-langdev|report|splitter|program-map|help]');
     console.log('  run-langium: Run Langium evaluations');
     console.log('  run-langdev: Run LangDev evaluations');
     console.log('  report: Generate a report from the last results');
