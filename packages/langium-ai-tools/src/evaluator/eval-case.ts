@@ -43,12 +43,6 @@ export interface EvalCase {
      * Expected output response
      */
     expected_response: string;
-
-    /**
-     * Whether or not to only check code blocks in the response, and ignore the rest
-     * Defaults to false
-     */
-    only_check_codeblocks?: boolean;
 }
 
 /**
@@ -84,10 +78,6 @@ function decodeEvalCase(caseData: unknown, context: string = 'case'): EvalCase {
         throw new Error(`${context}: "history" must be an array`);
     }
 
-    if (caseDataObj.only_check_codeblocks !== undefined && typeof caseDataObj.only_check_codeblocks !== 'boolean') {
-        throw new Error(`${context}: "only_check_codeblocks" must be a boolean`);
-    }
-
     if (caseDataObj.tags !== undefined && !Array.isArray(caseDataObj.tags)) {
         throw new Error(`${context}: "tags" must be an array`);
     }
@@ -98,8 +88,7 @@ function decodeEvalCase(caseData: unknown, context: string = 'case'): EvalCase {
         prompt: caseDataObj.prompt,
         expected_response: caseDataObj.expected_response,
         history: caseDataObj.history,
-        tags: caseDataObj.tags,
-        only_check_codeblocks: caseDataObj.only_check_codeblocks,
+        tags: caseDataObj.tags
     };
 
     // add optional fields if present
@@ -115,13 +104,6 @@ function decodeEvalCase(caseData: unknown, context: string = 'case'): EvalCase {
             throw new Error(`${context}: "tags" must be an array`);
         }
         evalCase.tags = caseDataObj.tags;
-    }
-
-    if (caseDataObj.only_check_codeblocks !== undefined) {
-        if (typeof caseDataObj.only_check_codeblocks !== 'boolean') {
-            throw new Error(`${context}: "only_check_codeblocks" must be a boolean`);
-        }
-        evalCase.only_check_codeblocks = caseDataObj.only_check_codeblocks;
     }
 
     return evalCase;

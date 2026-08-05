@@ -210,9 +210,6 @@ lai evaluate --sysprompt ./prompts/experimental.md
 
 # save results to a specific path
 lai evaluate --output results.json
-
-# --dir is DEPRECATED — pass the directory as a positional argument instead
-lai evaluate --dir ./custom-evals
 ```
 
 Results are automatically saved to `.langium-ai/eval-YYYY-MM-DD-HH-MM-SS.json`.
@@ -451,7 +448,6 @@ lai evaluate --list                   # list discovered files/suites/cases, don'
 lai evaluate --verbose                # with detailed output
 lai evaluate --sysprompt PATH         # with custom system prompt
 lai evaluate --output PATH            # save results to a specific path
-lai evaluate --dir PATH               # [DEPRECATED] pass paths positionally instead
 lai status                            # (alias: s) check project status
 lai history                           # (alias: h) view run history
 lai history --oneline                 # condensed history

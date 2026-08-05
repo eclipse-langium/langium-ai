@@ -9,8 +9,7 @@ Evaluation cases are written as `.eval.ts` files using the vitest-style testing 
 ### Basic Structure
 
 ```typescript
-import { describe, evaluation, beforeEach } from 'langium-ai-tools/evals';
-import type { EvalContext } from 'langium-ai-tools/evaluator';
+import { describe, evaluation, beforeEach, EvalContext } from 'langium-ai-tools/evals';
 
 describe('Basic Code Generation', () => {
 
@@ -70,14 +69,14 @@ evaluation('validates generated code', async (ctx: EvalContext) => {
 # run all .eval.ts files in the evaluations directory
 lai evaluate
 
+# run specific files or directories instead
+lai evaluate ./eval/check.eval.ts ./other-evals/
+
 # verbose output with results printed as they complete
 lai evaluate --verbose
 
 # use a specific system prompt file
 lai evaluate --sysprompt path/to/custom.sysprompt.md
-
-# use a custom evaluations directory (overrides config)
-lai evaluate --dir ./custom-evals
 
 # save results to a custom path
 lai evaluate --output results.json
@@ -87,7 +86,6 @@ lai evaluate --output results.json
 
 | Option | Description |
 |--------|-------------|
-| `--dir <path>` | Path to evaluations directory (overrides config) |
 | `--verbose` | Show detailed output as each evaluation completes |
 | `--sysprompt <path>` | Path to system prompt file (overrides config) |
 | `--output <path>` | Custom output path for results JSON |

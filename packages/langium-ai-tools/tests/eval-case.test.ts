@@ -18,7 +18,6 @@ eval_cases:
     tags:
       - "geography"
       - "capital cities"
-    only_check_codeblocks: true
 
   - name: "Test Case 2"
     prompt: "Write a Python function to add two numbers."
@@ -40,15 +39,13 @@ eval_cases:
             prompt: 'What is the capital of France?',
             expected_response: 'The capital of France is Paris.',
             history: [{ role: 'user', content: 'Tell me about France.' }],
-            tags: ['geography', 'capital cities'],
-            only_check_codeblocks: true,
+            tags: ['geography', 'capital cities']
         });
 
         expect(evalCases[1]).toEqual({
             name: 'Test Case 2',
             history: undefined,
             prompt: 'Write a Python function to add two numbers.',
-            only_check_codeblocks: undefined,
             expected_response: '```python\ndef add(a, b):\n    return a + b\n```\n',
             tags: ['programming', 'python'],
         });

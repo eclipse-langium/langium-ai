@@ -143,7 +143,7 @@ const response = await ollama.chat({
     }]
 });
 
-const es: EvaluatorScore = evaluator.evaluate(response.message.content);
+const es: EvaluatorScore = await evaluator.evaluate(response.message.content);
 
 // print out your score!
 console.log(es);

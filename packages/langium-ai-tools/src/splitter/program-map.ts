@@ -8,7 +8,7 @@ import { type AstNode } from 'langium';
 import type { LangiumServicesLike } from '../types.js';
 import { splitByNodeToAst } from './splitter.js';
 
-interface MappingRule {
+export interface MappingRule {
     /**
      * Determines which nodes to map with this rule
      */
@@ -20,7 +20,7 @@ interface MappingRule {
     map: (node: AstNode) => string;
 }
 
-interface ProgramMapOptions {
+export interface ProgramMapOptions {
     /**
      * List of mapping rules to apply to the document.
      * Each rule is a predicate that determines which nodes to map & how to map them

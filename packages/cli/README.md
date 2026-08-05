@@ -89,10 +89,6 @@ lai evaluate --sysprompt ./prompts/experimental.txt
 lai evaluate ./custom-evals
 lai evaluate ./evals/basic.eval.ts ./evals/edge-cases.eval.ts
 
-# (--dir is still accepted for backwards compatibility, but deprecated in
-#  favor of positional paths above)
-lai evaluate --dir ./custom-evals
-
 # combine options
 lai evaluate --sysprompt ./test-prompt.md --output results.json --verbose
 ```
@@ -201,7 +197,7 @@ Evaluations live in `evals/` and use a vitest-style API provided by `langium-ai-
 // evals/basic.eval.ts
 import { describe, evaluation, beforeEach } from 'langium-ai-tools/evals';
 import { LangiumEvaluator } from 'langium-ai-tools/evaluator';
-import type { EvalContext } from 'langium-ai-tools/evaluator';
+import type { EvalContext } from 'langium-ai-tools/evals';
 import { EmptyFileSystem } from 'langium';
 import { createLANGUAGEServices } from '../packages/language/src/LANGUAGE-module.js';
 import { generateResponse, extractCodeBlock } from './utils.js';

@@ -54,6 +54,7 @@ program
     .alias('e')
     .description('Run evaluations against your system prompt')
     .argument('[paths...]', 'Eval files or directories (defaults to the configured evaluations directory)')
+    // TODO @montymxb Aug. 5th, 2026: Soon to be removed...
     .option('--dir <path>', '[DEPRECATED] Path to evaluations directory (pass as a positional argument instead)')
     .option('--output <path>', 'Output path to use over the default')
     .option('--sysprompt <path>', 'Path to system prompt file (overrides config)')

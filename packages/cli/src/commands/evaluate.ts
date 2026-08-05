@@ -173,6 +173,7 @@ function ensureTsxLoaderRegistered(verbose: boolean): void {
 export async function evaluateCommand(paths: string[], options: EvaluateOptions): Promise<void> {
     const config = await loadConfig();
 
+    // TODO @montymxb Aug. 5th, 2026: Soon to be removed...
     // resolve positional path arguments. --dir is a deprecated alias — used as a
     // fallback only when no positional args are provided; otherwise it is ignored.
     const positionalArgs = [...paths];

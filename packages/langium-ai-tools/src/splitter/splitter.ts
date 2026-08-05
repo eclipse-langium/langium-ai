@@ -8,7 +8,7 @@ import { type AstNode, CstUtils, type LangiumDocument, URI } from 'langium';
 import { AstUtils } from 'langium';
 import type { LangiumServicesLike } from '../types.js';
 
-interface SplitterOptions {
+export interface SplitterOptions {
     /**
      * List of comment rule names to include in the chunk.
      * If not provided comments are ignored.
