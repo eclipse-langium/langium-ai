@@ -233,7 +233,7 @@ export function generateChartFromLastResults() {
                 Errors: data.errors,
                 Warnings: data.warnings,
                 'Semantic Diff': 1.0 - data.similarity, // inverse similarity
-                'Response Size': data.response_length ?? 0,
+                'Response Size': data.responseLength ?? 0,
                 Time: data._runtime ?? 0,
             };
         },

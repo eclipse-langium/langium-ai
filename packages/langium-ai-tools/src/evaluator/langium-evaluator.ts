@@ -66,7 +66,7 @@ export class LangiumEvaluator<T extends LangiumServicesLike> extends AbstractDoc
 
         const evalData: LangiumEvaluatorResultData = this.createEmptyResultData();
         // include length of the response for checking
-        evalData.response_length = ctx.input.length;
+        evalData.responseLength = ctx.input.length;
         // include the diagnostics for debugging if desired
         evalData.diagnostics = validationResults;
 

@@ -13,7 +13,7 @@ import {
     LangiumEvaluator,
     type LangiumEvaluatorResultData,
     loadLastResults,
-    mergeEvaluators
+    mergeEvaluators,
 } from 'langium-ai-tools/evaluator';
 import { createLangiumGrammarServices } from 'langium/grammar';
 import { generateHistogram, generateHistoricalChart, generateRadarChart, normalizeData } from './chart.js';
@@ -120,7 +120,7 @@ export function generateChartFromLastResults() {
                 Warnings: data.warnings,
                 'Semantic Diff': 1.0 - data.similarity, // inverse similarity
                 'Total Diagnostics': (data.errors + data.warnings + data.infos + data.hints + data.unassigned) / 5.0,
-                'Response Size': data.response_length ?? 0,
+                'Response Size': data.responseLength ?? 0,
                 'Edit Distance': data.edit_distance,
                 Time: data._runtime ?? 0,
             };
@@ -139,7 +139,7 @@ export function generateChartFromLastResults() {
                 Warnings: data.warnings,
                 'Semantic Diff': 1.0 - data.similarity,
                 'Total Diagnostics': (data.errors + data.warnings + data.infos + data.hints + data.unassigned) / 5.0,
-                'Response Size': data.response_length ?? 0,
+                'Response Size': data.responseLength ?? 0,
                 'Edit Distance': data.edit_distance,
                 Time: data._runtime ?? 0,
             };

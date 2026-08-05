@@ -11,7 +11,8 @@
             "!**/cli/src/templates.ts",
             "!**/out/**",
             "!**/integration-test/**",
-            "!**/targetted-integration-test/**"
+            "!**/targetted-integration-test/**",
+            "!**/.langium-ai/**"
         ]
     },
     "formatter": {

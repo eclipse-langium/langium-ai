@@ -389,7 +389,7 @@ describe('LangiumEvaluator', () => {
 
             const result = await evaluator.evaluate(code);
 
-            expect(result.data?.response_length).toBe(code.length);
+            expect(result.data?.responseLength).toBe(code.length);
         });
 
         it('should include diagnostics in result data', async () => {
