@@ -225,7 +225,7 @@ export function loadLastResults(dir: string, take?: number): EvaluatorResult[] {
  */
 export abstract class Evaluator {
     /**
-     * Run an evalution over some response and compare with an expected one.
+     * Run an evaluation over some response and compare with an expected one.
      * The result is a data entry that will be part of the overall evaluator result.
      */
     abstract evaluate(response: string, expected_response: string): Promise<EvaluatorResultData>;

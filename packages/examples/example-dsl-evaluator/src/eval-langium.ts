@@ -5,21 +5,18 @@
  ******************************************************************************/
 import { config } from 'dotenv';
 import { EmptyFileSystem } from 'langium';
-import { createLangiumGrammarServices } from 'langium/grammar';
 import {
     averageAcrossCases,
     averageAcrossRunners,
     EvalMatrix,
     type EvaluatorResultMetadata,
-    generateHistogram,
-    generateHistoricalChart,
-    generateRadarChart,
     LangiumEvaluator,
     type LangiumEvaluatorResultData,
     loadLastResults,
-    mergeEvaluators,
-    normalizeData,
+    mergeEvaluators
 } from 'langium-ai-tools/evaluator';
+import { createLangiumGrammarServices } from 'langium/grammar';
+import { generateHistogram, generateHistoricalChart, generateRadarChart, normalizeData } from './chart.js';
 import { EditDistanceEvaluator, type EditDistanceEvaluatorResultData } from './edit-distance-evaluator.js';
 import { type EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
 import { cases as langiumCases } from './langium-cases.js';
@@ -36,6 +33,7 @@ import {
 config();
 
 const langiumServices = createLangiumGrammarServices(EmptyFileSystem);
+langiumServices.grammar.LanguageMetaData.fileExtensions = ['.langium'];
 
 type MergedEvaluatorResultType = LangiumEvaluatorResultData &
     EditDistanceEvaluatorResultData &

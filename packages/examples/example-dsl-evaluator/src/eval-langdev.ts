@@ -11,19 +11,18 @@ import {
     type EvalCase,
     EvalMatrix,
     type EvaluatorResult,
-    generateRadarChart,
     LangiumEvaluator,
     type LangiumEvaluatorResultData,
     loadLastResults,
     mergeEvaluators,
     type Message,
-    normalizeData,
     type Runner,
 } from 'langium-ai-tools/evaluator';
 import { createLangiumGrammarServices } from 'langium/grammar';
 import ollama from 'ollama';
-import { type EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
 import * as readline from 'readline/promises';
+import { generateRadarChart, normalizeData } from './chart.js';
+import { type EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
 
 /**
  * Create services for the Langium grammar language.

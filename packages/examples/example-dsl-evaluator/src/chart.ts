@@ -8,15 +8,15 @@
  * Generates & exports an HTML radar chart report using plotly JS
  */
 
-import { readdirSync, writeFileSync } from 'node:fs';
-import * as path from 'node:path';
 import {
     type EvaluatorResult,
     type EvaluatorResultData,
     type EvaluatorResultMetadata,
     averageAcrossRunners,
     loadReport,
-} from './evaluator.js';
+} from 'langium-ai-tools/evaluator';
+import { readdirSync, writeFileSync } from 'node:fs';
+import * as path from 'node:path';
 
 /**
  * Generates an HTML radar chart from the provided data
