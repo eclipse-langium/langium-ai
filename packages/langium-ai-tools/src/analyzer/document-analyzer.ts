@@ -293,7 +293,7 @@ interface AnalysisOptions {
      */
     includeImportedRules: boolean;
     /**
-     * Whether to include hidden tokens (like comments, whitespace) in the analysis. Default is false.
+     * Whether to include hidden tokens (like comments, whitespace) in the analysis. Default is true.
      * Rule WS (whitespace) is always excluded.
      */
     includeHiddenRules: boolean;
