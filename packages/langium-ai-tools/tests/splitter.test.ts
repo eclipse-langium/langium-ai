@@ -5,8 +5,8 @@
 import { AstNode } from 'langium';
 import { createServicesForGrammar } from 'langium/grammar';
 import { describe, expect, it } from 'vitest';
-import { splitByNode, splitByNodeToAst } from '../src/splitter/splitter.js';
 import { ProgramMapper } from '../src/splitter/program-map.js';
+import { splitByNode, splitByNodeToAst } from '../src/splitter/splitter.js';
 
 // create test services
 const domainModelServices = await createServicesForGrammar({
@@ -49,7 +49,30 @@ hidden terminal SL_COMMENT: /\\/\\/[^\\n\\r]*/;
 `,
     languageMetaData: {
         languageId: 'domainmodel',
-        fileExtensions: [''],
+        fileExtensions: ['.dmodel'],
+        caseInsensitive: false,
+        mode: 'development',
+    },
+});
+
+// same grammar registered under a real (non-empty) file extension; guards the
+// document-factory service resolution, which resolves services by extension
+const extensionedServices = await createServicesForGrammar({
+    grammar: `
+grammar DomainModel
+
+entry Domainmodel:
+    (elements+=Entity)*;
+
+Entity:
+    'entity' name=ID;
+
+hidden terminal WS: /\\s+/;
+terminal ID: /[_a-zA-Z][\\w_]*/;
+`,
+    languageMetaData: {
+        languageId: 'domainmodel',
+        fileExtensions: ['.dmodel'],
         caseInsensitive: false,
         mode: 'development',
     },
@@ -99,6 +122,18 @@ package test {
 `;
 
 describe('splitByNode', () => {
+    describe('Service resolution', () => {
+        it('should split when services use a non-empty file extension', () => {
+            // regression: the memory document URI must carry the language's file
+            // extension, otherwise the document factory finds no matching services
+            const isEntity = (node: AstNode) => node.$type === 'Entity';
+            const chunks = splitByNode('entity Foo\nentity Bar', isEntity, extensionedServices);
+            expect(chunks.length).toBe(2);
+            expect(chunks[0]).toContain('entity Foo');
+            expect(chunks[1]).toContain('entity Bar');
+        });
+    });
+
     describe('Basic splitting', () => {
         it('should split by entity nodes', () => {
             const isEntity = (node: AstNode) => node.$type === 'Entity';

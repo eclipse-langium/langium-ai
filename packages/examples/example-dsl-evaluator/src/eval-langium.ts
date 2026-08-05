@@ -3,9 +3,9 @@
  * This program and the accompanying materials are made available under the
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
-
 import { config } from 'dotenv';
 import { EmptyFileSystem } from 'langium';
+import { createLangiumGrammarServices } from 'langium/grammar';
 import {
     averageAcrossCases,
     averageAcrossRunners,
@@ -20,9 +20,8 @@ import {
     mergeEvaluators,
     normalizeData,
 } from 'langium-ai-tools/evaluator';
-import { createLangiumGrammarServices } from 'langium/grammar';
-import { type EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
 import { EditDistanceEvaluator, type EditDistanceEvaluatorResultData } from './edit-distance-evaluator.js';
+import { type EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
 import { cases as langiumCases } from './langium-cases.js';
 import {
     runner_codegemma,
@@ -33,6 +32,7 @@ import {
     runner_llama3_2_3b,
     runner_llama3_2_3b_rag,
 } from './runners.js';
+
 config();
 
 const langiumServices = createLangiumGrammarServices(EmptyFileSystem);

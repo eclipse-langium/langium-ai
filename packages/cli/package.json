@@ -30,7 +30,10 @@
     "dsl",
     "cli"
   ],
-  "author": "Langium Team",
+  "author": {
+      "name": "TypeFox",
+      "url": "https://www.typefox.io"
+  },
   "license": "MIT",
   "dependencies": {
     "commander": "^15.0.0",

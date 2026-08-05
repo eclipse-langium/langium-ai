@@ -8,6 +8,10 @@
         "build": "tsc",
         "start": "node ./dist/index.js",
         "demo": "npm run build && npm run start -- run-langdev",
+        "chroma:up": "docker compose up -d && npm run chroma:wait",
+        "chroma:wait": "node ./scripts/wait-for-chroma.mjs",
+        "chroma:down": "docker compose down",
+        "seed": "npm run build && node ./dist/seed-chroma.js",
         "clean": "rimraf ./dist",
         "test": "echo \"No tests yet...\""
     },

@@ -36,9 +36,20 @@ export abstract class AbstractDocumentEvaluator<
             input = codeBlock;
         }
         const fileExt = fileExtension ? fileExtension : this.services.LanguageMetaData.fileExtensions[0];
+        if (!fileExt || fileExt.trim() === '') {
+            // without an extension the document factory can't resolve services by URI;
+            // fail loudly rather than parsing against an empty extension
+            throw new Error(
+                'No file extension available to evaluate against. Provide one explicitly or ensure the ' +
+                    'services expose a non-empty LanguageMetaData.fileExtensions entry.',
+            );
+        }
+        // fileExtensions entries already include the leading dot, so normalize before appending
+        const normalizedExt = fileExt.startsWith('.') ? fileExt : `.${fileExt}`;
         const doc = this.services.shared.workspace.LangiumDocumentFactory.fromString(
             input,
-            URI.parse(`memory:/test.${fileExt}`),
+            // triple slash so the extension lands on the path, not the authority
+            URI.parse(`memory:///test${normalizedExt}`),
         );
         const context: EvaluationContext = {
             input: input,

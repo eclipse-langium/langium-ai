@@ -1,14 +1,14 @@
+import type { EvalContext, EvaluationCaseResult } from 'langium-ai-tools/evals';
+import { clearSuites, getCollectedSuites, runEvalFile } from 'langium-ai-tools/evals';
 import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
-import path from 'path';
 import { register } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import path from 'path';
 import { loadConfig } from '../core/config.js';
+import { error, info, spinner, st, success } from '../utils/console.js';
 import { pathExists } from '../utils/fs.js';
-import { error, info, success, spinner, st } from '../utils/console.js';
-import { clearSuites, getCollectedSuites, runEvalFile } from 'langium-ai-tools/evals';
-import type { EvalContext, EvaluationCaseResult } from 'langium-ai-tools/evals';
-import { getNextRunId, saveRunData } from '../utils/runs.js';
 import type { EvaluationRunData } from '../utils/runs.js';
+import { getNextRunId, saveRunData } from '../utils/runs.js';
 
 // track if tsx loader is registered
 let tsxLoaderRegistered = false;

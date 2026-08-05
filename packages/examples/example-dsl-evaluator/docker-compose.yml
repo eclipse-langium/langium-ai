@@ -1,0 +1,14 @@
+# ChromaDB server for the RAG runners in this example.
+# Start with `npm run chroma:up`, stop with `npm run chroma:down`.
+services:
+    chroma:
+        # 1.x server exposes the /api/v2 endpoints used by the chromadb JS client
+        image: chromadb/chroma:1.0.21
+        container_name: langium-ai-chroma
+        ports:
+            - '8000:8000'
+        volumes:
+            - chroma-data:/data
+
+volumes:
+    chroma-data:

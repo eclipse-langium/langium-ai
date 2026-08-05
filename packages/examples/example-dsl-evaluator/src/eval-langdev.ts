@@ -25,11 +25,6 @@ import ollama from 'ollama';
 import { type EmbeddingEvaluatorResultData, OllamaEmbeddingEvaluator } from './embedding-evaluator.js';
 import * as readline from 'readline/promises';
 
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
-
 /**
  * Create services for the Langium grammar language.
  *
@@ -139,8 +134,18 @@ export async function runLangDevDemo() {
     const missingModels = models.filter((model) => !listedModels.some((m) => m.name === model));
     if (missingModels.length > 0) {
         console.error(`The following models are missing: ${missingModels.join(', ')}.`);
-        // prompt to install
-        const answer = await rl.question(`Do you want to install these missing models for this demo? (y/n) `);
+        // prompt to install; the readline interface holds stdin open, so scope it
+        // to this block and close it afterwards to avoid keeping the process alive
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+        });
+        let answer: string;
+        try {
+            answer = await rl.question(`Do you want to install these missing models for this demo? (y/n) `);
+        } finally {
+            rl.close();
+        }
         if (answer.toLowerCase() === 'y') {
             for (const model of missingModels) {
                 console.log(`Installing model ${model}...`);

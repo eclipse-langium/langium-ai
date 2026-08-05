@@ -18,6 +18,27 @@ export interface SplitterOptions {
 }
 
 /**
+ * Builds an in-memory document URI whose extension matches the language of the
+ * provided services. The extension is required: the document factory resolves
+ * services by file extension, so an empty or mismatched extension yields
+ * "no services for the extension" errors.
+ * @param services Associated Langium services, used to read the language's file extension
+ * @returns A `memory:///` URI carrying the correct extension
+ */
+function memoryDocumentUri(services: LangiumServicesLike): URI {
+    const extension: string | undefined = services.LanguageMetaData.fileExtensions[0];
+    if (!extension || extension.trim() === '') {
+        throw new Error(
+            'No file extension available to evaluate against. Provide one explicitly or ensure the ' +
+                'services expose a non-empty LanguageMetaData.fileExtensions entry.',
+        );
+    }
+    // note the triple slash: `memory://foo` parses `foo` as the authority,
+    // leaving an empty path (and thus no extension), so we use an absolute path
+    return URI.parse(`memory:///document${extension}`);
+}
+
+/**
  * Helper function to parse a document string into a LangiumDocument object
  * @param document String to be parsed
  * @param services Associated Langium services for parsing
@@ -26,7 +47,7 @@ export interface SplitterOptions {
 function parseDocument(document: string, services: LangiumServicesLike): LangiumDocument<AstNode> | undefined {
     const langiumDoc = services.shared.workspace.LangiumDocumentFactory.fromString(
         document,
-        URI.parse('memory://document.langium'),
+        memoryDocumentUri(services),
     );
     if (langiumDoc.parseResult.lexerErrors.length > 0) {
         console.error(
