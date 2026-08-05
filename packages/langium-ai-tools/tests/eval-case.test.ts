@@ -39,7 +39,7 @@ eval_cases:
             prompt: 'What is the capital of France?',
             expected_response: 'The capital of France is Paris.',
             history: [{ role: 'user', content: 'Tell me about France.' }],
-            tags: ['geography', 'capital cities']
+            tags: ['geography', 'capital cities'],
         });
 
         expect(evalCases[1]).toEqual({

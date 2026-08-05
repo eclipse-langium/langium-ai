@@ -88,7 +88,7 @@ function decodeEvalCase(caseData: unknown, context: string = 'case'): EvalCase {
         prompt: caseDataObj.prompt,
         expected_response: caseDataObj.expected_response,
         history: caseDataObj.history,
-        tags: caseDataObj.tags
+        tags: caseDataObj.tags,
     };
 
     // add optional fields if present
