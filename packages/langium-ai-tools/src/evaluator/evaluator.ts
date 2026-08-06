@@ -61,37 +61,28 @@ export function averageAcrossCases(results: EvaluatorResult[]): EvaluatorResult[
         mappedResults.set(name, existingResult);
     }
 
-    // average the results
+    // average the results without mutating the input
     for (const [_key, groupedResults] of mappedResults) {
-        const avgData = groupedResults[0].data;
-
-        // sum all results except the first
-        for (const result of groupedResults.slice(1)) {
-            const resultData = result.data;
-            for (const [key, value] of Object.entries(resultData)) {
+        // sum numeric entries into a fresh accumulator; non-numeric entries
+        // aren't relevant in an aggregation context and are never copied over
+        const sums: Record<string, number> = {};
+        for (const result of groupedResults) {
+            for (const [key, value] of Object.entries(result.data)) {
                 if (typeof value === 'number') {
-                    avgData[key] = ((avgData[key] as number) ?? 0) + value;
+                    sums[key] = (sums[key] ?? 0) + value;
                 }
             }
         }
 
-        // lastly, divide each entry by the number of 'groupedResults'
-        for (const [key, value] of Object.entries(avgData)) {
-            if (typeof value === 'number') {
-                const avgValue = value / groupedResults.length;
-                avgData[key] = avgValue;
-                // round to 2 decimal places
-                avgData[key] = Math.round((avgData[key] as number) * 100) / 100;
-            } else {
-                // drop non-numeric entries,
-                // which aren't relevant in an aggregation context
-                delete avgData[key];
-            }
+        // divide each entry by the number of 'groupedResults', rounded to 2 decimal places
+        const avgData: EvaluatorResultData = {};
+        for (const [key, sum] of Object.entries(sums)) {
+            avgData[key] = Math.round((sum / groupedResults.length) * 100) / 100;
         }
 
         averagedResults.push({
             name: groupedResults[0].name,
-            metadata: groupedResults[0].metadata,
+            metadata: { ...groupedResults[0].metadata },
             data: avgData,
         });
     }
@@ -132,30 +123,25 @@ export function averageAcrossRunners(results: EvaluatorResult[]): EvaluatorResul
             continue;
         }
 
-        const avgData = groupedResults[0].data;
-
-        // sum all results except the first
-        for (const result of groupedResults.slice(1)) {
-            const resultData = result.data;
-            for (const [key, value] of Object.entries(resultData)) {
+        // sum numeric entries into a fresh accumulator, leaving the input untouched
+        const sums: Record<string, number> = {};
+        for (const result of groupedResults) {
+            for (const [key, value] of Object.entries(result.data)) {
                 if (typeof value === 'number') {
-                    avgData[key] = ((avgData[key] as number) ?? 0) + value;
+                    sums[key] = (sums[key] ?? 0) + value;
                 }
             }
         }
 
-        // lastly, divide each entry by the number of 'groupedResults'
-        for (const [key, value] of Object.entries(avgData)) {
-            if (typeof value === 'number') {
-                avgData[key] = value / groupedResults.length;
-                // round to 2 decimal places
-                avgData[key] = Math.round((avgData[key] as number) * 100) / 100;
-            }
+        // divide each entry by the number of 'groupedResults', rounded to 2 decimal places
+        const avgData: EvaluatorResultData = {};
+        for (const [key, sum] of Object.entries(sums)) {
+            avgData[key] = Math.round((sum / groupedResults.length) * 100) / 100;
         }
 
         averagedResults.push({
             name: groupedResults[0].metadata.runner,
-            metadata: groupedResults[0].metadata,
+            metadata: { ...groupedResults[0].metadata },
             data: avgData,
         });
     }

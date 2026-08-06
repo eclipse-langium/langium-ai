@@ -122,6 +122,19 @@ describe('Evaluator Utility Functions', () => {
             expect(averaged).toHaveLength(0);
         });
 
+        it('should not mutate the input results', () => {
+            const results: EvaluatorResult[] = [
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 10, status: 'pass' } },
+                { name: 'test1', metadata: { duration: 0 }, data: { score: 20, status: 'fail' } },
+            ];
+
+            averageAcrossCases(results);
+
+            // input data is left intact, including non-numeric fields
+            expect(results[0].data).toStrictEqual({ score: 10, status: 'pass' });
+            expect(results[1].data).toStrictEqual({ score: 20, status: 'fail' });
+        });
+
         it('should handle single result', () => {
             const results: EvaluatorResult[] = [{ name: 'test1', metadata: { duration: 0 }, data: { score: 42 } }];
 
@@ -175,6 +188,19 @@ describe('Evaluator Utility Functions', () => {
 
             expect(averaged[0].metadata.runner).toBe('runner1');
             expect(averaged[0].metadata.version).toBe('1.0');
+        });
+
+        it('should not mutate the input results', () => {
+            const results: EvaluatorResult[] = [
+                { name: 'case1', metadata: { duration: 0, runner: 'runner1' }, data: { score: 10, status: 'pass' } },
+                { name: 'case2', metadata: { duration: 0, runner: 'runner1' }, data: { score: 20, status: 'fail' } },
+            ];
+
+            averageAcrossRunners(results);
+
+            // input data is left intact, including non-numeric fields
+            expect(results[0].data).toStrictEqual({ score: 10, status: 'pass' });
+            expect(results[1].data).toStrictEqual({ score: 20, status: 'fail' });
         });
 
         it('should handle single runner', () => {
