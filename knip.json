@@ -4,6 +4,7 @@
     "ignore": [
         "**/templates/**",
         "packages/examples/example-dsl-evaluator/src/runners.ts",
+        "packages/examples/example-dsl-evaluator/src/seed-chroma.ts",
         "packages/examples/example-dsl-evaluator/src/eval-langium.ts",
         "packages/langium-ai-mcp/src/mcp-client.ts",
         "scripts/setup-langium-project.ts"
