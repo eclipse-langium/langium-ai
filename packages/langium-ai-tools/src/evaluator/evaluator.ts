@@ -8,7 +8,7 @@
  * Baseline Validator Class
  */
 
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import * as path from 'path';
 
 /**
@@ -186,14 +186,18 @@ export function loadReport(file: string): Report {
 }
 
 /**
- * Attempts to load the most recent evaluator results from the given file
+ * Attempts to load the most recent evaluator result(s) from the given directory.
+ *
+ * @param dir The directory to load results from
+ * @param take The number of results to take, starting with the most recent ones.
+ *  If this is _not_ set, then only the most recent result will be returned by itself.
  */
 export function loadLastResults(dir: string, take?: number): EvaluatorResult[] {
     if (!existsSync(dir)) {
         throw new Error(`Directory does not exist: ${dir}`);
     }
 
-    let files = readdirSync(dir).filter((f) => f.endsWith('.json'));
+    let files: string[];
 
     if (!take) {
         const lastFile = path.join(dir, 'last.txt');
@@ -202,16 +206,20 @@ export function loadLastResults(dir: string, take?: number): EvaluatorResult[] {
             throw new Error(`Last file does not exist in directory: ${dir}. Try running an evaluation matrix first.`);
         }
         // read name from last file
-        const lastFileName = readFileSync(lastFile).toString();
-
-        files.push(lastFileName);
+        const lastFileName = readFileSync(lastFile).toString().trim();
+        files = [lastFileName];
     } else {
         // read the most recent files
-        files = files.sort().reverse().slice(0, take);
+        // TODO @montymxb, flatten this out a bit more later on
+        files = readdirSync(dir)
+            .filter((f) => f.endsWith('.json'))
+            .sort()
+            .reverse()
+            .slice(0, take);
     }
 
+    // build results from each report
     const results: EvaluatorResult[] = [];
-
     for (const file of files) {
         const report = loadReport(path.join(dir, file));
         results.push(...report.results);
@@ -226,9 +234,9 @@ export function loadLastResults(dir: string, take?: number): EvaluatorResult[] {
 export abstract class Evaluator {
     /**
      * Run an evaluation over some response and compare with an expected one.
-     * The result is a data entry that will be part of the overall evaluator result.
+     * Produces a complete evaluator result (name, metadata & data).
      */
-    abstract evaluate(response: string, expected_response: string): Promise<EvaluatorResultData>;
+    abstract evaluate(response: string, expected_response: string): Promise<EvaluatorResult>;
 }
 
 export function mergeEvaluators(...evaluators: Evaluator[]): Evaluator {
@@ -237,20 +245,28 @@ export function mergeEvaluators(...evaluators: Evaluator[]): Evaluator {
 }
 
 /**
- * Merges two evaluators together in sequence, such that data results of `a` are combined with `b` (b takes precedence in key overrides).
- * The merge is a shallow merge, so nested object properties will not be copied
- * Metadata & other top-level fields in the evaluator result are not handled here, just the data props.
+ * Merges two evaluators together in sequence into a single evaluator result.
+ * Data & metadata of `a` are combined with those of `b` (b takes precedence in key overrides).
+ * The merge is a shallow merge, so nested object properties will not be copied.
+ * The merged result keeps `a`'s name.
  * @param a First evaluator to merge
  * @param b Second evaluator to merge
  */
 function mergeEvaluatorsInternal(a: Evaluator, b: Evaluator): Evaluator {
     return {
-        async evaluate(response: string, expected_response: string): Promise<EvaluatorResultData> {
+        async evaluate(response: string, expected_response: string): Promise<EvaluatorResult> {
             const r1 = await a.evaluate(response, expected_response);
             const r2 = await b.evaluate(response, expected_response);
             return {
-                ...r1,
-                ...r2,
+                name: r1.name,
+                metadata: {
+                    ...r1.metadata,
+                    ...r2.metadata,
+                },
+                data: {
+                    ...r1.data,
+                    ...r2.data,
+                },
             };
         },
     };

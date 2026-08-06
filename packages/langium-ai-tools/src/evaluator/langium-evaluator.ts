@@ -95,7 +95,7 @@ export class LangiumEvaluator<T extends LangiumServicesLike> extends AbstractDoc
         return {
             name: this.constructor.name,
             metadata: {
-                // no duration available
+                // no LLM call, returning as duration 0
                 duration: 0,
             },
             data: evalData,

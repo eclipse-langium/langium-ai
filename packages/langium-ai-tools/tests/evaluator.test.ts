@@ -195,7 +195,9 @@ describe('Evaluator Utility Functions', () => {
             const eval1: Evaluator = {
                 async evaluate(_response: string, _expected: string) {
                     return {
-                        metric1: 10,
+                        name: 'eval1',
+                        metadata: { duration: 0 },
+                        data: { metric1: 10 },
                     };
                 },
             };
@@ -203,7 +205,9 @@ describe('Evaluator Utility Functions', () => {
             const eval2: Evaluator = {
                 async evaluate(_response: string, _expected: string) {
                     return {
-                        metric2: 20,
+                        name: 'eval2',
+                        metadata: { duration: 0 },
+                        data: { metric2: 20 },
                     };
                 },
             };
@@ -211,39 +215,43 @@ describe('Evaluator Utility Functions', () => {
             const merged = mergeEvaluators(eval1, eval2);
             const result = await merged.evaluate('test', 'expected');
 
-            expect(result).toEqual({ metric1: 10, metric2: 20 });
+            // merged result keeps the first evaluator's name & combines data
+            expect(result.name).toBe('eval1');
+            expect(result.data).toEqual({ metric1: 10, metric2: 20 });
         });
 
         it('should merge multiple evaluators', async () => {
             const eval1: Evaluator = {
                 async evaluate() {
-                    return { a: 1 };
+                    return { name: 'eval1', metadata: { duration: 0 }, data: { a: 1 } };
                 },
             };
 
             const eval2: Evaluator = {
                 async evaluate() {
-                    return { b: 2 };
+                    return { name: 'eval2', metadata: { duration: 0 }, data: { b: 2 } };
                 },
             };
 
             const eval3: Evaluator = {
                 async evaluate() {
-                    return { c: 3 };
+                    return { name: 'eval3', metadata: { duration: 0 }, data: { c: 3 } };
                 },
             };
 
             const merged = mergeEvaluators(eval1, eval2, eval3);
             const result = await merged.evaluate('test', 'expected');
 
-            expect(result).toEqual({ a: 1, b: 2, c: 3 });
+            expect(result.data).toEqual({ a: 1, b: 2, c: 3 });
         });
 
         it('should allow later evaluators to override earlier ones', async () => {
             const eval1: Evaluator = {
                 async evaluate() {
                     return {
-                        score: 10,
+                        name: 'eval1',
+                        metadata: { duration: 0 },
+                        data: { score: 10 },
                     };
                 },
             };
@@ -251,7 +259,9 @@ describe('Evaluator Utility Functions', () => {
             const eval2: Evaluator = {
                 async evaluate() {
                     return {
-                        score: 20,
+                        name: 'eval2',
+                        metadata: { duration: 0 },
+                        data: { score: 20 },
                     };
                 },
             };
@@ -260,17 +270,21 @@ describe('Evaluator Utility Functions', () => {
             const result = await merged.evaluate('test', 'expected');
 
             expect(result).toBeDefined();
-            expect(result.score).toBe(20);
+            expect(result.data.score).toBe(20);
         });
 
         it('should handle evaluators with overlapping and non-overlapping keys', async () => {
             const eval1: Evaluator = {
                 async evaluate() {
                     return {
-                        a: 1,
-                        b: 2,
-                        x: 10,
-                        y: 20,
+                        name: 'eval1',
+                        metadata: { duration: 0 },
+                        data: {
+                            a: 1,
+                            b: 2,
+                            x: 10,
+                            y: 20,
+                        },
                     };
                 },
             };
@@ -278,17 +292,21 @@ describe('Evaluator Utility Functions', () => {
             const eval2: Evaluator = {
                 async evaluate() {
                     return {
-                        b: 3,
-                        c: 4,
-                        y: 30,
-                        z: 40,
+                        name: 'eval2',
+                        metadata: { duration: 0 },
+                        data: {
+                            b: 3,
+                            c: 4,
+                            y: 30,
+                            z: 40,
+                        },
                     };
                 },
             };
 
             const merged = mergeEvaluators(eval1, eval2);
             const result = await merged.evaluate('test', 'expected');
-            expect(result).toEqual({ a: 1, b: 3, c: 4, x: 10, y: 30, z: 40 });
+            expect(result.data).toEqual({ a: 1, b: 3, c: 4, x: 10, y: 30, z: 40 });
         });
     });
 });

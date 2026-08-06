@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { Evaluator, type EvaluatorResultData } from 'langium-ai-tools/evaluator';
+import { Evaluator, type EvaluatorResult, type EvaluatorResultData } from 'langium-ai-tools/evaluator';
 
 export interface EditDistanceEvaluatorResultData extends EvaluatorResultData {
     edit_distance: number;
@@ -35,12 +35,19 @@ function levenshteinDistance(str1: string, str2: string): number {
 }
 
 export class EditDistanceEvaluator extends Evaluator {
-    async evaluate(response: string, expected_response: string): Promise<EvaluatorResultData> {
+    async evaluate(
+        response: string,
+        expected_response: string,
+    ): Promise<EvaluatorResult<EditDistanceEvaluatorResultData>> {
         const distance = levenshteinDistance(response, expected_response);
-        return new Promise((resolve) => {
-            resolve({
+        return {
+            name: this.constructor.name,
+            metadata: {
+                duration: 0,
+            },
+            data: {
                 edit_distance: distance,
-            });
-        });
+            },
+        };
     }
 }

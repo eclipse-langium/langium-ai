@@ -4,7 +4,7 @@
  * terms of the MIT License, which is available in the project root.
  ******************************************************************************/
 
-import { Evaluator, type EvaluatorResult } from './evaluator.js';
+import { Evaluator, type EvaluatorResult, type EvaluatorResultData } from './evaluator.js';
 import fs from 'node:fs';
 import * as path from 'path';
 import { type Message } from './message.js';
@@ -104,10 +104,17 @@ export class EvalMatrix {
                     // run all evaluators on this response
                     for (const evaluator of this.config.evaluators) {
                         console.log(`    * Evaluator: ${evaluator.name} (run ${iteration + 1})`);
-                        const evaluatorResultData = await evaluator.eval.evaluate(response, testCase.expected_response);
-                        const evaluatorResult: EvaluatorResult = {
+                        const evaluatorResult: EvaluatorResult<EvaluatorResultData> = await evaluator.eval.evaluate(
+                            response,
+                            testCase.expected_response,
+                        );
+                        // augment the evaluator's own result with matrix-level identity & metadata,
+                        // preserving any metadata the evaluator produced (e.g. analyzer syntax statistics)
+                        const matrixResult: EvaluatorResult = {
+                            ...evaluatorResult,
                             name: `${runner.name} - ${testCase.name} - ${evaluator.name}`,
                             metadata: {
+                                ...evaluatorResult.metadata,
                                 runner: runner.name,
                                 evaluator: evaluator.name,
                                 testCase: { ...testCase },
@@ -115,9 +122,8 @@ export class EvalMatrix {
                                 duration: (runnerEndTime.getTime() - runnerStartTime.getTime()) / 1000.0, // in seconds
                                 run_count: iteration + 1,
                             },
-                            data: evaluatorResultData,
                         };
-                        results.push(evaluatorResult);
+                        results.push(matrixResult);
                     }
                 }
             }
