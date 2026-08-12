@@ -219,10 +219,10 @@ export function loadLastResults(dir: string, take?: number): EvaluatorResult[] {
  */
 export abstract class Evaluator {
     /**
-     * Run an evaluation over some response and compare with an expected one.
+     * Run an evaluation over some response, possibly compares with an expected one if provided
      * Produces a complete evaluator result (name, metadata & data).
      */
-    abstract evaluate(response: string, expected_response: string): Promise<EvaluatorResult>;
+    abstract evaluate(response: string, expected_response?: string): Promise<EvaluatorResult>;
 }
 
 export function mergeEvaluators(...evaluators: Evaluator[]): Evaluator {

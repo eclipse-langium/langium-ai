@@ -12,6 +12,7 @@ import {
     mergeEvaluators,
 } from '../src/evaluator/evaluator.js';
 import { LangiumEvaluator } from '../src/evaluator/langium-evaluator.js';
+import { LangiumServices } from 'langium/lsp';
 
 // create test services using the same domain model grammar as document-analyzer tests
 const domainModelServices = await createServicesForGrammar({
@@ -338,7 +339,7 @@ describe('Evaluator Utility Functions', () => {
 });
 
 describe('LangiumEvaluator', () => {
-    let evaluator: LangiumEvaluator;
+    let evaluator: LangiumEvaluator<LangiumServices>;
 
     beforeEach(() => {
         // create a fresh evaluator instance before each test to ensure clean state

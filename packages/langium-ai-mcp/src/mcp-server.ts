@@ -34,7 +34,7 @@ server.registerTool(
 export const langiumEvaluator = new LangiumEvaluator(createLangiumGrammarServices(NodeFileSystem).grammar);
 
 export async function validateLangiumCode(code: string): Promise<string | undefined> {
-    const evalResult = await langiumEvaluator.evaluate(code, '');
+    const evalResult = await langiumEvaluator.evaluate(code);
     if (evalResult.data) {
         const langiumData = evalResult.data;
         if (langiumData.diagnostics.length > 0) {

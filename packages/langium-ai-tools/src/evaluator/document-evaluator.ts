@@ -30,11 +30,11 @@ export abstract class AbstractDocumentEvaluator<
      * Validate an agent response as if it's a langium program. If we can parse it, we attempt to validate it.
      *
      * @param input The input to compare
-     * @param expected_response Th expected response to compare against (unused in this evaluator)
-     * @param fileExtension The extension of the language to apply explicitly,
+     * @param expected_response Optional expected response to compare against (unused in this evaluator)
+     * @param fileExtension Optional extension of the language to apply explicitly,
      *  otherwise the first one that's registered will be applied from the services
      */
-    async evaluate(input: string, _expected_response: string, fileExtension?: string): Promise<EvaluatorResult<RD>> {
+    async evaluate(input: string, _expected_response?: string, fileExtension?: string): Promise<EvaluatorResult<RD>> {
         if (input.includes('```')) {
             // take the first code block instead, if present (assuming it's a langium grammar)
             const codeBlock = input.split(/```[a-z-]*/)[1];
