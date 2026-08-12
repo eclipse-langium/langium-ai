@@ -1,5 +1,26 @@
 # CHANGELOG
 
+## v6.0.0 langium-ai-tools
+*Aug 12th, 2026*
+
+Major release with some breaking changes regarding the `chart` functionality that was being exported, and evaluators.
+Regarding the charts, they were always intended for the built-in examples, but were present in the barrel file for `langium-ai-tools`.
+It's unlikely this was being used in practice, but if so it's been moved into the examples under `./packages/examples/example-dsl-evaluator/src/chart.ts`.
+
+### Breaking Changes
+- Removed the unneeded chart functionality from the main export, as it was only intended for the built-in examples
+- Aligned all Evaluators to return `EvaluatorResult`. Previously they were sometimes returning `EvaluatorResultData`. This was due to an inconsistency in the Evaluator return type, and has since been resolved.
+- `Evaluator:evaluate` now marks its second arg, `expected_response`, as optional, given this is only used in comparative checks
+
+### Bug Fixes
+- Resolved an issue where the splitter was not loading documents via an appropriate registered language extension
+- Correct malformed URI issue in splitter
+- Updated invocation of `LangiumEvaluator` with 3 args to align with other Evaluator types
+- Average helpers, such as `averageAcrossCases` and `averageAcrossRunners` for evaluators, no longer mutate the input to compute their average results
+
+### General improvements
+- Refreshed existing examples with ChromaDB setup included
+
 ## v5.0.7 langium-ai-tools, v0.4.1 langium-ai
 *August 5th, 2026*
 
