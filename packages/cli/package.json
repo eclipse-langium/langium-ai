@@ -1,6 +1,6 @@
 {
   "name": "langium-ai",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "AI application development tooling for Langium-based DSL projects",
   "repository": {
     "type": "git",
@@ -38,7 +38,7 @@
   "dependencies": {
     "commander": "^15.0.0",
     "glob": "^13.0.6",
-    "langium-ai-tools": "~5.0.6",
+    "langium-ai-tools": "~6.0.0",
     "yaml": "^2.9.0",
     "yocto-spinner": "^1.2.2"
   },

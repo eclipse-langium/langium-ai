@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v0.5.0 langium-ai
+
+Minor release to bump to latest v6.0.0 tools release.
+
+The new api is incompatible in some subtle ways with the original one with regards to built-in evaluators, and chart exports.
+The former may necessitate minor adjustments to ensure evaluations build.
+
 ## v6.0.0 langium-ai-tools
 *Aug 12th, 2026*
 
