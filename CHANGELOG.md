@@ -1,6 +1,12 @@
 # CHANGELOG
 
+## v6.0.1 langium-ai-tools
+*Aug 14th, 2026*
+
+Tiny patch. Reduced tools package size a nice amount by removing *.map files that are just used for development.
+
 ## v0.5.0 langium-ai
+*Aug 12th, 2026*
 
 Minor release to bump to latest v6.0.0 tools release.
 

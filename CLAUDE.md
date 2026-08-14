@@ -15,8 +15,8 @@ npm run test
 
 # Lint & format
 npm run lint              # oxlint
-npm run format            # biome check
-npm run format:fix        # biome auto-fix
+npm run format            # biome format (check only)
+npm run format:fix        # biome format --write (auto-fix)
 
 # Single package (from root)
 npm run build -w packages/cli
