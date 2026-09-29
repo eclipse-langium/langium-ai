@@ -1,75 +1,75 @@
 {
-    "name": "langium-ai-tools",
-    "version": "6.0.1",
-    "description": "Tooling for building AI Applications that leverage Langium DSLs",
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/eclipse-langium/langium-ai.git",
-        "directory": "packages/langium-ai-tools"
+  "name": "langium-ai-tools",
+  "version": "6.0.1",
+  "description": "Tooling for building AI Applications that leverage Langium DSLs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eclipse-langium/langium-ai.git",
+    "directory": "packages/langium-ai-tools"
+  },
+  "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
+  "type": "module",
+  "main": "dist/index.js",
+  "private": false,
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
-    "bugs": "https://github.com/eclipse-langium/langium-ai/issues",
-    "type": "module",
-    "main": "dist/index.js",
-    "private": false,
-    "files": [
-        "dist",
-        "!dist/**/*.map"
-    ],
-    "exports": {
-        ".": {
-            "import": "./dist/index.js",
-            "types": "./dist/index.d.ts"
-        },
-        "./analyzer": {
-            "import": "./dist/analyzer/index.js",
-            "types": "./dist/analyzer/index.d.ts"
-        },
-        "./splitter": {
-            "import": "./dist/splitter/index.js",
-            "types": "./dist/splitter/index.d.ts"
-        },
-        "./evaluator": {
-            "import": "./dist/evaluator/index.js",
-            "types": "./dist/evaluator/index.d.ts"
-        },
-        "./evals": {
-            "import": "./dist/evals/index.js",
-            "types": "./dist/evals/index.d.ts"
-        }
+    "./analyzer": {
+      "import": "./dist/analyzer/index.js",
+      "types": "./dist/analyzer/index.d.ts"
     },
-    "scripts": {
-        "build": "npm run generate && tsc && cp src/interface.proto dist/",
-        "generate": "mkdir -p src/gen && protoc --ts_out=force_disable_services,force_optimize_code_size,eslint_disable:./src/gen --proto_path=src src/interface.proto",
-        "watch": "npm run generate && tsc -w",
-        "test": "vitest run",
-        "clean": "rimraf ./dist ./src/gen",
-        "lint": "oxlint ."
+    "./splitter": {
+      "import": "./dist/splitter/index.js",
+      "types": "./dist/splitter/index.d.ts"
     },
-    "author": {
-        "name": "TypeFox",
-        "url": "https://www.typefox.io"
+    "./evaluator": {
+      "import": "./dist/evaluator/index.js",
+      "types": "./dist/evaluator/index.d.ts"
     },
-    "keywords": [
-        "langium",
-        "ai",
-        "tools",
-        "llm"
-    ],
-    "license": "MIT",
-    "engines": {
-        "node": ">=22.0.0"
-    },
-    "dependencies": {
-        "@protobuf-ts/runtime": "^2.11.1",
-        "yaml": "^2.9.0",
-        "tsx": "^4.7.0"
-    },
-    "peerDependencies": {
-        "langium": ">=4.0.0 <5.0.0",
-        "vscode-languageserver-types": ">=3.17.0"
-    },
-    "devDependencies": {
-        "@protobuf-ts/plugin": "^2.11.1",
-        "@types/node": "^25.9.3"
+    "./evals": {
+      "import": "./dist/evals/index.js",
+      "types": "./dist/evals/index.d.ts"
     }
+  },
+  "scripts": {
+    "build": "npm run generate && tsc && cp src/interface.proto dist/",
+    "generate": "mkdir -p src/gen && protoc --ts_out=force_disable_services,force_optimize_code_size,eslint_disable:./src/gen --proto_path=src src/interface.proto",
+    "watch": "npm run generate && tsc -w",
+    "test": "vitest run",
+    "clean": "rimraf ./dist ./src/gen",
+    "lint": "oxlint ."
+  },
+  "author": {
+    "name": "TypeFox",
+    "url": "https://www.typefox.io"
+  },
+  "keywords": [
+    "langium",
+    "ai",
+    "tools",
+    "llm"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@protobuf-ts/runtime": "^2.11.1",
+    "yaml": "^2.9.0",
+    "tsx": "^4.7.0"
+  },
+  "peerDependencies": {
+    "langium": ">=4.0.0 <5.0.0",
+    "vscode-languageserver-types": ">=3.17.0"
+  },
+  "devDependencies": {
+    "@protobuf-ts/plugin": "^2.11.1",
+    "@types/node": "^25.9.3"
+  }
 }
