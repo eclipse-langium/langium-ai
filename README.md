@@ -96,7 +96,7 @@ These skills provide background knowledge that agents draw on when working with 
 | Skill | Description |
 |---|---|
 | **lai** | Guide for using the LAI CLI — commands, configuration, evaluation workflow, and analysis |
-| **langium** | Comprehensive reference for how Langium projects work — grammar, parsing, validation, scoping, DI, and LSP integration |
+| **langium** | Build, fix, and improve Langium 4.x languages: recipes, best practices, and troubleshooting for grammars, scoping, validation, LSP features, code generation, testing, and multi-language projects |
 
 #### Actionable Skills (user-invocable)
 

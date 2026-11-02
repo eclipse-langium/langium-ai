@@ -291,7 +291,7 @@ There are non-invocable skills that are intended to supplement an agent with kno
 | Skill | Description |
 |---|---|
 | **lai** | Guide for using the LAI CLI — commands, configuration, evaluation workflow, and analysis |
-| **langium** | Comprehensive reference for how Langium projects work — grammar, parsing, validation, scoping, DI, and LSP integration |
+| **langium** | Build, fix, and improve Langium 4.x languages: recipes, best practices, and troubleshooting for grammars, scoping, validation, LSP features, code generation, testing, and multi-language projects |
 
 #### Actionable Skills (user-invocable)
 

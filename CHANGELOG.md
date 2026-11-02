@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## Unreleased langium skill
+*Oct 30th, 2026*
+
+Rewrote the `langium` agent skill around building, fixing, and improving Langium 4.x languages, verified against Langium 4.4.0.
+
+- Split the single 1,088 line `SKILL.md` into a short hub with a task router and ten task-oriented references under `skills/langium/references/`
+- Added recipes and pitfalls for grammars, project setup, scoping, validation, LSP features, code generation, testing, and multi-language projects, plus a troubleshooting guide
+- Fixed several errors, including the `infix` rule syntax and precedence order, `DocumentBuilder.waitUntil` and `registerBeforeDocument` signatures, the list of default LSP providers, and the claims about `slow` validations
+
 ## v6.0.1 langium-ai-tools
 *Aug 14th, 2026*
 
