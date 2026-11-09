@@ -110,7 +110,7 @@ Import from the narrowest entry point. Wrong imports are a frequent cause of "is
 | `langium/generate` | `expandToNode`, `joinToNode`, `toString`, tracing | Code generators ([code-generation.md](code-generation.md)) |
 | `langium/grammar` | Grammar language services, `createServicesForGrammar` | Tools that process `.langium` files, quick experiments |
 
-Use `NodeFileSystem` when the language must read files from disk (VS Code server, CLI). Use `EmptyFileSystem` in browsers and in tests that only use in-memory documents.
+Use `NodeFileSystem` for language servers and CLIs that read files from disk. Use `EmptyFileSystem` in browsers and in all tests, including vitest tests, which run in Node.js but work on in-memory documents.
 
 ## Wire services for a language server
 

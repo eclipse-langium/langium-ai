@@ -21,7 +21,7 @@ A typical project (scaffolded with `yo langium`) contains:
 | What | Where to look |
 | --- | --- |
 | Grammar | `src/**/*.langium` (path set in `langium-config.json`) |
-| Generator config | `langium-config.json`, or a `"langium"` key in `package.json` |
+| Generator config | `langium-config.json` if it exists, otherwise the `"langium"` key in `package.json`. If both exist, the CLI ignores the `package.json` key (unless `--file` points elsewhere) |
 | Generated code | `src/**/generated/` (`ast.ts`, `grammar.ts`, `module.ts`). Never edit by hand |
 | DI module | `src/**/<language>-module.ts` with `create<Language>Services` |
 | Validators | `src/**/<language>-validator.ts` |
@@ -88,7 +88,7 @@ Every behavior is a service. To change behavior, extend the `Default*` class and
 | `langium/generate` | `expandToNode`, `joinToNode`, `toString`, tracing |
 | `langium/grammar` | Services for the Langium grammar language itself (rarely needed) |
 
-Use `NodeFileSystem` in Node.js and `EmptyFileSystem` in the browser or in tests.
+Use `NodeFileSystem` for language servers and CLIs that read files from disk. Use `EmptyFileSystem` in the browser and in all tests, including vitest tests, which run in Node.js but work on in-memory documents.
 
 ## Reading the source and examples
 
