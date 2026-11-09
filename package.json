@@ -23,6 +23,11 @@
         "node": ">=22.0.0"
     },
     "license": "MIT",
+    "pi": {
+        "skills": [
+            "./skills"
+        ]
+    },
     "workspaces": [
         "packages/langium-ai-tools",
         "packages/langium-ai-mcp",

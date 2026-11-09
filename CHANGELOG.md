@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## v1.0.0 agent skills
+*Oct 30th, 2026*
+
+Rewrote the `langium` agent skill around building, fixing, and improving Langium 4.x languages, verified against Langium 4.4.0.
+
+- Split the single 1,088 line `SKILL.md` into a short hub with a task router and ten task-oriented references under `skills/langium/references/`
+- Added recipes and pitfalls for grammars, project setup, scoping, validation, LSP features, code generation, testing, and multi-language projects, plus a troubleshooting guide
+- Fixed several errors, including the `infix` rule syntax and precedence order, `DocumentBuilder.waitUntil` and `registerBeforeDocument` signatures, the list of default LSP providers, and the claims about `slow` validations
+- Packaged the skills as a versioned plugin for several agents:
+  - Claude Code: `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`
+  - Codex and other Agent Plugins clients: root `plugin.json` and `.agents/plugins/marketplace.json`
+  - Gemini CLI: `gemini-extension.json`
+  - Pi: `pi.skills` in the root `package.json`
+
 ## v6.0.1 langium-ai-tools
 *Aug 14th, 2026*
 

@@ -1,0 +1,5 @@
+{
+    "name": "langium-ai",
+    "version": "1.0.0",
+    "description": "Agent skills for building Langium 4.x languages and for using the Langium AI (lai) CLI to generate descriptors, system prompts, evals, and MCP servers for your DSL"
+}

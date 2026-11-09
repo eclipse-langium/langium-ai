@@ -19,3 +19,5 @@ packages/cli/src/templates.ts
 packages/cli/tests/.tmp/
 integration-test/
 targetted-integration-test/
+# skill evals, kept local so they are not shipped with installed skills
+skills/*/evals/
