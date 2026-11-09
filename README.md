@@ -87,7 +87,16 @@ Install all skills into your project with [skills](https://www.npmjs.com/package
 npx skills add eclipse-langium/langium-ai
 ```
 
-The `skills` package detects your agent and installs into the correct directory automatically.
+The `skills` package detects your agent and installs into the correct directory automatically. This is also the recommended route for OpenCode, which reads skills from `.agents/skills` and `.claude/skills`.
+
+You can instead install the skills as a versioned plugin or extension for your agent:
+
+| Agent | Install |
+|---|---|
+| Claude Code | `/plugin marketplace add eclipse-langium/langium-ai`, then `/plugin install langium-ai@langium-ai` |
+| Codex | `codex plugin marketplace add eclipse-langium/langium-ai`, then install `langium-ai` from the plugin directory |
+| Gemini CLI | `gemini extensions install https://github.com/eclipse-langium/langium-ai` |
+| Pi | `pi install git:github.com/eclipse-langium/langium-ai` |
 
 #### Reference Skills
 
